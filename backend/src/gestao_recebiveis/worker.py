@@ -10,7 +10,12 @@ from gestao_recebiveis.clock import Clock, SystemClock
 from gestao_recebiveis.config import get_settings
 from gestao_recebiveis.database import SessionLocal
 from gestao_recebiveis.models import DemoState
-from gestao_recebiveis.reminders.provider import FakeProvider, MessageProvider, ResponseLost, SendResult
+from gestao_recebiveis.reminders.provider import (
+    FakeProvider,
+    MessageProvider,
+    ResponseLost,
+    SendResult,
+)
 from gestao_recebiveis.reminders.service import Claim, authorize, claim, finish, renew, schedule
 
 logger = logging.getLogger("gestao_recebiveis.worker")

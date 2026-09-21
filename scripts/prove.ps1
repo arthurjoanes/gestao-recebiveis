@@ -42,10 +42,10 @@ try {
     Invoke-ProofCommand 'concurrent-services' @('ps', '--format', '{{.Names}} {{.Status}} {{.Ports}}')
     Invoke-ProofCommand 'docker-version' @('version', '--format', '{{json .Server}}')
     Invoke-ProofCommand 'compose-version' @('compose', 'version')
-    foreach ($BuildService in @('api', 'frontend', 'e2e')) {
+    foreach ($BuildService in @('db', 'api', 'frontend', 'e2e')) {
         Invoke-ProofCommand "$BuildService-build" @('compose', '--project-directory', $ProofRoot, '-f', (Join-Path $ProofRoot 'compose.yaml'), '--profile', 'test', 'build', $BuildService)
     }
-    Invoke-ProofCommand 'runtime-images' @('image', 'inspect', '--format', '{{.RepoTags}} {{.Id}}', 'gestao-recebiveis-backend:local', 'gestao-recebiveis-frontend:local', 'gestao-recebiveis-e2e:local')
+    Invoke-ProofCommand 'runtime-images' @('image', 'inspect', '--format', '{{.RepoTags}} {{.Id}}', 'gestao-recebiveis-database:local', 'gestao-recebiveis-backend:local', 'gestao-recebiveis-frontend:local', 'gestao-recebiveis-e2e:local')
     Invoke-ProofCommand 'fresh-proof' ($ComposePrefix + @('down', '--volumes', '--remove-orphans'))
     Invoke-ProofCommand 'database-ready' ($ComposePrefix + @('up', '-d', '--wait', '--wait-timeout', '120', 'db'))
     Invoke-ProofCommand 'backend-checks' ($ComposePrefix + @('run', '--rm', '--no-deps', '-e', 'LEASE_SECONDS=60', '-e', 'HEARTBEAT_SECONDS=20', 'probe', 'sh', '/scripts/check-backend.sh'))
@@ -71,7 +71,7 @@ finally {
         $SourceFiles += Get-ChildItem -LiteralPath (Join-Path $ProofRoot $Directory) -File -Recurse |
             Where-Object { $_.Extension -in @('.py', '.ts', '.tsx', '.css', '.cjs', '.ps1', '.sh') }
     }
-    foreach ($Relative in @('compose.yaml', 'compose.proof.yaml', 'backend/uv.lock', 'backend/pyproject.toml', 'backend/Dockerfile', 'frontend/package-lock.json', 'frontend/Dockerfile', 'frontend/Dockerfile.e2e', 'data/fixtures/manual.csv')) {
+    foreach ($Relative in @('compose.yaml', 'compose.proof.yaml', 'database/Dockerfile', 'backend/uv.lock', 'backend/pyproject.toml', 'backend/Dockerfile', 'frontend/package-lock.json', 'frontend/Dockerfile', 'frontend/Dockerfile.e2e', 'data/fixtures/manual.csv')) {
         $SourceFiles += Get-Item -LiteralPath (Join-Path $ProofRoot $Relative)
     }
     $Fingerprints = @($SourceFiles | Sort-Object FullName | ForEach-Object {

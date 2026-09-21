@@ -6,12 +6,27 @@ from sqlalchemy import func, select
 
 from gestao_recebiveis import imports, receivables, reporting
 from gestao_recebiveis.audit import record
-from gestao_recebiveis.auth import CurrentUser, Db, Operator, authenticate, check_origin, create_login
+from gestao_recebiveis.auth import (
+    CurrentUser,
+    Db,
+    Operator,
+    authenticate,
+    check_origin,
+    create_login,
+)
 from gestao_recebiveis.clock import business_date, business_now
 from gestao_recebiveis.config import get_settings
 from gestao_recebiveis.errors import DomainError
 from gestao_recebiveis.import_csv import MAX_BYTES
-from gestao_recebiveis.models import Attempt, Customer, DemoState, ImportBatch, Receivable, Reminder, User
+from gestao_recebiveis.models import (
+    Attempt,
+    Customer,
+    DemoState,
+    ImportBatch,
+    Receivable,
+    Reminder,
+    User,
+)
 from gestao_recebiveis.reminders.views import reminder_view
 from gestao_recebiveis.responses import (
     AuthResponse,
