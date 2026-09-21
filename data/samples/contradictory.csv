@@ -1,0 +1,3 @@
+source_system,external_receivable_id,external_customer_id,customer_name,customer_email,description,amount_brl,due_date
+demo_contradicao,SAME-001,CLI-SAME,Cliente Duplicado Fictício,duplicado@example.com,Duplicata interna,15.00,2026-08-17
+demo_contradicao,SAME-001,CLI-SAME,Cliente Duplicado Fictício,duplicado@example.com,Duplicata interna,16.00,2026-08-17
