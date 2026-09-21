@@ -1,7 +1,7 @@
 FROM node:24.14.0-bookworm-slim AS dependencies
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN --mount=type=cache,id=pf-cobraflow-npm,target=/root/.npm npm ci
+RUN --mount=type=cache,id=pf-gestao-recebiveis-npm,target=/root/.npm npm ci
 
 FROM dependencies AS build
 ENV NEXT_TELEMETRY_DISABLED=1
