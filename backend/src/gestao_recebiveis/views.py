@@ -5,7 +5,14 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from gestao_recebiveis.clock import business_date
-from gestao_recebiveis.models import AuditEvent, Customer, ImportBatch, Payment, Receivable, Reminder
+from gestao_recebiveis.models import (
+    AuditEvent,
+    Customer,
+    ImportBatch,
+    Payment,
+    Receivable,
+    Reminder,
+)
 
 
 def payment_view(payment: Payment) -> dict[str, Any]:

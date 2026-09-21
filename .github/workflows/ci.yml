@@ -9,14 +9,14 @@ permissions:
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:
       COMPOSE_PROJECT_NAME: pf-gestao-recebiveis
       DEMO_MODE: "true"
       FRONTEND_ORIGIN: http://localhost:3101
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Create temporary credentials
         shell: bash
         run: |
@@ -28,11 +28,23 @@ jobs:
           echo "DATABASE_PASSWORD=$database_password" >> "$GITHUB_ENV"
       - name: Build application and checks
         run: |
-          for service in api frontend frontend-checks e2e; do
+          for service in db api frontend frontend-checks e2e; do
             docker compose --profile test build "$service"
           done
       - name: Backend checks on PostgreSQL
         run: docker compose run --rm test
+      - name: Scan runtime images
+        run: |
+          mkdir -p artifacts/security
+          for component in backend frontend database; do
+            docker run --rm \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              -v "$PWD/artifacts/security:/reports" \
+              aquasec/trivy:0.74.0@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969 \
+              image --scanners vuln --ignorefile /dev/null --exit-code 1 \
+              --format json --output "/reports/$component.json" \
+              "gestao-recebiveis-$component:local"
+          done
       - name: Frontend lint and types
         run: docker compose run --rm --no-deps frontend-checks
       - name: Migrate and seed isolated browser stack
@@ -46,10 +58,12 @@ jobs:
         run: docker compose -f compose.yaml -f compose.e2e.yaml -p pf-gestao-recebiveis-e2e run --rm --no-deps e2e
       - name: Save browser evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: browser-evidence
-          path: artifacts/e2e
+          path: |
+            artifacts/e2e
+            artifacts/security
           if-no-files-found: ignore
       - name: Logs and cleanup
         if: always()

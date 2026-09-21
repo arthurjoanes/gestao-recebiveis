@@ -89,7 +89,7 @@ switch ($Action) {
     'proof' { & (Join-Path $PSScriptRoot 'prove.ps1') }
     'setup' {
         Assert-LocalPorts
-        foreach ($BuildService in @('api', 'frontend')) {
+        foreach ($BuildService in @('db', 'api', 'frontend')) {
             Invoke-CobraCompose -ComposeArgs @('build', $BuildService)
         }
         Invoke-CobraCompose -ComposeArgs @('up', '-d', '--wait', 'db')
@@ -105,7 +105,7 @@ switch ($Action) {
     }
     'test' {
         try {
-            foreach ($BuildService in @('api', 'frontend', 'frontend-checks', 'e2e')) {
+            foreach ($BuildService in @('db', 'api', 'frontend', 'frontend-checks', 'e2e')) {
                 Invoke-CobraCompose -ComposeArgs @('build', $BuildService)
             }
             Invoke-CobraCompose -ComposeArgs @('run', '--rm', 'test')

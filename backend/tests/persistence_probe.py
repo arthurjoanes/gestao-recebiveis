@@ -30,7 +30,15 @@ def main() -> None:
     from gestao_recebiveis.auth import password_hasher
     from gestao_recebiveis.database import SessionLocal, engine
     from gestao_recebiveis.imports import confirm_batch, create_preview
-    from gestao_recebiveis.models import Attempt, Base, Delivery, DemoState, Receivable, Reminder, User
+    from gestao_recebiveis.models import (
+        Attempt,
+        Base,
+        Delivery,
+        DemoState,
+        Receivable,
+        Reminder,
+        User,
+    )
     from gestao_recebiveis.reminders.provider import FakeProvider, ResponseLost, SendResult
     from gestao_recebiveis.reminders.service import Claim, authorize, claim, finish, renew, schedule
 

@@ -1,12 +1,12 @@
 # Gestão de recebíveis
 
-Criei uma aplicação de contas a receber com importação CSV, pagamentos integrais e lembretes simulados. Usei dados fictícios para estudar repetição de requisições e recuperação de falhas.
+Aplicação de contas a receber com importação CSV, pagamentos integrais e lembretes simulados. A demonstração usa dados fictícios e permite verificar repetição de requisições e recuperação de falhas.
 
 ![Resumo da carteira fictícia](docs/img/resumo.png)
 
-Reenviar um CSV não pode aumentar a dívida, e repetir uma baixa não pode duplicar o pagamento. Tratei esses casos no backend e registrei as tentativas de lembretes para recuperar resultados incertos.
+Reenviar um CSV não aumenta a dívida, e repetir uma baixa não duplica o pagamento. O backend protege essas operações e registra as tentativas de lembretes para recuperar resultados incertos.
 
-## Como organizei
+## Arquitetura
 
 A interface envia as operações à API. O PostgreSQL guarda a carteira e a fila; um worker processa os lembretes usando um provedor fictício persistente.
 
@@ -19,12 +19,12 @@ flowchart LR
     Fake --> DB
 ```
 
-## Escolhas que fiz
+## Decisões técnicas
 
-- Guardei dinheiro em centavos e enviei strings no JSON para conservar precisão. Em troca, precisei converter os valores explicitamente na interface.
-- Revalidei o CSV na confirmação e usei transações e chaves idempotentes nas baixas. Isso exige cuidado com locks, mas permite repetir operações sem duplicar efeitos.
-- Mantive a fila no PostgreSQL, com `SKIP LOCKED`, lease e heartbeat. Dispensei um broker separado e aceitei concentrar a coordenação no banco.
-- Persisti a aceitação do provedor antes de simular uma resposta perdida. Consigo testar a recuperação após reinício, mas isso não garante entrega por um serviço externo.
+- Dinheiro é armazenado em centavos e enviado como string no JSON para conservar precisão; a interface faz a conversão explicitamente.
+- O CSV é revalidado na confirmação. Transações e chaves idempotentes permitem repetir baixas sem duplicar efeitos.
+- A fila usa PostgreSQL com `SKIP LOCKED`, lease e heartbeat. A coordenação permanece no banco, sem exigir um broker separado.
+- O provedor fictício persiste a aceitação antes de simular uma resposta perdida. Isso permite testar recuperação após reinício; a entrega por um serviço externo exige outra integração.
 
 As [decisões técnicas](docs/decisoes-tecnicas.md) e o roteiro da [demo](docs/demo.md) estão em `docs/`.
 
@@ -40,9 +40,12 @@ Na raiz do projeto:
 
 O setup gera a configuração local, constrói as imagens e carrega os dados fictícios. A interface fica em `http://localhost:3101`; a documentação da API, em `http://localhost:8101/docs`. As contas de demonstração aparecem no login.
 
+Se você já executou a versão com PostgreSQL Debian, siga a [migração do banco](docs/verification.md#banco-de-versões-anteriores) antes de iniciar esta versão Alpine.
+
 Sem PowerShell, copie `.env.example` para `.env`, troque `SESSION_SECRET` e `DATABASE_PASSWORD` por valores aleatórios e rode o que o script faz:
 
 ```sh
+docker compose build db
 docker compose build api
 docker compose build frontend
 docker compose up -d --wait db
@@ -58,13 +61,14 @@ docker compose up -d --wait --wait-timeout 180 db api worker frontend
 .\scripts\gestao-recebiveis.ps1 proof
 ```
 
-Passaram 145 testes de backend e 12 testes Playwright, além de lint, formatação e tipos. Cobri importação, concorrência, permissões, pagamentos e navegação.
+Passaram 145 testes de backend e 12 testes Playwright, além de lint, formatação e tipos. A suíte cobre importação, concorrência, permissões, pagamentos e navegação.
 
 O `proof` é o teste de reinício do banco: interrompe o processamento após uma aceitação, reinicia seu banco descartável e verifica a recuperação sem duplicar a entrega simulada. Só existe em PowerShell (`scripts/prove.ps1`).
 
 Os mesmos testes, com os comandos do CI (`.github/workflows/ci.yml`):
 
 ```sh
+docker compose --profile test build db
 docker compose --profile test build api
 docker compose --profile test build frontend
 docker compose --profile test build frontend-checks
@@ -82,7 +86,7 @@ docker compose stop db-test
 
 ## Limites
 
-Deixei o escopo em uma empresa, BRL e pagamento integral. Não implementei envio externo, Pix, boleto, juros ou estorno. Antes de integrar um provedor real, validaria seu contrato de idempotência e reconciliação. Ainda não avaliei o sistema com usuários reais.
+O escopo é uma empresa, BRL e pagamento integral. Envio externo, Pix, boleto, juros e estorno não estão implementados. Integrar um provedor real exige validar seu contrato de idempotência e reconciliação. A demonstração ainda não foi avaliada com usuários reais.
 
 
 Python 3.13, FastAPI, SQLAlchemy, PostgreSQL 18, Next.js 16, TypeScript e Docker. Licença MIT.
