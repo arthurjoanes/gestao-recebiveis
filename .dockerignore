@@ -1,0 +1,15 @@
+.git
+.env
+.env.*
+artifacts
+**/node_modules
+**/.next
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+**/playwright-report
+**/test-results
+docs
+*.log
