@@ -1,0 +1,4 @@
+source_system,external_receivable_id,external_customer_id,customer_name,customer_email,description,amount_brl,due_date
+fixture,MANUAL-01,MANUAL-CLI,Cliente Manual Fictício,manual@example.com,Dez centavos,0.10,2026-08-16
+fixture,MANUAL-02,MANUAL-CLI,Cliente Manual Fictício,manual@example.com,Vinte centavos,0.20,2026-08-17
+fixture,MANUAL-03,MANUAL-CLI,Cliente Manual Fictício,manual@example.com,Valor com reais e centavos,1234.56,2026-08-20

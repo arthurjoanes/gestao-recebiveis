@@ -1,0 +1,4 @@
+source_system,external_receivable_id,external_customer_id,customer_name,customer_email,description,amount_brl,due_date
+demo_lote,DEMO-003,DEMO-CLI-01,Armazém Nuvem Fictício,nuvem@example.com,Lote de demonstração - a vencer,269.81,2026-08-20
+demo_lote,DEMO-001,DEMO-CLI-01,Armazém Nuvem Fictício,nuvem@example.com,Lote de demonstração - vencido,1250.09,2026-08-14
+demo_lote,DEMO-002,DEMO-CLI-02,Empório Cedro Fictício,cedro@example.com,Lote de demonstração - vence hoje,480.10,2026-08-17

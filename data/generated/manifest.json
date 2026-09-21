@@ -1,0 +1,10 @@
+{
+  "generator_version": 1,
+  "seed": 42,
+  "reference_date": "2026-08-17",
+  "business_timezone": "America/Sao_Paulo",
+  "customers": 60,
+  "receivables": 240,
+  "sha256": "a6500d3d8a07219e73ad979aa88b8177679777488a80943e9a8f5557c8b4952f",
+  "source": "Gerador próprio; todos os clientes e títulos são fictícios."
+}

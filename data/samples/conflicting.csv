@@ -1,0 +1,3 @@
+source_system,external_receivable_id,external_customer_id,customer_name,customer_email,description,amount_brl,due_date
+demo_lote,DEMO-001,DEMO-CLI-01,Armazém Nuvem Fictício,nuvem@example.com,Lote de demonstração - vencido,9999.99,2026-08-14
+demo_lote,DEMO-004,DEMO-CLI-02,Empório Cedro Fictício,cedro@example.com,Este título não pode ser gravado parcialmente,10.00,2026-08-20
