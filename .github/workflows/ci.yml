@@ -1,0 +1,60 @@
+name: Gestão de recebíveis checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      COMPOSE_PROJECT_NAME: pf-gestao-recebiveis
+      DEMO_MODE: "true"
+      FRONTEND_ORIGIN: http://localhost:3101
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create temporary credentials
+        shell: bash
+        run: |
+          session_secret="$(openssl rand -hex 48)"
+          database_password="$(openssl rand -hex 24)"
+          echo "::add-mask::$session_secret"
+          echo "::add-mask::$database_password"
+          echo "SESSION_SECRET=$session_secret" >> "$GITHUB_ENV"
+          echo "DATABASE_PASSWORD=$database_password" >> "$GITHUB_ENV"
+      - name: Build application and checks
+        run: |
+          for service in api frontend frontend-checks e2e; do
+            docker compose --profile test build "$service"
+          done
+      - name: Backend checks on PostgreSQL
+        run: docker compose run --rm test
+      - name: Frontend lint and types
+        run: docker compose run --rm --no-deps frontend-checks
+      - name: Migrate and seed isolated browser stack
+        run: |
+          docker compose -f compose.yaml -f compose.e2e.yaml -p pf-gestao-recebiveis-e2e up -d --wait db
+          docker compose -f compose.yaml -f compose.e2e.yaml -p pf-gestao-recebiveis-e2e run --rm --no-deps migrate
+          docker compose -f compose.yaml -f compose.e2e.yaml -p pf-gestao-recebiveis-e2e run --rm --no-deps seed
+      - name: Start isolated application
+        run: docker compose -f compose.yaml -f compose.e2e.yaml -p pf-gestao-recebiveis-e2e up -d --wait --wait-timeout 180 api worker frontend
+      - name: Browser journey
+        run: docker compose -f compose.yaml -f compose.e2e.yaml -p pf-gestao-recebiveis-e2e run --rm --no-deps e2e
+      - name: Save browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-evidence
+          path: artifacts/e2e
+          if-no-files-found: ignore
+      - name: Logs and cleanup
+        if: always()
+        run: |
+          docker compose --profile test logs --tail 200
+          docker compose -f compose.yaml -f compose.e2e.yaml -p pf-gestao-recebiveis-e2e --profile test logs --tail 200
+          docker compose -f compose.yaml -f compose.e2e.yaml -p pf-gestao-recebiveis-e2e --profile test --profile tools down --remove-orphans
+          docker compose stop db-test
