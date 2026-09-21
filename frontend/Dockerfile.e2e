@@ -1,0 +1,7 @@
+FROM mcr.microsoft.com/playwright:v1.63.0-noble
+WORKDIR /app
+ENV CI=true
+COPY package.json package-lock.json ./
+RUN --mount=type=cache,id=pf-cobraflow-e2e-npm,target=/root/.npm npm ci
+COPY . .
+CMD ["npm", "run", "test:e2e"]

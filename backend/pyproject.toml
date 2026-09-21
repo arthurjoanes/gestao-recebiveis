@@ -1,0 +1,54 @@
+[project]
+name = "gestao-recebiveis"
+version = "0.1.0"
+description = "Contas a receber e lembretes simulados"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+  "fastapi>=0.115,<1",
+  "uvicorn[standard]>=0.34,<1",
+  "pydantic>=2.10,<3",
+  "pydantic-settings>=2.7,<3",
+  "sqlalchemy>=2.0.36,<2.1",
+  "psycopg[binary]>=3.2,<4",
+  "alembic>=1.14,<2",
+  "pwdlib[argon2]>=0.2,<1",
+  "python-multipart>=0.0.20,<1",
+  "email-validator>=2.2,<3",
+  "swagger-ui-bundle>=1.1,<2",
+]
+
+[dependency-groups]
+dev = [
+  "httpx>=0.28,<1",
+  "pytest>=8.3,<10",
+  "ruff>=0.9,<1",
+  "mypy>=1.14,<2",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra"
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.13"
+files = ["src"]
+check_untyped_defs = true
+disallow_untyped_defs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = "swagger_ui_bundle"
+ignore_missing_imports = true
