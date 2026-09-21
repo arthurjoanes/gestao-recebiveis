@@ -1,0 +1,24 @@
+name: pf-gestao-recebiveis-e2e
+
+services:
+  db:
+    volumes: !reset []
+    tmpfs:
+      - /var/lib/postgresql
+  api:
+    ports: !reset []
+    environment:
+      DEMO_MODE: "true"
+      FRONTEND_ORIGIN: http://localhost:3101
+      COOKIE_SECURE: "false"
+  worker:
+    environment:
+      DEMO_MODE: "true"
+  seed:
+    environment:
+      DEMO_MODE: "true"
+  migrate:
+    environment:
+      DEMO_MODE: "true"
+  frontend:
+    ports: !reset []
