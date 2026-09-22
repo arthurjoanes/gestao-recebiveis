@@ -104,146 +104,150 @@ export function ImportsView({ session }: { session: Session }) {
           <Icon name="refresh" /> Atualizar
         </button>
       </div>
-      <ol className="import-steps" aria-label="Etapas da importação">
-        <li aria-current={!batch ? "step" : undefined}>
-          <span>1</span>Selecionar arquivo
-        </li>
-        <li
-          aria-current={
-            batch && batch.status !== "confirmed" ? "step" : undefined
-          }
-        >
-          <span>2</span>Conferir linhas
-        </li>
-        <li aria-current={batch?.status === "confirmed" ? "step" : undefined}>
-          <span>3</span>Confirmar importação
-        </li>
-      </ol>
-      {session.user.role === "operator" ? (
-        <section className="panel upload-panel">
-          <div className="upload-icon" aria-hidden="true">
-            <Icon name="upload" />
-          </div>
-          <div>
-            <h2>Importar CSV</h2>
-            <p>UTF-8 · separado por vírgulas · até 2 MiB e 5.000 linhas</p>
-            <p className="footnote">
-              Valores com ponto decimal (120.50), datas AAAA-MM-DD. A
-              confirmação grava os títulos.
-            </p>
-            <label className="file-label">
-              Arquivo CSV
-              <input
-                type="file"
-                accept=".csv,text/csv"
-                disabled={busy}
-                onChange={(event) => {
-                  setFile(event.target.files?.[0] ?? null);
-                  setBatch(null);
-                  setError("");
-                  setSuccess("");
-                }}
-              />
-            </label>
-          </div>
-          <button
-            className="button"
-            disabled={busy || !file}
-            onClick={() => void preview()}
+      <div className="import-workbench">
+        <ol className="import-steps" aria-label="Etapas da importação">
+          <li aria-current={!batch ? "step" : undefined}>
+            <span>1</span>Selecionar arquivo
+          </li>
+          <li
+            aria-current={
+              batch && batch.status !== "confirmed" ? "step" : undefined
+            }
           >
-            {busy ? "Processando…" : "Analisar arquivo"}
-          </button>
-        </section>
-      ) : (
-        <div className="info-banner">Importação exige perfil operador.</div>
-      )}
-      <details className="csv-help">
-        <summary>Cabeçalho e regras</summary>
-        <code>
-          source_system,external_receivable_id,external_customer_id,customer_name,customer_email,description,amount_brl,due_date
-        </code>
-        <p>
-          Títulos idênticos são ignorados. Divergências bloqueiam o lote
-          inteiro. A confirmação revalida os dados no banco.
-        </p>
-      </details>
-      {error && <Alert>{error}</Alert>}
-      {success && <Alert success>{success}</Alert>}
-      {batch && (
-        <ImportPreview
-          key={`${batch.id}-${batch.status}`}
-          batch={batch}
-          canConfirm={session.user.role === "operator"}
-          busy={busy}
-          onConfirm={() => void confirm()}
-        />
-      )}
-      <section className="panel">
-        <div className="section-heading">
-          <div>
-            <h2>Histórico de lotes</h2>
-          </div>
-        </div>
-        {batches.error ? (
-          <Alert>{batches.error}</Alert>
-        ) : batches.loading ? (
-          <Loading />
-        ) : batches.data?.items.length ? (
-          <>
-            <div
-              className="table-scroll"
-              role="region"
-              aria-label="Tabela com rolagem horizontal"
-              tabIndex={0}
-            >
-              <table>
-                <thead>
-                  <tr>
-                    <th>Lote / arquivo</th>
-                    <th>Data</th>
-                    <th>Linhas</th>
-                    <th>Situação</th>
-                    <th>Ação</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {batches.data.items.map((item) => (
-                    <tr key={item.id}>
-                      <td>
-                        <strong>#{item.id}</strong> {item.filename}
-                      </td>
-                      <td>{instant(item.created_at)}</td>
-                      <td>{item.row_count}</td>
-                      <td>
-                        <Badge status={item.status} />
-                      </td>
-                      <td>
-                        <button
-                          className="text-button"
-                          disabled={busy}
-                          onClick={() => void open(item.id)}
-                        >
-                          Ver resultado
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <Pagination
-              page={page}
-              total={batches.data.total}
-              pageSize={batches.data.page_size}
-              onChange={setPage}
+            <span>2</span>Conferir linhas
+          </li>
+          <li aria-current={batch?.status === "confirmed" ? "step" : undefined}>
+            <span>3</span>Confirmar importação
+          </li>
+        </ol>
+        <div className="import-content">
+          {session.user.role === "operator" ? (
+            <section className="panel upload-panel">
+              <div className="upload-icon" aria-hidden="true">
+                <Icon name="upload" />
+              </div>
+              <div>
+                <h2>Importar CSV</h2>
+                <p>UTF-8 · separado por vírgulas · até 2 MiB e 5.000 linhas</p>
+                <p className="footnote">
+                  Valores com ponto decimal (120.50), datas AAAA-MM-DD. A
+                  confirmação grava os títulos.
+                </p>
+                <label className="file-label">
+                  Arquivo CSV
+                  <input
+                    type="file"
+                    accept=".csv,text/csv"
+                    disabled={busy}
+                    onChange={(event) => {
+                      setFile(event.target.files?.[0] ?? null);
+                      setBatch(null);
+                      setError("");
+                      setSuccess("");
+                    }}
+                  />
+                </label>
+              </div>
+              <button
+                className="button"
+                disabled={busy || !file}
+                onClick={() => void preview()}
+              >
+                {busy ? "Processando…" : "Analisar arquivo"}
+              </button>
+            </section>
+          ) : (
+            <div className="info-banner">Importação exige perfil operador.</div>
+          )}
+          <details className="csv-help">
+            <summary>Cabeçalho e regras</summary>
+            <code>
+              source_system,external_receivable_id,external_customer_id,customer_name,customer_email,description,amount_brl,due_date
+            </code>
+            <p>
+              Títulos idênticos são ignorados. Divergências bloqueiam o lote
+              inteiro. A confirmação revalida os dados no banco.
+            </p>
+          </details>
+          {error && <Alert>{error}</Alert>}
+          {success && <Alert success>{success}</Alert>}
+          {batch && (
+            <ImportPreview
+              key={`${batch.id}-${batch.status}`}
+              batch={batch}
+              canConfirm={session.user.role === "operator"}
+              busy={busy}
+              onConfirm={() => void confirm()}
             />
-          </>
-        ) : (
-          <Empty title="Nenhum lote importado">
-            Selecione um CSV para conferir a prévia.
-          </Empty>
-        )}
-      </section>
+          )}
+          <section className="panel">
+            <div className="section-heading">
+              <div>
+                <h2>Histórico de lotes</h2>
+              </div>
+            </div>
+            {batches.error ? (
+              <Alert>{batches.error}</Alert>
+            ) : batches.loading ? (
+              <Loading />
+            ) : batches.data?.items.length ? (
+              <>
+                <div
+                  className="table-scroll"
+                  role="region"
+                  aria-label="Tabela com rolagem horizontal"
+                  tabIndex={0}
+                >
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Lote / arquivo</th>
+                        <th>Data</th>
+                        <th>Linhas</th>
+                        <th>Situação</th>
+                        <th>Ação</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {batches.data.items.map((item) => (
+                        <tr key={item.id}>
+                          <td>
+                            <strong>#{item.id}</strong> {item.filename}
+                          </td>
+                          <td>{instant(item.created_at)}</td>
+                          <td>{item.row_count}</td>
+                          <td>
+                            <Badge status={item.status} />
+                          </td>
+                          <td>
+                            <button
+                              className="text-button"
+                              disabled={busy}
+                              onClick={() => void open(item.id)}
+                            >
+                              Ver resultado
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <Pagination
+                  page={page}
+                  total={batches.data.total}
+                  pageSize={batches.data.page_size}
+                  onChange={setPage}
+                />
+              </>
+            ) : (
+              <Empty title="Nenhum lote importado">
+                Selecione um CSV para conferir a prévia.
+              </Empty>
+            )}
+          </section>
+        </div>
+      </div>
     </>
   );
 }

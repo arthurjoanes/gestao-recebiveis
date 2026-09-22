@@ -113,7 +113,7 @@ export function RemindersView({
               <div
                 className="table-scroll"
                 role="region"
-                aria-label="Tabela com rolagem horizontal"
+                aria-label="Fila de lembretes e tentativas"
                 tabIndex={0}
               >
                 <table>

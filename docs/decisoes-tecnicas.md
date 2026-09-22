@@ -1,6 +1,6 @@
 # Decisões técnicas
 
-Perguntas que este projeto levanta, com a resposta curta e o arquivo onde ela está no código. As respostas apontam para `backend/src/gestao_recebiveis/` salvo indicação diferente.
+Estas decisões protegem três resultados: uma dívida não se repete ao importar, uma baixa não se repete ao pagar e uma tentativa incerta de envio não é tratada como uma entrega nova. O [guia de problemas e exemplos](problem-solution.md) mostra os casos, o resultado esperado e os testes correspondentes. As respostas abaixo detalham o mecanismo; caminhos sem link completo se referem a `backend/src/gestao_recebiveis/`.
 
 ## Por que a fila de jobs fica no PostgreSQL e não em um broker?
 
@@ -49,3 +49,19 @@ O `FakeProvider` grava resultado por tentativa e entrega única por chave no Pos
 ## Como evoluir para um provedor real sem fingir que já existe?
 
 O worker fala com a interface `MessageProvider` (um `Protocol`), então um provedor real seria outra classe com o método `send`, sem mexer em `authorize`/`finish`. Antes de plugar, eu checaria o contrato de idempotência e de reconciliação do serviço, porque a resposta perdida e a repetição de chave dependem desse comportamento. Hoje só existe o `FakeProvider`; a troca é um caminho, não algo implementado. Ver `reminders/provider.py` (`MessageProvider`, `FakeProvider`) e `worker.py` (`run_once`, parâmetro `provider`).
+
+## Por que a interface usa carteira, conferência e detalhe de tentativas?
+
+São três tarefas diferentes. A carteira precisa comparar cliente, vencimento, valor e situação lado a lado; por isso a tabela recebe o espaço principal e os filtros ficam próximos. A importação exige uma decisão antes de escrever: arquivo, conferência e confirmação são passos visíveis, mas a validação definitiva permanece no servidor. Nos lembretes, abrir a cronologia não deve apagar o recorte da fila; o detalhe aparece junto da lista no desktop e acima dela no celular.
+
+Voltar de um título conserva os filtros e a página, e recupera o foco quando a linha ainda existe. Se um pagamento ou outra alteração removeu o título daquele recorte, o retorno tem um destino acessível e a página vazia explica como continuar. A mesma regra orienta os estados vazio, carregando e erro: indicar o que aconteceu e oferecer a próxima ação, sem trocar uma falha de consulta por um saldo zero.
+
+O custo dessa composição é manter explicitamente o contexto entre lista e detalhe. Isso fica em [`workspace.tsx`](../frontend/src/features/workspace.tsx) e [`receivables.tsx`](../frontend/src/features/receivables.tsx), com regressões no [roteiro de navegador](../frontend/tests/journey.spec.ts). No celular, as linhas da carteira e dos vencidos reorganizam valor, cliente e situação; a ação fica no código do título, sem repetir um segundo botão na mesma linha. A rolagem horizontal, quando necessária em outras tabelas, fica dentro da região; o menu móvel e os diálogos mantêm teclado, Escape e retorno de foco.
+
+O resumo deixa saldo e lista de vencidos em primeiro nível. A composição por vencimento e os recebimentos ficam em “Vencimentos e recebimentos”, sem misturar posição da carteira com entradas no período. A área de trabalho tem largura máxima e margens centrais em monitores largos; valores usam alinhamento numérico e o texto mantém seu eixo de leitura. Regras dessa composição ficam em [`financial-workspace.css`](../frontend/src/app/financial-workspace.css), enquanto controles compartilhados permanecem em `globals.css`. Foram removidas as regras da antiga barra lateral, evitando dois layouts concorrentes. Transições curtas sinalizam mudança de área e interação; a preferência por movimento reduzido as desativa.
+
+## Por que limitar o login antes de conferir a senha e separar as contas do banco?
+
+Verificar uma senha com Argon2 tem custo deliberado. Fazer isso antes de reservar capacidade permitiria gastar esse custo repetidamente sem uma cota atômica. [`login_admission.py`](../backend/src/gestao_recebiveis/login_admission.py) reserva a tentativa em transação independente: falhar a autenticação não desfaz a reserva, e um sucesso libera somente a própria. Identificadores dos contadores usam HMAC; o relógio comercial da demo não muda a expiração. A [suíte de admissão](../backend/tests/test_login_admission.py) verifica concorrência e as reservas.
+
+As contas de administração e migração precisam alterar a estrutura; API e worker precisam apenas manipular dados. [`provision_database.py`](../backend/src/gestao_recebiveis/provision_database.py) separa essas permissões, conferidas em [test_database_roles.py](../backend/tests/test_database_roles.py). O custo é provisionar identidades adicionais e migrar instalações antigas com cuidado. Isso limita o privilégio do runtime, mas não substitui a autorização por papel nem resolve sozinho a identificação de clientes atrás de proxies; esses limites e o procedimento estão em [segurança](security.md).

@@ -55,38 +55,33 @@ export function WorkspaceNavigation({
   );
   return (
     <>
-      <aside className="sidebar">
-        <Brand />
-        <div className="company">
-          <Icon name="titles" />
-          <div>
-            <strong>Contas a receber</strong>
-            <small>Carteira em reais · BRL</small>
-          </div>
-        </div>
-
-        <p className="nav-label">Financeiro</p>
-        {navigation}
-
-        <div className="user-block">
-          <span className="user-avatar">
-            {session.user.name.slice(0, 1).toUpperCase()}
+      <header className="desktop-header">
+        <div className="masthead">
+          <Brand />
+          <span className="workspace-label">
+            Contas a receber <span>/</span> Carteira em reais
           </span>
-          <div>
-            <strong>{session.user.name}</strong>
-            <small>{role}</small>
+          <div className="user-block">
+            <span className="user-avatar">
+              {session.user.name.slice(0, 1).toUpperCase()}
+            </span>
+            <div>
+              <strong>{session.user.name}</strong>
+              <small>{role}</small>
+            </div>
+            <button
+              aria-label="Sair da conta"
+              title="Sair"
+              className="icon-button"
+              disabled={loggingOut}
+              onClick={onLogout}
+            >
+              <Icon name="logout" />
+            </button>
           </div>
-          <button
-            aria-label="Sair da conta"
-            title="Sair"
-            className="icon-button"
-            disabled={loggingOut}
-            onClick={onLogout}
-          >
-            <Icon name="logout" />
-          </button>
         </div>
-      </aside>
+        {navigation}
+      </header>
       <header className="mobile-header">
         <Brand />
         <div className="button-group">
