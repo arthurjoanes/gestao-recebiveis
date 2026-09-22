@@ -2,19 +2,25 @@
 
 Desenvolvi uma aplicação de demonstração para quem confere contas a receber. Um **título** registra o valor que um cliente deve e seu vencimento; dar **baixa** é registrar o pagamento integral dessa obrigação. O operador importa títulos por CSV, confere conflitos, registra pagamentos e acompanha lembretes simulados. O perfil leitor consulta a mesma carteira sem alterá-la. Os dados representam uma empresa fictícia, em reais (BRL).
 
-![Resumo da carteira: posição em aberto, vencido, em dia e recebimentos do período](docs/screenshots/publication-20260922/overview.png)
+[Na prática](#na-prática) · [Implementação](#implementação) · [Executar e verificar](#executar-e-verificar) · [Limites e manutenção](#limites-e-manutenção)
 
-*Interface executada no [CI do commit `5718cdad`](https://github.com/arthurjoanes/gestao-recebiveis/actions/runs/35744528178), em 22/09/2026: 192 títulos fictícios em aberto e 48 pagamentos no período. Esta massa é distinta do caso de R$ 125 abaixo. [Proveniência da captura](docs/evidence/frontend-ci-20260922.json).*
+<p><img src="docs/readme/uso.svg" width="800" height="8" alt=""></p>
 
-## Exemplo: a mesma baixa após restauração
+## Na prática
+
+![Resumo da carteira: posição em aberto, vencido, em dia e recebimentos do período](docs/screenshots/current-20260922/resumo.png)
+
+*Recorte real dos indicadores, capturado localmente em 22/09/2026, sobre `deade1369`: 192 títulos fictícios em aberto e 48 pagamentos no período. Esta massa é distinta do caso de R$ 125 abaixo. [Telas atuais, reprodução e arquivo histórico](docs/image-captures.md).*
+
+### Prova histórica: a mesma baixa após restauração
 
 O problema aparece quando um arquivo chega novamente ou a conexão cai depois de uma baixa. Repetir a entrada não pode criar outra dívida ou outro pagamento. Na prova documentada, dois títulos de **R$ 50 + R$ 75 = R$ 125** continuaram sendo os mesmos após reimportação e restauração; repetir a baixa de R$ 50 devolveu o pagamento já registrado e manteve **R$ 75 em aberto**.
 
-![Título fictício RESTORE-PAID com pagamento integral de R$ 50 e registro na linha do tempo](docs/screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/04-mesma-baixa-preservada.png)
+[Captura histórica completa: Título fictício RESTORE-PAID com pagamento integral de R$ 50 e registro na linha do tempo](docs/screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/04-mesma-baixa-preservada.png)
 
 *Captura histórica real da execução `11adf9df…`, de 22/09/2026. Confira o valor pago e o evento na linha do tempo; a igualdade do pagamento foi verificada no banco, não deduzida da imagem. [Imagem completa](docs/screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/04-mesma-baixa-preservada.png) · [cenário, fontes e limites](docs/restore-proof.md). A composição atual da interface aparece na primeira imagem.*
 
-## Como trato as repetições
+### Como trato as repetições
 
 - **Mesmo título, outro arquivo:** a identidade é sistema de origem + código externo. Reordenar ou renomear o CSV não cria uma obrigação nova.
 - **Linha nova junto de um conflito:** a confirmação rejeita o lote inteiro. Nenhuma linha válida fica gravada pela metade.
@@ -23,7 +29,11 @@ O problema aparece quando um arquivo chega novamente ou a conexão cai depois de
 
 O [guia de casos](docs/problem-solution.md) liga esses problemas às entradas, ao código e aos testes. As capturas de importação, conflito e reconciliação ficam junto de seus casos, com a versão identificada. Lembretes usam exclusivamente um provedor fictício persistente; nenhuma mensagem é enviada a cliente real.
 
-## O que eu implementei
+<p><img src="docs/readme/implementacao.svg" width="800" height="8" alt=""></p>
+
+## Implementação
+
+### O que eu implementei
 
 - O parser de CSV, a prévia por linha e a confirmação transacional, com identidade composta, comparação dos registros e rejeição sem efeito parcial ([importação](backend/src/gestao_recebiveis/imports.py), [parser](backend/src/gestao_recebiveis/import_csv.py)).
 - A baixa integral, a idempotência — repetir uma operação sem repetir seu efeito — e a auditoria financeira, coordenadas com o cancelamento de pendências ([pagamento](backend/src/gestao_recebiveis/receivables.py)).
@@ -33,7 +43,7 @@ O [guia de casos](docs/problem-solution.md) liga esses problemas às entradas, a
 
 FastAPI atende HTTP; SQLAlchemy/psycopg acessam PostgreSQL; Next.js/React apresentam a carteira. As [decisões técnicas](docs/decisoes-tecnicas.md) explicam como integrei essas ferramentas, os efeitos e os compromissos da implementação.
 
-## Stack
+### Stack
 
 <p>
   <img src="docs/stack/python.svg" alt="Python" width="72" height="72">
@@ -47,13 +57,11 @@ FastAPI atende HTTP; SQLAlchemy/psycopg acessam PostgreSQL; Next.js/React aprese
 
 Python e FastAPI na API e no worker; PostgreSQL na carteira e na fila; TypeScript, React e Next.js na interface. A demonstração roda com Docker Compose.
 
-## Reproduzir um lote pequeno
+<p><img src="docs/readme/execucao.svg" width="800" height="8" alt=""></p>
 
-Na demonstração iniciada, importe [valid.csv](data/samples/valid.csv): `1250.09 + 480.10 + 269.81 = 2000.00`, três títulos. Confirme, reenvie [reordered.csv](data/samples/reordered.csv) e confira que quantidade e saldo do lote não aumentaram. Depois envie [conflicting.csv](data/samples/conflicting.csv): ele tenta mudar `DEMO-001` e incluir `DEMO-004`; o lote inteiro deve ser rejeitado.
+## Executar e verificar
 
-Essa fixture de R$ 2.000 é independente dos dois títulos de R$ 125 da imagem. O [roteiro](docs/demo.md) descreve baixa e tentativas simuladas; o [contrato HTTP](docs/api-contract.md) permite conferir a resposta exata. No Resumo, vencido e em dia compõem o aberto; recebido usa seu próprio período de pagamento.
-
-## Rodar localmente
+### Rodar localmente
 
 Use Docker Desktop com containers Linux e PowerShell 7. Python, Node e PostgreSQL executam nos containers.
 
@@ -79,7 +87,13 @@ docker compose run --rm --no-deps seed
 docker compose up -d --wait --wait-timeout 180 db api worker frontend
 ```
 
-## Verificação e situação atual
+### Reproduzir um lote pequeno
+
+Na demonstração iniciada, importe [valid.csv](data/samples/valid.csv): `1250.09 + 480.10 + 269.81 = 2000.00`, três títulos. Confirme, reenvie [reordered.csv](data/samples/reordered.csv) e confira que quantidade e saldo do lote não aumentaram. Depois envie [conflicting.csv](data/samples/conflicting.csv): ele tenta mudar `DEMO-001` e incluir `DEMO-004`; o lote inteiro deve ser rejeitado.
+
+Essa fixture de R$ 2.000 é independente dos dois títulos de R$ 125 da imagem. O [roteiro](docs/demo.md) descreve baixa e tentativas simuladas; o [contrato HTTP](docs/api-contract.md) permite conferir a resposta exata. No Resumo, vencido e em dia compõem o aberto; recebido usa seu próprio período de pagamento.
+
+### Verificação e situação atual
 
 ```powershell
 .\scripts\gestao-recebiveis.ps1 test
@@ -92,7 +106,11 @@ O candidato local baseado em `4bb9b57` passou em **158 testes com PostgreSQL**, 
 
 A [restauração em volume novo](docs/restore-proof.md) é uma prova histórica adicional de conteúdo, sequências, pagamento e tentativa preservados. Não confundo dump gerado com restauração validada. Fontes e tentativas com falha permanecem rastreáveis nos seus manifestos.
 
-## Decisões e limites
+<p><img src="docs/readme/limites.svg" width="800" height="8" alt=""></p>
+
+## Limites e manutenção
+
+### Decisões e limites
 
 Escolhi centavos inteiros para as operações em BRL; deixei a autorização e a confirmação no servidor; mantive a fila no mesmo banco para coordenar título, baixa e lembrete. Isso reduz serviços da demonstração e permite transações compartilhadas, mas concentra a operação no PostgreSQL e exige representar a incerteza de um envio. [Arquitetura e fronteiras](docs/architecture.md) · [alternativas e compromissos](docs/decisoes-tecnicas.md).
 

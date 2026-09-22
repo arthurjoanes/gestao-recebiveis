@@ -1,0 +1,101 @@
+{
+  "captured_at": "2026-09-22T17:36:25.370Z",
+  "source_commit": "deade1369ee4a12d225394546098d342604cfeec",
+  "application": "http://localhost:3101",
+  "scope": "Aplicação real; operador demo; somente navegação e consultas; carteira preservada.",
+  "images": [
+    {
+      "path": "resumo.png",
+      "focus": ".metrics",
+      "dimensions": {
+        "width": 1368,
+        "height": 447
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "sha256": "7b0ec309c6556d897efdbb2ba79d2140d9d90c784b14adeaad6e60336bcd031f",
+      "overflow": false,
+      "dimension_source": "PNG IHDR"
+    },
+    {
+      "path": "carteira.png",
+      "focus": ".portfolio-panel",
+      "dimensions": {
+        "width": 1368,
+        "height": 747
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "sha256": "5b02237f25f724d89f10978de38c1a6646022f9c57892ab4758a862dca3bf943",
+      "overflow": false,
+      "dimension_source": "PNG IHDR"
+    },
+    {
+      "path": "titulo.png",
+      "focus": ".detail-summary",
+      "dimensions": {
+        "width": 862,
+        "height": 385
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "sha256": "8d67da29a09b5e4575211450478296ba2967574533380e0e96e8eb70ea3a8382",
+      "overflow": false,
+      "dimension_source": "PNG IHDR"
+    },
+    {
+      "path": "importacoes.png",
+      "focus": ".upload-panel",
+      "dimensions": {
+        "width": 1125,
+        "height": 208
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "sha256": "da61607ab943fd16ffdca21655bd63daeec9481b9f4830dcee7cade807671257",
+      "overflow": false,
+      "dimension_source": "PNG IHDR"
+    },
+    {
+      "path": "lembretes.png",
+      "focus": ".reminder-list",
+      "dimensions": {
+        "width": 1368,
+        "height": 746
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "sha256": "be16a39ed3a2bb4def07c4a8896e8f0d06fcb8729978ed773c776f961aaf499a",
+      "overflow": false,
+      "dimension_source": "PNG IHDR"
+    },
+    {
+      "path": "resumo-mobile.png",
+      "focus": ".balance-position",
+      "dimensions": {
+        "width": 358,
+        "height": 610
+      },
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "sha256": "36903f51f4cbac73330451dd693d027201921b2e21479e039998518db337e41f",
+      "overflow": false,
+      "dimension_source": "PNG IHDR"
+    }
+  ],
+  "page_errors": [],
+  "capture_method": "Capturas nativas de componentes e clip; sem fullPage ou edição de pixels.",
+  "scope_note": "Navegação somente leitura; nenhuma ação financeira executada."
+}
