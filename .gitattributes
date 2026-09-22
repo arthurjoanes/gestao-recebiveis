@@ -3,3 +3,6 @@
 *.csv text eol=lf
 Dockerfile* text eol=lf
 *.png binary
+
+# Preserve published evidence checksums across Windows and Git checkouts.
+docs/evidence/restore-proof/**/*.json text eol=lf

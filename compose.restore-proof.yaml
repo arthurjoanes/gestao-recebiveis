@@ -1,0 +1,119 @@
+# The runner supplies only generated identities and immutable local image IDs.
+# No worker service: the guarded probe drives the real domain methods explicitly.
+name: ${GR_RESTORE_PROJECT:?Use scripts/prove_restore.py}
+
+x-labels: &labels
+  com.portfolio.restore.run: ${GR_RESTORE_RUN_ID:?}
+  com.portfolio.restore.role: ${GR_RESTORE_ROLE:?}
+  com.portfolio.restore.purpose: isolated-restore-v1
+
+x-environment: &environment
+  DATABASE_URL: postgresql+psycopg://gestao_app:${GR_RESTORE_APP_PASSWORD:?}@db:5432/${GR_RESTORE_DATABASE:?}
+  SESSION_SECRET: ${GR_RESTORE_SESSION_SECRET:?}
+  DEMO_MODE: "true"
+  FRONTEND_ORIGIN: http://127.0.0.1:${GR_RESTORE_PORT:?}
+  COOKIE_SECURE: "false"
+  LEASE_SECONDS: "3"
+  HEARTBEAT_SECONDS: "1"
+  CF_RESTORE_MODE: isolated-restore-v1
+  CF_RESTORE_RUN_ID: ${GR_RESTORE_RUN_ID:?}
+  CF_RESTORE_ROLE: ${GR_RESTORE_ROLE:?}
+  CF_RESTORE_PROJECT: ${GR_RESTORE_PROJECT:?}
+  CF_RESTORE_EVIDENCE_DIR: /evidence
+  CF_RESTORE_OPERATOR_PASSWORD: ${GR_RESTORE_OPERATOR_PASSWORD:?}
+
+x-backend: &backend
+  image: ${GR_RESTORE_BACKEND_IMAGE:?}
+  init: true
+  user: "10001:10001"
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  tmpfs: ["/tmp:rw,nosuid,noexec,size=96m,uid=10001,gid=10001,mode=1700"]
+  environment: *environment
+  labels: *labels
+  networks: [isolated]
+  mem_limit: 384m
+  cpus: 0.50
+  pids_limit: 96
+  logging:
+    driver: json-file
+    options: {max-size: 5m, max-file: "2"}
+
+services:
+  db:
+    image: ${GR_RESTORE_DATABASE_IMAGE:?}
+    labels: *labels
+    environment:
+      POSTGRES_DB: ${GR_RESTORE_DATABASE:?}
+      POSTGRES_USER: gestao_restore_admin
+      POSTGRES_PASSWORD: ${GR_RESTORE_ADMIN_PASSWORD:?}
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
+    volumes: [restore-data:/var/lib/postgresql]
+    networks: [isolated]
+    mem_limit: 256m
+    cpus: 0.75
+    pids_limit: 128
+    shm_size: 64m
+    stop_grace_period: 30s
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U gestao_restore_admin -d $$POSTGRES_DB"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    logging:
+      driver: json-file
+      options: {max-size: 5m, max-file: "2"}
+  provision:
+    <<: *backend
+    environment:
+      DATABASE_ADMIN_URL: postgresql+psycopg://gestao_restore_admin:${GR_RESTORE_ADMIN_PASSWORD:?}@db:5432/${GR_RESTORE_DATABASE:?}
+      DATABASE_OWNER_PASSWORD: ${GR_RESTORE_OWNER_PASSWORD:?}
+      DATABASE_APP_PASSWORD: ${GR_RESTORE_APP_PASSWORD:?}
+    command: [python, -m, gestao_recebiveis.provision_database]
+  migrate:
+    <<: *backend
+    environment:
+      <<: *environment
+      DATABASE_URL: postgresql+psycopg://gestao_owner:${GR_RESTORE_OWNER_PASSWORD:?}@db:5432/${GR_RESTORE_DATABASE:?}
+    command: [alembic, upgrade, head]
+  probe:
+    <<: *backend
+    volumes:
+      - ${GR_RESTORE_PRIVATE_EVIDENCE:?}:/evidence
+    command: [python, tests/restore_probe.py, snapshot, --name, inspection]
+  api:
+    <<: *backend
+    command: [uvicorn, "gestao_recebiveis.app:app", --host, "0.0.0.0", --port, "8101", --no-proxy-headers]
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8101/health/ready', timeout=2).read()"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  frontend:
+    image: ${GR_RESTORE_FRONTEND_IMAGE:?}
+    labels: *labels
+    init: true
+    environment: {API_INTERNAL_URL: "http://api:8101", NODE_ENV: production}
+    ports: ["127.0.0.1:${GR_RESTORE_PORT:?}:3101"]
+    # Docker Desktop does not publish ports on an internal-only bridge.
+    # Only the UI joins this second project-owned bridge; DB/API stay internal.
+    networks: [isolated, browser]
+    mem_limit: 256m
+    cpus: 0.50
+    pids_limit: 96
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3101').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  restore-data:
+    labels: *labels
+networks:
+  isolated:
+    internal: true
+    labels: *labels
+  browser:
+    labels: *labels

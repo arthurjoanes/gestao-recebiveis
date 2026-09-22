@@ -75,6 +75,8 @@ docker compose up -d --wait --wait-timeout 180 db api worker frontend
 
 `test` executa as verificações de backend e frontend e percorre a interface no navegador, usando bancos descartáveis. `proof` interrompe o processamento depois de uma aceitação, reinicia seu PostgreSQL de teste e verifica a recuperação da mesma tentativa, sem duplicar a entrega simulada.
 
+A [prova de restauração em outro volume](docs/restore-proof.md) acrescenta um caso controlado: R$ 125 em títulos, R$ 50 pagos e R$ 75 abertos, com a mesma baixa e entrega simulada após recuperar o banco. Inclui capturas reais, recusas de backup corrompido/destino ocupado, hashes e tempos locais. Ela usa uma fixture própria de dois títulos, separada dos exemplos de R$ 2.000 acima.
+
 Os [resultados e o escopo das revisões](docs/verification.md) distinguem a validação da interface das provas de concorrência, permissões, migração e recuperação. Os comandos completos de automação estão no [workflow de CI](.github/workflows/ci.yml).
 
 ## Como funciona
@@ -94,7 +96,7 @@ O login reserva cotas atômicas antes de conferir senhas. API e worker usam cred
 
 ## Limites
 
-O escopo é uma empresa, BRL e pagamento integral. Envio externo, Pix, boleto, juros e estorno não estão implementados. Um provedor real exige validar seu contrato de idempotência e reconciliação. A demonstração não foi avaliada com usuários reais.
+O escopo é uma empresa, BRL e pagamento integral. Envio externo, Pix, boleto, juros e estorno não estão implementados. O [plano de integração com provedor real](docs/provider-integration-plan.md) define o contrato e os ensaios ainda pendentes de idempotência e reconciliação. A demonstração não foi avaliada com usuários reais.
 
 Os serviços são publicados em loopback. Uma implantação para múltiplos usuários precisa de uma borda que identifique clientes com confiança, conforme a [documentação de segurança](docs/security.md).
 

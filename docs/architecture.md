@@ -4,6 +4,8 @@
 
 Importação de títulos, recebimentos e lembretes simulados. Operadores importam, pagam, cancelam e controlam a demo; leitores consultam. Uma empresa, BRL, pagamento integral.
 
+**Problema central:** preservar a identidade e o valor de uma dívida quando o arquivo, a requisição de pagamento ou uma tentativa de envio se repetem. A arquitetura coordena essas decisões no banco e deixa a interface mostrar o que foi confirmado. O público pretendido é quem confere uma carteira de recebíveis; a demonstração não comprova adoção por uma empresa real.
+
 ## Componentes
 
 ```mermaid
@@ -17,6 +19,16 @@ flowchart LR
 ```
 
 API e worker compartilham o pacote Python. SQLAlchemy síncrono, psycopg e transações explícitas. Os jobs ficam no PostgreSQL para usar os mesmos locks e transações das regras financeiras, sem outro serviço.
+
+| Parte | Responsabilidade | Custo ou limite |
+| --- | --- | --- |
+| Next.js | Conferir lote, consultar carteira e apresentar o histórico de pagamento/envio | Exige manter estados de carregamento, erro, filtros e foco; não decide a baixa financeira |
+| FastAPI e pacote de domínio | Autenticar, autorizar e executar regras dentro de transações | Requer contratos HTTP e tratamento explícito de conflitos |
+| PostgreSQL | Unicidade, valores, pagamentos, auditoria, sessão e fila durável | Concentra dados e coordenação; o banco precisa de backup e procedimento de recuperação |
+| Worker | Agendar, assumir e concluir tentativas fora do ciclo da requisição | Exige lease, renovação e recusa de posse antiga; não elimina resultado desconhecido |
+| Provedor simulado | Reproduzir aceitação e resposta perdida de forma controlada | Usa o mesmo banco; não reproduz a independência de um provedor externo |
+
+Esses processos rodam no mesmo computador na demonstração. Separar containers e volumes não cria tolerância à perda do host. Se a necessidade fosse apenas somar um CSV sem atualização concorrente nem envio, uma rotina de validação e relatório seria uma alternativa menor. A aplicação acrescenta persistência, permissões e coordenação para exercitar os casos descritos no [guia de problemas](problem-solution.md); não há benchmark que prove superioridade sobre essa alternativa.
 
 ## Dados e transações
 
@@ -73,3 +85,7 @@ Referências: [SELECT e locks](https://www.postgresql.org/docs/current/sql-selec
 O serviço descartável `db-init` usa o administrador somente para provisionar `gestao_owner` e `gestao_app`. As migrações usam o primeiro; API, worker e seed usam o segundo, com DML e uso de sequências, sem DDL ou criação de papéis. A tabela `alembic_version` permite somente leitura ao runtime.
 
 `login_admission` armazena contadores efêmeros identificados por HMAC. Reservas usam uma transação independente da autenticação e um advisory lock por origem; a falha de credenciais não desfaz a reserva. Uma autenticação bem-sucedida libera somente a própria reserva. O relógio da demonstração não interfere na expiração. Veja [segurança](security.md) para cotas, limitações de proxy e migração de instalações existentes.
+
+## Fronteira de recuperação
+
+A [prova de restauração](restore-proof.md) separa origem e destino em projetos e volumes próprios. Antes de retomar operações, compara o conteúdo das tabelas e sequências e verifica as permissões do runtime; depois confere idempotência e reconciliação. O banco contém também o ledger do provedor fictício. Por isso, recuperar esse conjunto não prova a recuperação de um efeito em serviço externo. O [plano de integração](provider-integration-plan.md) trata essa fronteira e a necessidade de cópia fora do host.
