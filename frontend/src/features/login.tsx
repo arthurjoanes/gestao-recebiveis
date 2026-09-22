@@ -38,6 +38,43 @@ export function Login({
         <Brand />
       </div>
       <div className="login-grid">
+        <section className="login-intro" aria-label="Sobre a carteira">
+          <p className="eyebrow">CONTAS A RECEBER</p>
+          <h2>
+            Do arquivo à baixa,
+            <br />
+            cada título tem um histórico.
+          </h2>
+          <ol>
+            <li>
+              <span>01</span>
+              <div>
+                <strong>Confira antes de importar</strong>
+                <p>A prévia mostra linhas novas, repetições e conflitos.</p>
+              </div>
+            </li>
+            <li>
+              <span>02</span>
+              <div>
+                <strong>Acompanhe o vencimento</strong>
+                <p>Separe o saldo em aberto dos pagamentos recebidos.</p>
+              </div>
+            </li>
+            <li>
+              <span>03</span>
+              <div>
+                <strong>Registre o pagamento</strong>
+                <p>
+                  A baixa integral preserva o registro e encerra lembretes
+                  pendentes.
+                </p>
+              </div>
+            </li>
+          </ol>
+          <p className="footnote">
+            Demonstração com dados fictícios e envio simulado.
+          </p>
+        </section>
         <section className="login-card">
           <p className="eyebrow">ACESSO À CARTEIRA</p>
           <h1>Entrar</h1>

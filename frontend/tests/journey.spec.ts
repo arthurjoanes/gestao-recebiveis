@@ -630,7 +630,8 @@ test("intervalos inválidos mantêm saldo válido, formulário aberto e erro ass
   const filters = page.locator(".overview-filter-panel");
   const metricsBox = await page.locator(".metrics").boundingBox();
   const filtersBox = await filters.boundingBox();
-  expect(metricsBox!.y + metricsBox!.height).toBeLessThanOrEqual(filtersBox!.y);
+  // O recorte antecede o livro financeiro e permanece recolhido na abertura.
+  expect(filtersBox!.y + filtersBox!.height).toBeLessThanOrEqual(metricsBox!.y);
   await filters.locator("summary").click();
   let requests = 0;
   page.on("request", (request) => {
@@ -684,6 +685,7 @@ test("intervalos inválidos mantêm saldo válido, formulário aberto e erro ass
   await page.locator('[name="received_to"]').fill("9999-12-31");
   await page.getByRole("button", { name: "Aplicar filtros" }).click();
   await expect(filters).not.toHaveAttribute("open");
+  await page.locator(".balance-details > summary").click();
   await expect(page.locator(".metric-accent")).toContainText("31/12/9999");
 });
 
@@ -705,6 +707,7 @@ test("saldo abre títulos com busca e vencimento preservados e retorno mantém r
   await expect(page.locator(".metric").first()).toContainText(
     "1 título em aberto",
   );
+  await page.locator(".balance-details > summary").click();
   await page
     .getByRole("button", { name: "Ver títulos vencidos", exact: true })
     .focus();
@@ -740,6 +743,7 @@ test("saldo abre títulos com busca e vencimento preservados e retorno mantém r
   await expect(page.locator("#title-period-error")).toBeVisible();
   await expect(page.locator('[name="due_from"]')).toBeFocused();
   await navigate(page, "Resumo");
+  await page.locator(".balance-details > summary").click();
   await page
     .getByRole("button", { name: "Ver títulos em dia", exact: true })
     .focus();
@@ -889,4 +893,91 @@ test("detalhe do lembrete preserva filtros, página, rolagem e foco na fila", as
     .getByRole("button", { name: "Fechar detalhe", exact: true })
     .click();
   await expect(list.locator(":focus")).toHaveCount(1);
+});
+
+test("voltar do título preserva a página e o foco, com saída para página esvaziada", async ({
+  page,
+}) => {
+  await login(page);
+  for (const width of [1440, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    await navigate(page, "Títulos");
+    await page.getByLabel("Cliente ou título").fill("TIT-");
+    await page
+      .getByRole("button", { name: "Filtrar títulos", exact: true })
+      .click();
+    await page.getByRole("button", { name: "Próxima", exact: true }).click();
+    await expect(page.locator(".pagination")).toContainText("Página 2");
+    const title = await page.locator(".row-link").last().innerText();
+    await page.getByRole("button", { name: title, exact: true }).click();
+    await expect(
+      page.getByRole("heading", { name: title, exact: true }),
+    ).toBeVisible();
+    await page
+      .getByRole("button", { name: "Voltar para títulos", exact: true })
+      .click();
+    await expect(page.locator(".pagination")).toContainText("Página 2");
+    await expect(page.getByLabel("Cliente ou título")).toHaveValue("TIT-");
+    await expect(
+      page.getByRole("button", { name: title, exact: true }),
+    ).toBeFocused();
+  }
+
+  const heldTitle = await page.locator(".row-link").last().innerText();
+  await page.getByRole("button", { name: heldTitle, exact: true }).click();
+  let releaseReturn!: () => void;
+  const delayedReturn = new Promise<void>((resolve) => {
+    releaseReturn = resolve;
+  });
+  await page.route(
+    "**/api/v1/receivables?**",
+    async (route) => {
+      await delayedReturn;
+      await route.continue();
+    },
+    { times: 1 },
+  );
+  try {
+    await page
+      .getByRole("button", { name: "Voltar para títulos", exact: true })
+      .click();
+    await expect(page.locator(".loading")).toBeVisible();
+    await page.getByLabel("Cliente ou título").fill("TIT-00");
+  } finally {
+    releaseReturn();
+  }
+  await expect(page.locator(".pagination")).toContainText("Página 2");
+  await expect(page.getByLabel("Cliente ou título")).toBeFocused();
+  await expect(page.getByLabel("Cliente ou título")).toHaveValue("TIT-00");
+
+  const title = await page.locator(".row-link").last().innerText();
+  await page.getByRole("button", { name: title, exact: true }).click();
+  // Resposta controlada: os títulos da segunda página deixaram o recorte enquanto o detalhe estava aberto.
+  await page.route("**/api/v1/receivables?**", async (route) => {
+    const response = await route.fetch();
+    const body = await response.json();
+    await route.fulfill({
+      response,
+      json: { ...body, items: [], total: 20, page: 2 },
+    });
+  });
+  await page
+    .getByRole("button", { name: "Voltar para títulos", exact: true })
+    .click();
+  await expect(
+    page.getByText("Esta página ficou vazia", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Títulos", exact: true }),
+  ).toBeFocused();
+  await page.unroute("**/api/v1/receivables?**");
+  await page
+    .getByRole("button", { name: "Voltar à primeira página", exact: true })
+    .click();
+  await expect(page.locator(".pagination")).toContainText("Página 1");
+  await expect(page.getByLabel("Cliente ou título")).toHaveValue("TIT-");
+  await expect(page.locator(".row-link").first()).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Títulos", exact: true }),
+  ).toBeFocused();
 });

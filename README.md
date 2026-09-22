@@ -1,10 +1,23 @@
 # Gestão de recebíveis
 
-Acompanhe títulos por vencimento, confira arquivos CSV antes da importação e registre pagamentos integrais. A carteira reúne cliente, valor e situação; o detalhe do título mostra a baixa, o histórico e os lembretes associados.
+Uma planilha reenviada não pode aumentar a dívida de um cliente. Um pagamento confirmado não deve gerar outra baixa nem autorizar novos lembretes. O Gestão de Recebíveis trata esses problemas com conferência de CSV, transações no banco e acompanhamento das tentativas de envio.
+
+A carteira reúne cliente, vencimento, valor e situação; o detalhe do título mostra o pagamento, o histórico e os lembretes associados. Operadores fazem as alterações e leitores consultam os resultados.
 
 ![Carteira de títulos com filtros e vencimentos](docs/img/carteira.png)
 
 *Dados fictícios da demonstração. Os filtros consultam toda a carteira; a tabela apresenta uma página por vez.*
+
+## Problemas que o projeto resolve
+
+| Situação | Como o sistema responde | Exemplo para conferir |
+|---|---|---|
+| O mesmo lote chega duas vezes, com outro nome ou ordem | Compara a identidade de cada título; não depende do nome do arquivo | Importar `valid.csv` e `reordered.csv` mantém três títulos e R$ 2.000,00 do lote |
+| Um arquivo mistura dados novos com uma alteração conflitante | Revalida a prévia e rejeita o lote inteiro sem alterar a carteira parcialmente | `conflicting.csv` tenta mudar `DEMO-001`; `DEMO-004` também não entra |
+| O operador repete a baixa depois de perder a resposta | A mesma chave e conteúdo recuperam o pagamento já registrado | Duas chamadas iguais produzem um pagamento; conteúdo diferente retorna conflito |
+| O envio foi aceito, mas a resposta não chegou ao worker | Reconcilia a tentativa persistida antes de autorizar outra | O cenário de resposta perdida termina com uma entrega simulada |
+
+O [guia de problema, solução e exemplos](docs/problem-solution.md) liga cada situação à regra e à prova correspondente. As [decisões técnicas](docs/decisoes-tecnicas.md) explicam por que usar centavos, transações, fila no PostgreSQL e tentativas separadas das entregas, com os respectivos limites.
 
 ## Um percurso para conferir o resultado
 

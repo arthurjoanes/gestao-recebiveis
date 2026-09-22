@@ -110,13 +110,27 @@ export function ReceivableDetailView({
                 aria-label="Dados do título"
               >
                 <div className="invoice-caption">
-                  <span>CONTAS A RECEBER</span>
+                  <span>REGISTRO FINANCEIRO</span>
                   <span>{data.source_system}</span>
                 </div>
-                <p className="eyebrow">Valor do título</p>
-                <strong className="detail-amount">
-                  {money(data.amount_cents)}
-                </strong>
+                <div className="invoice-identity">
+                  <div>
+                    <span className="eyebrow">Cliente</span>
+                    <h2>{data.customer_name}</h2>
+                    <p>{data.customer_email}</p>
+                  </div>
+                  <div>
+                    <span className="eyebrow">Título</span>
+                    <strong>{data.external_receivable_id}</strong>
+                    <p>Vence em {date(data.due_date)}</p>
+                  </div>
+                </div>
+                <div className="invoice-balance">
+                  <p className="eyebrow">Valor do título</p>
+                  <strong className="detail-amount">
+                    {money(data.amount_cents)}
+                  </strong>
+                </div>
                 <dl>
                   <div>
                     <dt>Vencimento</dt>
@@ -125,10 +139,6 @@ export function ReceivableDetailView({
                   <div>
                     <dt>Descrição</dt>
                     <dd>{data.description}</dd>
-                  </div>
-                  <div>
-                    <dt>Contato</dt>
-                    <dd>{data.customer_email}</dd>
                   </div>
                   {data.payment && (
                     <>

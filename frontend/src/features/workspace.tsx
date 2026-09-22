@@ -25,6 +25,7 @@ export function Workspace({
 }) {
   const [area, setArea] = useState<Area>("overview");
   const [titleId, setTitleId] = useState<number | null>(null);
+  const [returnToTitle, setReturnToTitle] = useState<number | null>(null);
   const [titleFilters, setTitleFilters] = useState<PortfolioFilters>({
     q: "",
     status: "",
@@ -45,6 +46,7 @@ export function Workspace({
   function navigate(next: Area) {
     setArea(next);
     setTitleId(null);
+    setReturnToTitle(null);
     setTitleFilters({ q: "", status: "", due_from: "", due_to: "" });
     setReminderId(null);
     window.scrollTo({ top: 0 });
@@ -73,7 +75,7 @@ export function Workspace({
     }
   }
   return (
-    <div className="workspace">
+    <div className={`workspace area-${area}`}>
       <a className="skip-link" href="#main-content">
         Pular para o conteúdo
       </a>
@@ -117,13 +119,17 @@ export function Workspace({
                 key={JSON.stringify(titleFilters)}
                 onOpen={openTitle}
                 initialFilters={titleFilters}
+                returnToTitle={returnToTitle}
               />
             ) : (
               <ReceivableDetailView
                 key={titleId}
                 id={titleId}
                 session={session}
-                onBack={() => setTitleId(null)}
+                onBack={() => {
+                  setReturnToTitle(titleId);
+                  setTitleId(null);
+                }}
                 onReminder={openReminder}
               />
             ))}
