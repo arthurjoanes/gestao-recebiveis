@@ -17,6 +17,8 @@ jobs:
       FRONTEND_ORIGIN: http://localhost:3101
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Restore proof guards and backup CLI
+        run: python3 -m unittest discover -s scripts/tests -v
       - name: Create temporary credentials
         shell: bash
         run: |
@@ -71,6 +73,7 @@ jobs:
           name: browser-evidence
           path: |
             artifacts/e2e
+            artifacts/e2e-report
             artifacts/security
           if-no-files-found: ignore
       - name: Logs and cleanup
