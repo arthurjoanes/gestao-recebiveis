@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-22T15:22:09.734515+00:00",
+  "tested_commit": "5718cdad3c5052ddbf6f660797121e9c47aa46c8",
+  "workflow_run_id": 35744528178,
+  "workflow_run_url": "https://github.com/arthurjoanes/gestao-recebiveis/actions/runs/35744528178",
+  "run_attempt": 1,
+  "conclusion": "success",
+  "job_id": 106802559938,
+  "playwright": {
+    "version": "1.63.0",
+    "project": "chromium",
+    "collected": 15,
+    "passed": 15,
+    "interactive_journeys": 14,
+    "formatting_case": 1,
+    "failed": 0,
+    "skipped": 0,
+    "retries": 0,
+    "workers": 1,
+    "duration_seconds": 33.4
+  },
+  "artifact": {
+    "id": 10702621807,
+    "name": "browser-evidence",
+    "url": "https://github.com/arthurjoanes/gestao-recebiveis/actions/runs/35744528178/artifacts/10702621807",
+    "png_count": 21,
+    "security_json_count": 3
+  },
+  "published_image": {
+    "path": "docs/screenshots/publication-20260922/overview.png",
+    "artifact_path": "e2e/overview.png",
+    "sha256": "ca432d43fb20cbfa3a5a4014c179354ffc79bdf94e964c0aea3af7e72ac9b1ba",
+    "bytes": 122948,
+    "dimensions": {
+      "width": 1440,
+      "height": 1356
+    },
+    "modified": false
+  },
+  "limits": [
+    "Remote CI execution; no local frontend startup was retried.",
+    "Other captures can represent different test states; no paired baseline comparison.",
+    "Not a native zoom, screen-reader, full WCAG AA or performance audit."
+  ]
+}

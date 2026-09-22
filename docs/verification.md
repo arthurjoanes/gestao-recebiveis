@@ -1,6 +1,16 @@
 # Verificação local
 
-O [candidato de qualidade do frontend](frontend-quality.md) tem uma matriz própria e distingue as verificações estáticas das jornadas bloqueadas. As capturas e execuções históricas abaixo não validam automaticamente esse candidato.
+A [qualidade do frontend](frontend-quality.md) distingue a revisão estática local das jornadas remotas. O [CI do commit `5718cdad`](https://github.com/arthurjoanes/gestao-recebiveis/actions/runs/35744528178) executou a composição publicada; as provas mais antigas abaixo continuam limitadas às suas próprias versões.
+
+## CI da interface publicada — 22/09/2026
+
+No SHA **`5718cdad3c5052ddbf6f660797121e9c47aa46c8`**, o run **[35744528178](https://github.com/arthurjoanes/gestao-recebiveis/actions/runs/35744528178)**, tentativa 1, terminou com sucesso. Build, 158 testes de backend, atualização do banco, scans e lint/tipos passaram. A suíte Chromium/Playwright 1.63.0 executou **15 casos em 33,4 s: 14 jornadas interativas e 1 caso de formatação BRL**, sem skip, retry ou filtro de seleção; um worker.
+
+O artefato [browser-evidence](https://github.com/arthurjoanes/gestao-recebiveis/actions/runs/35744528178/artifacts/10702621807) contém **21 PNGs e três relatórios de segurança**. Resumo e detalhe longo foram capturados em 1440×900, 1366×768, 768×1024, 390×844 e 320×844; há ainda importação, conflito, baixa, retry, menu e diálogo. A [imagem do Resumo](screenshots/publication-20260922/overview.png) foi copiada sem modificação, com SHA-256 e origem no [recibo](evidence/frontend-ci-20260922.json). Os casos alteram a massa durante a execução, portanto imagens diferentes não constituem uma comparação pareada do mesmo estado. A limpeza do workflow concluiu com sucesso.
+
+Esta prova remota não altera a recusa local anterior de inicialização. Também não comprova comparação baseline/candidato, zoom nativo, leitor de tela, conformidade AA integral ou desempenho percebido. O SHA acima identifica o código testado; esta atualização documental não foi uma nova execução da aplicação.
+
+## Reproduzir a verificação local
 
 Na raiz do projeto, com Docker Desktop em modo Linux e PowerShell:
 
@@ -31,7 +41,7 @@ Gitleaks 8.30.1 foi executado com redação integral e a configuração existent
 
 O [recibo desta revisão](evidence/portfolio-review-20260922.json) identifica versão, instalação, resultados e limites. Conferi os 129 links locais e sete fragmentos de README/docs, além de referências de casos aos testes; não houve renderização Markdown nem nova jornada.
 
-**Situação: design aprovado pelo autor em 22/09/2026; validação de execução da interface atual pendente.** O lançamento Next permanece bloqueado pela revisão automática anterior; não repeti o comando nem usei outra forma de iniciar o frontend. Não há novas jornadas, capturas ou avaliação com leitor de tela; a aprovação do design não é prova de execução da interface. O procedimento completo `setup`/`test`/`proof` inclui frontend e não foi repetido. Os testes atuais de backend não transferem aprovação para a interface local.
+**Situação posterior: design aprovado pelo autor e 15 casos Playwright aprovados no [CI do commit `5718cdad`](https://github.com/arthurjoanes/gestao-recebiveis/actions/runs/35744528178).** A revisão autoral local descrita acima não executou o frontend: respeitou a recusa automática anterior, sem repetir o comando nem usar outro método. O CI remoto posterior executou 14 jornadas interativas e o caso de formatação BRL, com novas capturas. O procedimento local completo `setup`/`test`/`proof` não foi repetido; comparação pareada, zoom nativo, leitor de tela e avaliação completa de acessibilidade continuam fora dessa prova.
 
 ## Interface da carteira — 22/09/2026
 
