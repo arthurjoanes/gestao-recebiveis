@@ -50,7 +50,7 @@ Separei a intenção (`Reminder`), a tentativa autorizada (`Attempt`) e a entreg
 
 ![Tentativa número 1 concluída e entrega simulada número 1 preservada após reconciliação](screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/03-mesma-tentativa-reconciliada.png)
 
-*Captura histórica da mesma prova: o token de posse mudou, mas a identidade da tentativa e da entrega foi preservada. O [manifesto e as consultas](restore-proof.md) sustentam essa afirmação; não houve envio externo. A nova composição visual não foi executada nesta revisão.*
+*Captura histórica da mesma prova: o token de posse mudou, mas a identidade da tentativa e da entrega foi preservada. O [manifesto e as consultas](restore-proof.md) sustentam essa afirmação; não houve envio externo. A nova composição visual não foi executada nessa revisão histórica; sua prova posterior está no [CI do commit `5718cdad`](https://github.com/arthurjoanes/gestao-recebiveis/actions/runs/35744528178) e na [matriz do frontend](frontend-quality.md).*
 
 Um broker seria uma alternativa para distribuir a fila. Ele acrescentaria um serviço e uma fronteira de consistência entre banco e mensageria; manter PostgreSQL simplifica este laboratório, mas exige cuidar de contenção e da rotina de posse/reconciliação. Não medi qual alternativa atenderia melhor uma carga de produção.
 
