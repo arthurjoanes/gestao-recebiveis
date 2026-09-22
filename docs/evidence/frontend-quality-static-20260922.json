@@ -1,0 +1,137 @@
+{
+  "review_date": "2026-09-22",
+  "base_commit": "a86db5574d3011415b8c42aa34c03a3e40ee1686",
+  "hash_normalization": "CRLF to LF, UTF-8 bytes",
+  "source_hashes": {
+    "frontend/src/app/error.tsx": "74c432763f3d4c222d8b108c0d216194076065e62f6e1432b088e948ba26b255",
+    "frontend/src/app/financial-workspace.css": "d620829e3390a8b930aab601a15bbefebf39298a3881bbe274525482cd735a0a",
+    "frontend/src/app/globals.css": "8c27445a493cbfba1e0dbd0c584b28d4b3b7956ff123b0bf98051fe246990b22",
+    "frontend/src/app/layout.tsx": "7964d0e38ff1b477edbdc136c9fe65247395c211d274ee0088c97be2f2b5de5d",
+    "frontend/src/app/page.tsx": "97ba11efc3b86035cdd030164bd9f6ac51233f96ab4e09e5288687eca414f649",
+    "frontend/src/components/brand.tsx": "c04b5694b776088e5527c956d7199da680467c0b455fc68d3ee58a135c129da7",
+    "frontend/src/components/ui.tsx": "e45f5d6c39e559a20b559bd63ddc467a536fb396945866f3825cbaabe4facf84",
+    "frontend/src/components/workspace-navigation.tsx": "cb53e884819353587ada5f122f084fce001b28a049128383418cf1ed1c74a4ee",
+    "frontend/src/features/demo.tsx": "a23e554e6d9c12b6a01b9cf76f8c772ec08355758b3e35f594a5b2e47b3ecd3c",
+    "frontend/src/features/import-preview.tsx": "8f3093db197bdf7d8ce0a762c9c0f62e4aa305a20ca45db5df869dc07b797292",
+    "frontend/src/features/imports.tsx": "e2f59b02a3ff693a3f588981a5b315aeec04dd270345e119940da6fc3959f8f0",
+    "frontend/src/features/login.tsx": "ff25dfa960d3c7efd5085f9a1391c912bc2585c69c4f646f78f5ef3ae6170efb",
+    "frontend/src/features/overview-filters.tsx": "bc5730e742e59f59cf41b73efa2427afcd2cf02201bc767c1e66f63ee0b33237",
+    "frontend/src/features/overview.tsx": "85c1840bdaf1891b7f5617cec238744650ccdba741efaaf1137e4d0392115544",
+    "frontend/src/features/receivable-detail.tsx": "d2c349f3d068b46934620b4b5d08c6e1c2986ad3060b5a18c8702a3dfcee7e68",
+    "frontend/src/features/receivables.tsx": "c2082b0cdcb3c1eec60195c45e2b86965b9a53daeda1228687325820020e9b42",
+    "frontend/src/features/reminders.tsx": "205d43c466985d6a3b4449cdf8cc280bc988275cc515a6cc42038eb224d43a32",
+    "frontend/src/features/workspace.tsx": "0c016431bd4bc7ccc6b82aeffcb3e2f61078069260f7e6aaa7138f3ec7140201",
+    "frontend/src/lib/api.ts": "c0beb7ccf5520c874b546d82e94dbfd88ac00ecd0f51b78f292b1194ba5161fa",
+    "frontend/src/lib/format.ts": "5f93e82f19ea37bf2a93f9aa1795aafbfffa7712622b0df25a4e05ed2dcf7771",
+    "frontend/src/lib/types.ts": "6d3dbb923534135dc20d07702411b3dc862787d8a3da46d74b6b009edc1ccff7",
+    "frontend/src/lib/use-resource.ts": "bd7ce8674cd9303eec370c6c59bedc722c7d55f4856ddfdbc0fd0ffde6c1ecd8",
+    "frontend/src/components/responsive-filters.tsx": "2fbc4bb04a5efcb6593a7271b1e7389a7912da418772c468d096b5427f57b381",
+    "frontend/tests/journey.spec.ts": "a810eabe429796a7317a883541038589395747d1b11d65789e4441f4751d621a"
+  },
+  "protected_unchanged_count": 68,
+  "protected_unchanged_scope": "backend, data, API client, format, types, resource hook, workspace, package files and Next config",
+  "checks": {
+    "eslint": "passed",
+    "prettier": "passed",
+    "typescript": "passed",
+    "production_build": "passed",
+    "playwright_list": {
+      "declared": 15,
+      "executed": 0
+    },
+    "format_assertions": 10,
+    "contrast_pairs": [
+      {
+        "name": "primary",
+        "foreground": "#172b49",
+        "background": "#ffffff",
+        "ratio": 14.21,
+        "minimum": 4.5
+      },
+      {
+        "name": "muted",
+        "foreground": "#526176",
+        "background": "#f3f6fa",
+        "ratio": 5.82,
+        "minimum": 4.5
+      },
+      {
+        "name": "action",
+        "foreground": "#ffffff",
+        "background": "#1e57a4",
+        "ratio": 7.11,
+        "minimum": 4.5
+      },
+      {
+        "name": "overdue",
+        "foreground": "#87560f",
+        "background": "#ffffff",
+        "ratio": 6.23,
+        "minimum": 4.5
+      },
+      {
+        "name": "positive",
+        "foreground": "#226b4b",
+        "background": "#ffffff",
+        "ratio": 6.42,
+        "minimum": 4.5
+      },
+      {
+        "name": "header",
+        "foreground": "#d1dded",
+        "background": "#142b49",
+        "ratio": 10.38,
+        "minimum": 4.5
+      },
+      {
+        "name": "input-border",
+        "foreground": "#7a899e",
+        "background": "#ffffff",
+        "ratio": 3.56,
+        "minimum": 3
+      },
+      {
+        "name": "focus-surface",
+        "foreground": "#1e57a4",
+        "background": "#f3f6fa",
+        "ratio": 6.56,
+        "minimum": 3
+      },
+      {
+        "name": "focus-header",
+        "foreground": "#9fc5ff",
+        "background": "#142b49",
+        "ratio": 8.09,
+        "minimum": 3
+      }
+    ]
+  },
+  "assets": {
+    "baseline_bytes": 651583,
+    "candidate_bytes": 651944,
+    "baseline_gzip_bytes": 193093,
+    "candidate_gzip_bytes": 193251,
+    "interpretation": "Sum of emitted JS/CSS chunks; not network, paint or interaction performance."
+  },
+  "baseline_api": {
+    "sha256": "a9d718f6331736f708aed643cb7e78c27666bef220c4229644237eb6a2dbddf9",
+    "business_date": "2026-08-17",
+    "receivables": 240,
+    "open_count": 192,
+    "overdue_count": 96,
+    "current_count": 96,
+    "paid_count": 48
+  },
+  "browser": {
+    "status": "not_verified",
+    "reason": "First frontend start rejected by automatic command review: blocked by policy. No alternative startup attempted.",
+    "new_screenshots": 0,
+    "new_journeys_executed": 0,
+    "historical_screenshots_preserved": true
+  },
+  "cleanup": {
+    "owned_compose_project_stopped_and_removed": true,
+    "volume_removal_flag_used": false,
+    "other_resources_touched": false
+  }
+}

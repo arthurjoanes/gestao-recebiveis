@@ -4,6 +4,8 @@ import { query } from "@/lib/api";
 import { date, money } from "@/lib/format";
 import { useResource } from "@/lib/use-resource";
 import type { Page, Receivable } from "@/lib/types";
+import { ResponsiveFilters } from "@/components/responsive-filters";
+import { portfolioScope } from "./overview-filters";
 import {
   Alert,
   Badge,
@@ -25,6 +27,13 @@ const emptyFilters: PortfolioFilters = {
   status: "",
   due_from: "",
   due_to: "",
+};
+const situationLabels: Record<string, string> = {
+  open: "Em aberto",
+  overdue: "Vencidos",
+  current: "Em dia (inclui hoje)",
+  paid: "Pagos",
+  canceled: "Cancelados",
 };
 
 export function ReceivablesView({
@@ -89,108 +98,124 @@ export function ReceivablesView({
           </span>
         </div>
         <div className="portfolio-workbench">
-          <form
-            className="filters portfolio-filters"
-            onReset={(event) => {
-              event.preventDefault();
-              for (const name of ["q", "status", "due_from", "due_to"]) {
-                (
-                  event.currentTarget.elements.namedItem(
-                    name,
-                  ) as HTMLInputElement
-                ).value = "";
-              }
-              setFilters({ ...emptyFilters, page: 1 });
-              setPeriodError("");
-            }}
-            onSubmit={(event) => {
-              event.preventDefault();
-              const form = new FormData(event.currentTarget);
-              const start = String(form.get("due_from") ?? "");
-              const end = String(form.get("due_to") ?? "");
-              if (start && end && start > end) {
-                setPeriodError(
-                  "Vencimento inicial deve ser anterior ou igual ao final.",
-                );
-                (
-                  event.currentTarget.elements.namedItem(
-                    "due_from",
-                  ) as HTMLInputElement
-                )?.focus();
-                return;
-              }
-              setPeriodError("");
-              setFilters({
-                q: String(form.get("q") ?? "").trim(),
-                status: String(form.get("status") ?? ""),
-                due_from: String(form.get("due_from") ?? ""),
-                due_to: String(form.get("due_to") ?? ""),
-                page: 1,
-              });
-            }}
+          <ResponsiveFilters
+            id="portfolio-filter-fields"
+            label="Filtrar carteira"
+            scope={[
+              filters.q ? `Busca: ${filters.q}` : "Todos os clientes e títulos",
+              situationLabels[filters.status] ?? "Todas as situações",
+              portfolioScope(filters),
+            ].join(" · ")}
           >
-            <h3>Recorte da carteira</h3>
-            <label className="search-field">
-              Cliente ou título
-              <input
-                name="q"
-                defaultValue={initialFilters.q}
-                type="search"
-                maxLength={200}
-                placeholder="Nome ou código"
-              />
-            </label>
-            <label>
-              Situação
-              <select name="status" defaultValue={initialFilters.status}>
-                <option value="">Todas</option>
-                <option value="open">Em aberto</option>
-                <option value="overdue">Vencidos</option>
-                <option value="current">Em dia (inclui hoje)</option>
-                <option value="paid">Pagos</option>
-                <option value="canceled">Cancelados</option>
-              </select>
-            </label>
-            <label>
-              Vencimento de
-              <input
-                name="due_from"
-                type="date"
-                min="0001-01-01"
-                max="9999-12-31"
-                defaultValue={initialFilters.due_from}
-                aria-invalid={!!periodError}
-                aria-describedby={
-                  periodError ? "title-period-error" : undefined
-                }
-              />
-            </label>
-            <label>
-              Até
-              <input
-                name="due_to"
-                type="date"
-                min="0001-01-01"
-                max="9999-12-31"
-                defaultValue={initialFilters.due_to}
-                aria-invalid={!!periodError}
-                aria-describedby={
-                  periodError ? "title-period-error" : undefined
-                }
-              />
-            </label>
-            <button className="button" type="submit">
-              Filtrar títulos
-            </button>
-            <button type="reset" className="text-button">
-              Limpar filtros
-            </button>
-            {periodError && (
-              <p className="field-error" id="title-period-error" role="alert">
-                {periodError}
-              </p>
+            {(onApplied) => (
+              <form
+                className="filters portfolio-filters"
+                onReset={(event) => {
+                  event.preventDefault();
+                  for (const name of ["q", "status", "due_from", "due_to"]) {
+                    (
+                      event.currentTarget.elements.namedItem(
+                        name,
+                      ) as HTMLInputElement
+                    ).value = "";
+                  }
+                  setFilters({ ...emptyFilters, page: 1 });
+                  setPeriodError("");
+                }}
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  const form = new FormData(event.currentTarget);
+                  const start = String(form.get("due_from") ?? "");
+                  const end = String(form.get("due_to") ?? "");
+                  if (start && end && start > end) {
+                    setPeriodError(
+                      "Vencimento inicial deve ser anterior ou igual ao final.",
+                    );
+                    (
+                      event.currentTarget.elements.namedItem(
+                        "due_from",
+                      ) as HTMLInputElement
+                    )?.focus();
+                    return;
+                  }
+                  setPeriodError("");
+                  setFilters({
+                    q: String(form.get("q") ?? "").trim(),
+                    status: String(form.get("status") ?? ""),
+                    due_from: String(form.get("due_from") ?? ""),
+                    due_to: String(form.get("due_to") ?? ""),
+                    page: 1,
+                  });
+                  onApplied();
+                }}
+              >
+                <label className="search-field">
+                  Cliente ou título
+                  <input
+                    name="q"
+                    defaultValue={initialFilters.q}
+                    type="search"
+                    maxLength={200}
+                    placeholder="Nome ou código"
+                  />
+                </label>
+                <label>
+                  Situação
+                  <select name="status" defaultValue={initialFilters.status}>
+                    <option value="">Todas</option>
+                    <option value="open">Em aberto</option>
+                    <option value="overdue">Vencidos</option>
+                    <option value="current">Em dia (inclui hoje)</option>
+                    <option value="paid">Pagos</option>
+                    <option value="canceled">Cancelados</option>
+                  </select>
+                </label>
+                <label>
+                  Vencimento de
+                  <input
+                    name="due_from"
+                    type="date"
+                    min="0001-01-01"
+                    max="9999-12-31"
+                    defaultValue={initialFilters.due_from}
+                    aria-invalid={!!periodError}
+                    aria-describedby={
+                      periodError ? "title-period-error" : undefined
+                    }
+                  />
+                </label>
+                <label>
+                  Até
+                  <input
+                    name="due_to"
+                    type="date"
+                    min="0001-01-01"
+                    max="9999-12-31"
+                    defaultValue={initialFilters.due_to}
+                    aria-invalid={!!periodError}
+                    aria-describedby={
+                      periodError ? "title-period-error" : undefined
+                    }
+                  />
+                </label>
+                <button className="button" type="submit">
+                  Filtrar títulos
+                </button>
+                <button type="reset" className="text-button">
+                  Limpar filtros
+                </button>
+                {periodError && (
+                  <p
+                    className="field-error"
+                    id="title-period-error"
+                    role="alert"
+                  >
+                    {periodError}
+                  </p>
+                )}
+              </form>
             )}
-          </form>
+          </ResponsiveFilters>
           <div className="portfolio-results">
             {result.error ? (
               <Alert>{result.error}</Alert>
