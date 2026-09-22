@@ -1,7 +1,5 @@
 # Do problema financeiro ao comportamento verificável
 
-> Regras e critérios de teste. Fontes: [financeiro](../backend/tests/test_financial.py), [lembretes](../backend/tests/test_reminders.py) e [API](../backend/tests/test_api.py). Conferência documental: **22/09/2026**.
-
 Desenvolvi o projeto para exercitar uma operação de contas a receber: conferir títulos vindos de outro sistema, registrar o pagamento integral e acompanhar lembretes. A demonstração representa uma empresa fictícia, em BRL. Não emite boleto, não cobra por Pix e não envia mensagens a clientes reais.
 
 ## Um arquivo reenviado não deve criar outra dívida
@@ -30,7 +28,7 @@ Código: [`imports.py`](../backend/src/gestao_recebiveis/imports.py), funções 
 
 Depois de clicar em pagar, perder a conexão não informa se a baixa foi gravada. Impedir um segundo clique ajuda a interface, mas não resolve a repetição da requisição ou dois operadores atuando juntos.
 
-A documentação [Idempotent requests, da Stripe](https://docs.stripe.com/api/idempotent_requests) (consulta: 22/09/2026), consultada em 22/09/2026, descreve repetição após erro de conexão usando a mesma chave e recusa quando os parâmetros mudam. Este projeto reproduz esse risco na baixa integral: compara título e observação e recupera o pagamento persistido. Não integra Stripe nem implementa seu cache de respostas ou sua política de expiração de chaves.
+A documentação [Idempotent requests, da Stripe](https://docs.stripe.com/api/idempotent_requests) descreve repetição após erro de conexão usando a mesma chave e recusa quando os parâmetros mudam. Este projeto reproduz esse risco na baixa integral: compara título e observação e recupera o pagamento persistido. Não integra Stripe nem implementa seu cache de respostas ou sua política de expiração de chaves.
 
 Implementei `pay` para serializar a chave idempotente: ele confere o conteúdo associado e bloqueia o título antes de mudar seu estado. A baixa e o cancelamento das pendências pertencem à mesma transação.
 
@@ -79,3 +77,7 @@ Código: [`workspace.tsx`](../frontend/src/features/workspace.tsx), [`receivable
 ## Recuperar também a identidade dos efeitos
 
 Depois de restaurar um backup, a aplicação precisa reconhecer uma baixa repetida e uma tentativa cuja resposta se perdeu. A [prova em outro volume](restore-proof.md) conferiu todas as tabelas e sequências antes de repetir a baixa e reconciliar o envio: preservou pagamento #1, tentativa #1 e entrega simulada #1. O token antigo perdeu a posse. Isso relaciona o mecanismo à consequência financeira observada, sem tratar um backup existente como recuperação automaticamente validada. O provedor simulado está no mesmo banco; o [contrato para integração externa](provider-integration-plan.md) continua proposto.
+
+## Código e evidências relacionados
+
+[API](../backend/tests/test_api.py).

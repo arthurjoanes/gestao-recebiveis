@@ -1,7 +1,5 @@
 # Integrar um provedor sem duplicar efeitos
 
-> Proposta de trabalho futuro; capacidade atual limitada ao simulador. Fontes: [provedor](../backend/src/gestao_recebiveis/reminders/provider.py) e [worker](../backend/src/gestao_recebiveis/worker.py). Conferência documental: **22/09/2026**.
-
 **Problema central:** após perder uma resposta, o sistema precisa distinguir uma mensagem não enviada de uma mensagem já aceita. Restaurar o PostgreSQL não desfaz uma entrega que ocorreu fora dele.
 
 Este é um plano de integração, não um adaptador implementado. Nenhum fornecedor ou sandbox foi escolhido; nenhuma mensagem foi enviada a um destinatário real. A [implementação atual](../backend/src/gestao_recebiveis/reminders/provider.py) simula o provedor e guarda seu resultado no mesmo PostgreSQL da aplicação.
@@ -44,3 +42,7 @@ Registrar versão do adaptador, contrato consultado, ambiente, horários, IDs sa
 O procedimento futuro precisa de cópia protegida em local independente, destino vazio, credenciais e versão de schema compatíveis. Antes de abrir a carteira, comparar IDs, valores, pagamentos, auditoria e sequências. Antes de reativar lembretes, reconciliar as tentativas com o estado externo atual.
 
 Registrar separadamente a idade do corte recuperado e o tempo até a operação validada. Só depois definir frequência de backup e metas de recuperação coerentes com o volume e a operação. O ensaio em outro volume do mesmo host não comprova esse cenário.
+
+## Código e evidências relacionados
+
+[worker](../backend/src/gestao_recebiveis/worker.py).

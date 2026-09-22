@@ -22,7 +22,7 @@ Um **título** registra quanto um cliente deve e o vencimento; dar **baixa** é 
 | Mesma baixa após perder a resposta | Recupera o pagamento para a mesma chave e conteúdo         |
 | Envio aceito com resposta perdida  | Reconcilia a tentativa antes de autorizar outra etapa      |
 
-Fontes da implementação, conferidas em **22/09/2026**: [importação](backend/src/gestao_recebiveis/imports.py), [pagamento](backend/src/gestao_recebiveis/receivables.py), [lembretes](backend/src/gestao_recebiveis/reminders/service.py) e [casos com critérios e testes](docs/problem-solution.md).
+O [guia de casos e testes](docs/problem-solution.md) liga esses comportamentos à [importação](backend/src/gestao_recebiveis/imports.py), ao [pagamento](backend/src/gestao_recebiveis/receivables.py) e aos [lembretes](backend/src/gestao_recebiveis/reminders/service.py).
 
 <a id="na-prática"></a>
 <a id="como-trato-as-repetições"></a>
@@ -35,11 +35,11 @@ _Página principal já versionada. Os [recortes com data, versão e hashes](docs
 
 <a id="reproduzir-um-lote-pequeno"></a>
 
-Na demo iniciada, importe [valid.csv](data/samples/valid.csv): **R$ 1.250,09 + R$ 480,10 + R$ 269,81 = R$ 2.000,00**, três títulos. Reenvie [reordered.csv](data/samples/reordered.csv): quantidade e saldo do lote devem permanecer iguais. [conflicting.csv](data/samples/conflicting.csv) tenta mudar `DEMO-001` e incluir `DEMO-004`; a confirmação deve rejeitar o lote inteiro. Valores conferidos nos CSVs em **22/09/2026**. [Roteiro completo](docs/demo.md).
+Na demo iniciada, importe [valid.csv](data/samples/valid.csv): **R$ 1.250,09 + R$ 480,10 + R$ 269,81 = R$ 2.000,00**, três títulos. Reenvie [reordered.csv](data/samples/reordered.csv): quantidade e saldo do lote devem permanecer iguais. [conflicting.csv](data/samples/conflicting.csv) tenta mudar `DEMO-001` e incluir `DEMO-004`; a confirmação deve rejeitar o lote inteiro. [Roteiro completo](docs/demo.md).
 
 <a id="prova-histórica-a-mesma-baixa-após-restauração"></a>
 
-A prova histórica de **22/09/2026** usa outra massa: dois títulos de **R$ 50 + R$ 75 = R$ 125**. Após restauração, repetir a baixa de R$ 50 conservou o pagamento e **R$ 75 em aberto**. A fonte é o [manifesto da execução `11adf9df…`](docs/evidence/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/manifest.json); [cenário, imagens e limites](docs/restore-proof.md). Não é uma nova execução da prova nesta revisão documental.
+A prova histórica de **22/09/2026** usa outra massa: dois títulos de **R$ 50 + R$ 75 = R$ 125**. Após restauração, repetir a baixa de R$ 50 conservou o pagamento e **R$ 75 em aberto**, conforme o [manifesto da execução `11adf9df…`](docs/evidence/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/manifest.json). Veja o [cenário, as imagens e os limites](docs/restore-proof.md).
 
 ## Arquitetura
 
@@ -50,9 +50,7 @@ flowchart TB
     Worker["Worker Python<br/>lembretes simulados"] --> DB
 ```
 
-A API decide autorização, importação e baixa dentro de transações. O worker assume lembretes por prazo de posse; o provedor fictício guarda o resultado no mesmo banco. API e worker compartilham o pacote Python. O Compose acrescenta tarefas de provisionamento, migração e seed; elas não são serviços de negócio permanentes.
-
-Fontes: [Compose](compose.yaml), [transações](backend/src/gestao_recebiveis/database.py), [worker](backend/src/gestao_recebiveis/worker.py) e [simulador](backend/src/gestao_recebiveis/reminders/provider.py), conferidos em **22/09/2026**. [Arquitetura detalhada e fronteiras](docs/architecture.md).
+A API decide autorização, importação e baixa dentro de [transações](backend/src/gestao_recebiveis/database.py). O [worker](backend/src/gestao_recebiveis/worker.py) assume lembretes por prazo de posse; o [provedor fictício](backend/src/gestao_recebiveis/reminders/provider.py) guarda o resultado no mesmo banco. API e worker compartilham o pacote Python. O [Compose](compose.yaml) acrescenta tarefas de provisionamento, migração e seed; elas não são serviços de negócio permanentes. A [arquitetura detalhada](docs/architecture.md) explica essas fronteiras.
 
 <a id="implementação"></a>
 <a id="o-que-eu-implementei"></a>
@@ -77,7 +75,7 @@ Fontes: [Compose](compose.yaml), [transações](backend/src/gestao_recebiveis/da
 | Persistência | PostgreSQL para carteira e fila; permite coordenação transacional e concentra a operação no banco |
 | Execução     | Docker Compose, com bancos separados para demo e testes                                           |
 
-Escolhi centavos inteiros para BRL, pagamentos integrais e uma fila no mesmo banco. Essas escolhas estão ligadas ao problema e aos respectivos custos nas [decisões técnicas](docs/decisoes-tecnicas.md). Dependências e versões: [lock Python](backend/uv.lock), [lock frontend](frontend/package-lock.json) e [Dockerfile do banco](database/Dockerfile), conferidos em **22/09/2026**.
+Escolhi centavos inteiros para BRL, pagamentos integrais e uma fila no mesmo banco. Essas escolhas estão ligadas ao problema e aos respectivos custos nas [decisões técnicas](docs/decisoes-tecnicas.md). Dependências e versões: [lock Python](backend/uv.lock), [lock frontend](frontend/package-lock.json) e [Dockerfile do banco](database/Dockerfile).
 
 <a id="executar-e-verificar"></a>
 <a id="rodar-localmente"></a>
@@ -90,7 +88,7 @@ Use Docker Desktop com containers Linux e PowerShell 7. Na raiz:
 .\scripts\gestao-recebiveis.ps1 setup
 ```
 
-O script cria a configuração local, constrói as imagens e carrega os dados fictícios. Abra a [interface](http://localhost:3101) ou a [documentação da API](http://localhost:8101/docs). As contas demo aparecem no login. Fontes: [script de setup](scripts/gestao-recebiveis.ps1) e [Compose](compose.yaml), conferidos em **22/09/2026**.
+O [script de setup](scripts/gestao-recebiveis.ps1) cria a configuração local, constrói as imagens do [Compose](compose.yaml) e carrega os dados fictícios. Abra a [interface](http://localhost:3101) ou a [documentação da API](http://localhost:8101/docs). As contas demo aparecem no login.
 
 Se já usou a versão PostgreSQL Debian, leia a [migração do banco](docs/verification.md#banco-de-versões-anteriores). A [execução sem PowerShell](docs/demo.md#executar-sem-powershell) apresenta os mesmos passos do Compose. Para diagnóstico, confira `docker compose ps` e `docker compose logs --tail 100 api worker`.
 
@@ -103,7 +101,7 @@ Se já usou a versão PostgreSQL Debian, leia a [migração do banco](docs/verif
 .\scripts\gestao-recebiveis.ps1 proof
 ```
 
-`test` verifica backend e navegador em ambientes descartáveis. `proof` exercita interrupção e reinício do banco de teste; a prova de restauração em volume novo tem [executor separado](scripts/prove_restore.py). Fontes: [script principal](scripts/gestao-recebiveis.ps1), [prova de reinício](scripts/prove.ps1) e [Compose E2E](compose.e2e.yaml), conferidos em **22/09/2026**.
+No [script principal](scripts/gestao-recebiveis.ps1), `test` verifica backend e navegador em ambientes descartáveis, incluindo o [Compose E2E](compose.e2e.yaml). `proof` executa a [prova de interrupção e reinício](scripts/prove.ps1) do banco de teste; a restauração em volume novo tem [executor separado](scripts/prove_restore.py).
 
 O [recibo do CI de 22/09/2026](docs/evidence/frontend-ci-20260922.json), sobre `5718cdad`, registra **15 casos Playwright**; o [recibo da revisão local](docs/evidence/portfolio-review-20260922.json) registra **158 testes backend** na versão que identifica. A [verificação](docs/verification.md) separa essa execução das revisões locais e dos resultados posteriores. Contagens e capturas são históricas; editar a documentação não reexecuta as suítes.
 
@@ -112,13 +110,13 @@ O [recibo do CI de 22/09/2026](docs/evidence/frontend-ci-20260922.json), sobre `
 
 ## Limites e segurança
 
-- Uma empresa, BRL e pagamento integral; Pix, boleto, juros, estorno e envio externo não estão implementados.
-- Baixa confirmada impede novas autorizações de lembrete; não desfaz uma autorização anterior em trânsito.
+- O [contrato financeiro](backend/src/gestao_recebiveis/schemas.py) cobre uma empresa, BRL e pagamento integral; Pix, boleto, juros, estorno e envio externo não estão implementados.
+- Baixa confirmada impede novas [autorizações de lembrete](backend/src/gestao_recebiveis/reminders/service.py); não desfaz uma autorização anterior em trânsito.
 - O provedor simulado usa o mesmo PostgreSQL. A restauração local não prova recuperação de um efeito em serviço externo ou perda do host.
 - O Compose publica serviços em loopback. Uso público exige identidade, HTTPS e configuração operacional próprios.
 - Produtividade com usuários, carga de produção, leitor de tela, zoom nativo e conformidade AA integral não foram demonstrados.
 
-Fontes e limites, conferidos em **22/09/2026**: [schemas financeiros](backend/src/gestao_recebiveis/schemas.py), [autorização de envio](backend/src/gestao_recebiveis/reminders/service.py), [Compose](compose.yaml), [segurança](docs/security.md) e [escopo visual](docs/frontend-quality.md). O [plano de provedor real](docs/provider-integration-plan.md) é trabalho proposto.
+Os guias de [segurança](docs/security.md) e [qualidade da interface](docs/frontend-quality.md) detalham o alcance das verificações. O [plano de provedor real](docs/provider-integration-plan.md) é trabalho proposto.
 
 ## Documentação
 
@@ -144,4 +142,4 @@ Desenvolvido por **Arthur Joanes**. Para conversar sobre recebíveis, consistên
   </a>
 </p>
 
-Código sob [licença MIT](LICENSE). IBM Plex Sans mantém a [licença OFL 1.1](frontend/src/app/fonts/plex-LICENSE.txt) e a [origem](frontend/src/app/fonts/sources.json). Ícones da stack e LinkedIn: [Devicon, licença MIT](docs/stack/LICENSE.devicon). Licenças conferidas nos arquivos em **22/09/2026**.
+Código sob [licença MIT](LICENSE). IBM Plex Sans mantém a [licença OFL 1.1](frontend/src/app/fonts/plex-LICENSE.txt) e a [origem](frontend/src/app/fonts/sources.json). Ícones da stack e LinkedIn: [Devicon, licença MIT](docs/stack/LICENSE.devicon).

@@ -1,7 +1,5 @@
 # Qualidade da interface financeira
 
-> Decisões visuais e histórico de verificações, sem certificação integral de acessibilidade. Fontes: [workspace](../frontend/src/features/workspace.tsx), [jornadas](../frontend/tests/journey.spec.ts) e [recibo do CI](evidence/frontend-ci-20260922.json). Conferência documental: **22/09/2026**.
-
 As [capturas locais atuais de 22/09/2026](image-captures.md) documentam seis vistas da aplicação sobre `deade1369`, com navegação sem alteração financeira. As provas de CI, restauração e design abaixo continuam vinculadas às respectivas fontes históricas.
 
 Direção visual de 22/09/2026 sobre o commit `bd5aeb1c11d3fa2e98a4e401aa3e86b22e2945f4`. O baseline já tinha carteira, detalhe, filtros compactos e os quatro saldos visíveis. A nova composição separa **posição da carteira**, **movimentação recebida** e **conferência de títulos**, com marca e tipografia próprias.
@@ -46,7 +44,7 @@ Ambas são **simulações de composição**, identificadas dentro da imagem; nã
 
 [Stripe — gestão de faturas](https://docs.stripe.com/invoicing/dashboard), em imagem oficial, mostrou valor/situação/ação vinculados ao documento. Foi aproveitada a proximidade para conferência, sem cobrança externa, integração ou cópia. A captura do [SolidInvoice](https://github.com/SolidInvoice/SolidInvoice) consultada anteriormente reforçou a lista de trabalho; seus cartões coloridos equivalentes e colunas comprimidas foram rejeitados. Nenhum código desses produtos foi incorporado; suas licenças não são tratadas como licença geral de dependências ou imagens.
 
-| Fonte primária / material visto em 22/09/2026                                                                                                                         | Aproveitado e adaptado                                                                   | Rejeitado / licença                                                                                                        |
+| Fonte primária / material consultado                                                                                                                                  | Aproveitado e adaptado                                                                   | Rejeitado / licença                                                                                                        |
 | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
 | [Linear — redesenho](https://linear.app/now/how-we-redesigned-the-linear-ui), imagem oficial da interface com lista e detalhe                                         | Contraste entre navegação, edição e conteúdo; cor intensa tem uma função                 | Não copiar shell, código, marca ou imagem. A publicação não concede licença para reutilizar seus assets                    |
 | [Carbon — tabelas](https://carbondesignsystem.com/components/data-table/usage/) e [eixos/rótulos](https://carbondesignsystem.com/data-visualization/axes-and-labels/) | Alinhamento numérico, unidade e comparabilidade; controles junto do trabalho             | Não adicionar gráficos para decorar nem arredondar dinheiro para K/M; padrões consultados, nenhum componente copiado       |
@@ -54,9 +52,7 @@ Ambas são **simulações de composição**, identificadas dentro da imagem; nã
 | [Pentagram — Galaxy](https://www.pentagram.com/work/galaxy), aplicação real de símbolo e wordmark                                                                     | Um gesto reconhecível que funciona sem ornamento e em aplicações diferentes              | Não reutilizar círculo/quadrado, desenho ou marca; direitos dos autores                                                    |
 | [Swavee — identidade conceitual](https://www.behance.net/gallery/241721015/Visual-Identity-design-for-Swavee), apresentação no Behance                                | Relação entre nome, símbolo e aplicação; referência fictícia explicitamente identificada | Não copiar letras, esfera, fotos, gradientes ou marketing. Portfólio conceitual não comprova usabilidade nem exclusividade |
 
-As referências externas desta seção foram reconsultadas em **22/09/2026**. Suas relações com o produto são interpretações de design, não provas de usabilidade.
-
-As [Web Interface Guidelines](https://github.com/vercel-labs/web-interface-guidelines/blob/main/command.md) foram consultadas em 22/09/2026. Foram aplicados foco visível, redução de movimento, campos nomeados, consulta/aplicação separadas e ausência de dependência visual nova. [Estado em React](https://react.dev/learn/choosing-the-state-structure), [reflow](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html) e [alvos](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html) orientam decisões; não certificam a aplicação. Estas fontes sustentam padrões e inferências de design, não uma avaliação de usabilidade com usuários.
+As [Web Interface Guidelines](https://github.com/vercel-labs/web-interface-guidelines/blob/main/command.md) orientaram foco visível, redução de movimento, campos nomeados e a separação entre consultar e aplicar filtros. [Estado em React](https://react.dev/learn/choosing-the-state-structure), [reflow](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html) e [alvos](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html) orientam decisões; não certificam a aplicação. Estas fontes sustentam padrões e inferências de design, não uma avaliação de usabilidade com usuários.
 
 ## Identidade, tipografia e superfícies
 
@@ -109,3 +105,7 @@ Antes de alterar telas, confira o inventário, os contratos e os limites das pro
 - Nos READMEs e na documentação, identifique a linguagem dos blocos de código (`json`, `python`, `powershell`, `sh`, `sql`, `yaml` etc.) para habilitar o realce sintático. Use `text` para saídas sem sintaxe, prosa e diagramas ASCII.
 - Nas interfaces, use realce da linguagem com contraste legível. Preserve o texto original e o conteúdo copiado; a formatação para leitura deve ser uma opção separada.
 - Mudanças de apresentação não alteram evidências históricas, hashes ou capturas antigas. Gere registros atuais separados quando necessário.
+
+## Código e evidências relacionados
+
+[workspace](../frontend/src/features/workspace.tsx) · [jornadas](../frontend/tests/journey.spec.ts).

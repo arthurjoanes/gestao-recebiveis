@@ -1,6 +1,6 @@
 # Demo de cinco minutos
 
-> Roteiro proposto, com duração estimada, não cronometrada. Fontes: [seed](../backend/src/gestao_recebiveis/seed.py), [amostra CSV](../data/samples/valid.csv), [política](../backend/src/gestao_recebiveis/reminders/policy.py) e [executor](../scripts/gestao-recebiveis.ps1). Conferência documental: **22/09/2026**.
+A duração sugerida é uma estimativa, não uma medição com usuários.
 
 Pré-condição: execute `./scripts/gestao-recebiveis.ps1 setup` e entre em http://localhost:3101 como `operador@example.com`, senha `Recebiveis!2026`. Carteira inicial: 240 títulos e 48 pagamentos fictícios; data comercial 17/08/2026 às 10:00. O processamento inicia pausado; o agendador permanece ativo. Se esta carteira já foi alterada em apresentações anteriores, use o reset explícito descrito abaixo antes de começar. O tempo abaixo é aproximado e pressupõe as imagens já construídas.
 
@@ -67,4 +67,8 @@ docker compose run --rm --no-deps seed
 docker compose up -d --wait --wait-timeout 180 db api worker frontend
 ```
 
-A tarefa `migrate` depende de `db-init`, que provisiona os papéis. Fontes: [Compose](../compose.yaml) e [setup PowerShell](../scripts/gestao-recebiveis.ps1), conferidos em **22/09/2026**. Uma instalação legada deve seguir a [migração documentada](verification.md#banco-de-versões-anteriores) antes destes passos.
+A tarefa `migrate` depende de `db-init`, que provisiona os papéis. Fontes: [Compose](../compose.yaml) e [setup PowerShell](../scripts/gestao-recebiveis.ps1). Uma instalação legada deve seguir a [migração documentada](verification.md#banco-de-versões-anteriores) antes destes passos.
+
+## Código e evidências relacionados
+
+[seed](../backend/src/gestao_recebiveis/seed.py) · [amostra CSV](../data/samples/valid.csv) · [política](../backend/src/gestao_recebiveis/reminders/policy.py).
