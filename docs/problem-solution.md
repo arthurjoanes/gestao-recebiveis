@@ -1,5 +1,7 @@
 # Do problema financeiro ao comportamento verificável
 
+> Regras e critérios de teste. Fontes: [financeiro](../backend/tests/test_financial.py), [lembretes](../backend/tests/test_reminders.py) e [API](../backend/tests/test_api.py). Conferência documental: **22/09/2026**.
+
 Desenvolvi o projeto para exercitar uma operação de contas a receber: conferir títulos vindos de outro sistema, registrar o pagamento integral e acompanhar lembretes. A demonstração representa uma empresa fictícia, em BRL. Não emite boleto, não cobra por Pix e não envia mensagens a clientes reais.
 
 ## Um arquivo reenviado não deve criar outra dívida
@@ -16,11 +18,11 @@ Uma alternativa plausível seria deduplicar pelo hash do arquivo: é menor, mas 
 
 [Captura histórica completa: Lote sintético de dois títulos totaliza R$ 125 e consta como confirmado](screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/01-lote-confirmado.png)
 
-*Prova visual histórica `11adf9df…`: fixture separada de R$ 50 + R$ 75, não o CSV de R$ 2.000 acima. A [conferência no banco](restore-proof.md#o-que-foi-conferido) verificou que o reenvio manteve dois títulos e R$ 125; a captura isolada não prova idempotência. [Abrir no tamanho original](screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/01-lote-confirmado.png).*
+_Prova visual histórica `11adf9df…`: fixture separada de R$ 50 + R$ 75, não o CSV de R$ 2.000 acima. A [conferência no banco](restore-proof.md#o-que-foi-conferido) verificou que o reenvio manteve dois títulos e R$ 125; a captura isolada não prova idempotência. [Abrir no tamanho original](screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/01-lote-confirmado.png)._
 
 [Captura histórica completa: Conflito no título de R$ 50 junto de um título novo leva à rejeição do arquivo de R$ 150](screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/02-conflito-sem-alteracao-financeira.png)
 
-*Mesma execução e viewport: R$ 51 tentam substituir R$ 50, junto de R$ 99 novos. Os R$ 150 são o total do arquivo rejeitado; o banco permaneceu em R$ 125 e o título de R$ 99 não foi gravado. “Novo” descreve a análise da linha, não uma inclusão confirmada. [Imagem completa](screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/02-conflito-sem-alteracao-financeira.png).*
+_Mesma execução e viewport: R$ 51 tentam substituir R$ 50, junto de R$ 99 novos. Os R$ 150 são o total do arquivo rejeitado; o banco permaneceu em R$ 125 e o título de R$ 99 não foi gravado. “Novo” descreve a análise da linha, não uma inclusão confirmada. [Imagem completa](screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/02-conflito-sem-alteracao-financeira.png)._
 
 Código: [`imports.py`](../backend/src/gestao_recebiveis/imports.py), funções `analyze` e `confirm_batch`; restrições em [`models.py`](../backend/src/gestao_recebiveis/models.py). Provas: `test_repeat_reorder_and_renamed_no_duplicate`, `test_error_last_line_and_conflict_atomic`, `test_preview_revalidated` e `test_concurrent_imports_identical_and_conflicting`, em [test_financial.py](../backend/tests/test_financial.py).
 
@@ -28,7 +30,7 @@ Código: [`imports.py`](../backend/src/gestao_recebiveis/imports.py), funções 
 
 Depois de clicar em pagar, perder a conexão não informa se a baixa foi gravada. Impedir um segundo clique ajuda a interface, mas não resolve a repetição da requisição ou dois operadores atuando juntos.
 
-A documentação [Idempotent requests, da Stripe](https://docs.stripe.com/api/idempotent_requests), consultada em 22/09/2026, descreve repetição após erro de conexão usando a mesma chave e recusa quando os parâmetros mudam. Este projeto reproduz esse risco na baixa integral: compara título e observação e recupera o pagamento persistido. Não integra Stripe nem implementa seu cache de respostas ou sua política de expiração de chaves.
+A documentação [Idempotent requests, da Stripe](https://docs.stripe.com/api/idempotent_requests) (consulta: 22/09/2026), consultada em 22/09/2026, descreve repetição após erro de conexão usando a mesma chave e recusa quando os parâmetros mudam. Este projeto reproduz esse risco na baixa integral: compara título e observação e recupera o pagamento persistido. Não integra Stripe nem implementa seu cache de respostas ou sua política de expiração de chaves.
 
 Implementei `pay` para serializar a chave idempotente: ele confere o conteúdo associado e bloqueia o título antes de mudar seu estado. A baixa e o cancelamento das pendências pertencem à mesma transação.
 
@@ -52,7 +54,7 @@ Separei a intenção (`Reminder`), a tentativa autorizada (`Attempt`) e a entreg
 
 [Captura histórica completa: Tentativa número 1 concluída e entrega simulada número 1 preservada após reconciliação](screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/03-mesma-tentativa-reconciliada.png)
 
-*Captura histórica da mesma prova: o token de posse mudou, mas a identidade da tentativa e da entrega foi preservada. O [manifesto e as consultas](restore-proof.md) sustentam essa afirmação; não houve envio externo. A nova composição visual não foi executada nessa revisão histórica; sua prova posterior está no [CI do commit `5718cdad`](https://github.com/arthurjoanes/gestao-recebiveis/actions/runs/35744528178) e na [matriz do frontend](frontend-quality.md).*
+_Captura histórica da mesma prova: o token de posse mudou, mas a identidade da tentativa e da entrega foi preservada. O [manifesto e as consultas](restore-proof.md) sustentam essa afirmação; não houve envio externo. A nova composição visual não foi executada nessa revisão histórica; sua prova posterior está no [CI do commit `5718cdad`](https://github.com/arthurjoanes/gestao-recebiveis/actions/runs/35744528178) e na [matriz do frontend](frontend-quality.md)._
 
 Um broker seria uma alternativa para distribuir a fila. Ele acrescentaria um serviço e uma fronteira de consistência entre banco e mensageria; manter PostgreSQL simplifica este laboratório, mas exige cuidar de contenção e da rotina de posse/reconciliação. Não medi qual alternativa atenderia melhor uma carga de produção.
 

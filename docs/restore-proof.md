@@ -1,5 +1,7 @@
 # Recuperar a carteira sem repetir seus efeitos
 
+> Registro histórico; execução em 22/09/2026, sem nova restauração nesta revisão. Fontes: [manifesto primário](evidence/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/manifest.json) e [executor](../scripts/prove_restore.py). Conferência documental: **22/09/2026**.
+
 As quatro imagens desta página são **históricas**, vinculadas ao manifesto da restauração. Mantêm o layout da execução original; veja as [telas atuais](image-captures.md) para a composição servida hoje.
 
 Restaurar um banco não basta para retomar cobranças: é preciso preservar a baixa já registrada e descobrir se uma tentativa pendente já foi aceita. Esta prova restaura uma carteira sintética em outro volume e confere esses fatos antes de continuar. O caso representa um risco técnico do domínio; não é um incidente de cliente.
@@ -8,16 +10,16 @@ Em 22/09/2026, a execução `11adf9df35ba4314945ffdd4fbaeabfc` passou: **R$ 125 
 
 ## O que foi conferido
 
-| Etapa | Resultado observado | Por que importa |
-| --- | --- | --- |
-| Importação | Dois títulos, de R$ 50 e R$ 75, totalizam R$ 125 | Estabelece um resultado financeiro pequeno e conferível |
-| Repetição idêntica | Dois títulos existentes, nenhum novo; registros financeiros iguais | Reenviar o CSV não aumenta a dívida |
-| Conflito | O arquivo candidato soma R$ 150; lote rejeitado, carteira ainda R$ 125 e título novo ausente | Um conflito não deixa importação parcial |
-| Corte do backup | Pagamento #1 de R$ 50; tentativa #1 com resultado desconhecido; entrega simulada #1 já aceita | Reproduz uma resposta perdida após aceitação |
-| Restauração em destino vazio | Conteúdo das 16 tabelas públicas, incluindo a versão do schema, e estado das 12 sequências iguais ao corte | Confere os registros, não apenas contagens ou a abertura da aplicação |
-| Repetição da baixa restaurada | Mesmo pagamento #1 e estado completo igual; observação diferente recusada como conflito de idempotência | Uma resposta perdida não autoriza outra baixa |
-| Reconciliação | Mesma tentativa #1 concluída, mesmo lembrete e mesma entrega #1; token de posse passou de 1 para 2 | O processo antigo perdeu autoridade para concluir; não foi criada outra tentativa |
-| Final | Origem e dump original preservados; zero containers, volumes ou redes dos dois projetos descartáveis | A prova não substitui nem remove a carteira de demonstração |
+| Etapa                         | Resultado observado                                                                                        | Por que importa                                                                   |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Importação                    | Dois títulos, de R$ 50 e R$ 75, totalizam R$ 125                                                           | Estabelece um resultado financeiro pequeno e conferível                           |
+| Repetição idêntica            | Dois títulos existentes, nenhum novo; registros financeiros iguais                                         | Reenviar o CSV não aumenta a dívida                                               |
+| Conflito                      | O arquivo candidato soma R$ 150; lote rejeitado, carteira ainda R$ 125 e título novo ausente               | Um conflito não deixa importação parcial                                          |
+| Corte do backup               | Pagamento #1 de R$ 50; tentativa #1 com resultado desconhecido; entrega simulada #1 já aceita              | Reproduz uma resposta perdida após aceitação                                      |
+| Restauração em destino vazio  | Conteúdo das 16 tabelas públicas, incluindo a versão do schema, e estado das 12 sequências iguais ao corte | Confere os registros, não apenas contagens ou a abertura da aplicação             |
+| Repetição da baixa restaurada | Mesmo pagamento #1 e estado completo igual; observação diferente recusada como conflito de idempotência    | Uma resposta perdida não autoriza outra baixa                                     |
+| Reconciliação                 | Mesma tentativa #1 concluída, mesmo lembrete e mesma entrega #1; token de posse passou de 1 para 2         | O processo antigo perdeu autoridade para concluir; não foi criada outra tentativa |
+| Final                         | Origem e dump original preservados; zero containers, volumes ou redes dos dois projetos descartáveis       | A prova não substitui nem remove a carteira de demonstração                       |
 
 A reconciliação acrescentou dois eventos de auditoria e alterou o estado do lembrete/tentativa. Algumas sequências avançaram sem nova linha por `INSERT ON CONFLICT`; isso foi registrado. A igualdade integral é exigida **antes** da reconciliação, não depois de mudanças legítimas do negócio. O login da captura no destino ocorreu após essas comparações.
 
@@ -27,19 +29,19 @@ As páginas foram renderizadas pelo frontend real em Microsoft Edge/Chromium 153
 
 [Captura histórica completa: Lote confirmado com dois títulos e total de R$ 125](screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/01-lote-confirmado.png)
 
-*Lote #1: duas obrigações financeiras identificadas, sem depender do nome do arquivo para impedir repetição.*
+_Lote #1: duas obrigações financeiras identificadas, sem depender do nome do arquivo para impedir repetição._
 
 [Captura histórica completa: Lote de R$ 150 rejeitado por conflito](screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/02-conflito-sem-alteracao-financeira.png)
 
-*Os R$ 150 pertencem ao arquivo candidato rejeitado. O banco e a consulta HTTP confirmaram que a carteira permaneceu em R$ 125. “Novo” nessa linha descreve a análise do arquivo; o título não foi inserido.*
+_Os R$ 150 pertencem ao arquivo candidato rejeitado. O banco e a consulta HTTP confirmaram que a carteira permaneceu em R$ 125. “Novo” nessa linha descreve a análise do arquivo; o título não foi inserido._
 
 [Captura histórica completa: Mesma tentativa e entrega simulada após reconciliação no destino](screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/03-mesma-tentativa-reconciliada.png)
 
-*No destino restaurado, tentativa #1 concluída e entrega simulada #1 preservada. Nenhuma mensagem externa foi enviada.*
+_No destino restaurado, tentativa #1 concluída e entrega simulada #1 preservada. Nenhuma mensagem externa foi enviada._
 
 [Captura histórica completa: Título pago preserva baixa de R$ 50](screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/04-mesma-baixa-preservada.png)
 
-*A baixa de R$ 50 continuou associada ao título original. A verificação do banco, além da imagem, confirmou o mesmo pagamento #1.*
+_A baixa de R$ 50 continuou associada ao título original. A verificação do banco, além da imagem, confirmou o mesmo pagamento #1._
 
 ## Como a prova é isolada
 
@@ -62,14 +64,14 @@ O [suplemento CLI](evidence/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/cli-s
 
 ## Medidas e reprodução
 
-| Fase medida com relógio monotônico | Tempo observado |
-| --- | ---: |
-| Dump, cópia e hash | 1,219 s |
-| Preparação do destino | 10,203 s |
-| Guarda, cópia e `pg_restore` | 6,735 s |
-| Privilégios, igualdade, recusas, repetição e reconciliação | 40,781 s |
-| Destino: preparação até reconciliação | 57,719 s |
-| Execução completa, incluindo builds com cache, capturas e limpeza | 157,672 s |
+| Fase medida com relógio monotônico                                | Tempo observado |
+| ----------------------------------------------------------------- | --------------: |
+| Dump, cópia e hash                                                |         1,219 s |
+| Preparação do destino                                             |        10,203 s |
+| Guarda, cópia e `pg_restore`                                      |         6,735 s |
+| Privilégios, igualdade, recusas, repetição e reconciliação        |        40,781 s |
+| Destino: preparação até reconciliação                             |        57,719 s |
+| Execução completa, incluindo builds com cache, capturas e limpeza |       157,672 s |
 
 Uma observação local, fixture de dois títulos e dump de 48.737 bytes. Os subtotais não devem ser somados ao total que já os inclui. O relógio do host foi `GetTickCount64`, resolução nominal de 15,625 ms; os números não são SLA, estimativa de produção nem teste de capacidade.
 

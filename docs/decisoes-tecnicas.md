@@ -1,16 +1,18 @@
 # Decisões técnicas
 
+> Escolhas locais e mecanismos descritos. Fontes: [modelos](../backend/src/gestao_recebiveis/models.py), [importação](../backend/src/gestao_recebiveis/imports.py), [baixa](../backend/src/gestao_recebiveis/receivables.py) e [fila](../backend/src/gestao_recebiveis/reminders/service.py). Conferência documental: **22/09/2026**.
+
 Organizei a implementação para proteger três resultados: uma dívida não se repete ao importar, uma baixa não se repete ao pagar e uma tentativa incerta de envio não é tratada como uma entrega nova. O [guia de problemas e exemplos](problem-solution.md) mostra os casos, o resultado esperado e os testes correspondentes. As respostas abaixo detalham o mecanismo; caminhos sem link completo se referem a `backend/src/gestao_recebiveis/`.
 
 ## Dificuldades verificáveis e suas consequências
 
-| Dificuldade | Tratamento escolhido | Consequência que permanece |
-| --- | --- | --- |
-| A carteira pode mudar entre prévia e confirmação do CSV | Revalidar sob transação e rejeitar o lote conflitante por inteiro | O operador precisa corrigir e reenviar também suas linhas válidas |
-| Pagamento e autorização de lembrete podem disputar o mesmo título | Ordem de locks e baixa/cancelamento na mesma transação | Uma autorização já feita pode produzir efeito depois da baixa |
-| A aceitação sobrevive, mas sua resposta se perde | Guardar tentativa desconhecida e reconciliar sua mesma identidade | A integração real depende do que o provedor permite consultar e repetir |
-| Verificar senhas consome CPU antes de saber se o usuário é legítimo | Reservar capacidade persistente antes do Argon2 | Na demo, clientes que atravessam o mesmo Next compartilham a origem e a quota |
-| O runtime não precisa administrar o banco | Separar admin, owner e aplicação; reaplicar concessões na atualização | A instalação exige provisionamento e preservação das credenciais corretas |
+| Dificuldade                                                         | Tratamento escolhido                                                  | Consequência que permanece                                                    |
+| ------------------------------------------------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| A carteira pode mudar entre prévia e confirmação do CSV             | Revalidar sob transação e rejeitar o lote conflitante por inteiro     | O operador precisa corrigir e reenviar também suas linhas válidas             |
+| Pagamento e autorização de lembrete podem disputar o mesmo título   | Ordem de locks e baixa/cancelamento na mesma transação                | Uma autorização já feita pode produzir efeito depois da baixa                 |
+| A aceitação sobrevive, mas sua resposta se perde                    | Guardar tentativa desconhecida e reconciliar sua mesma identidade     | A integração real depende do que o provedor permite consultar e repetir       |
+| Verificar senhas consome CPU antes de saber se o usuário é legítimo | Reservar capacidade persistente antes do Argon2                       | Na demo, clientes que atravessam o mesmo Next compartilham a origem e a quota |
+| O runtime não precisa administrar o banco                           | Separar admin, owner e aplicação; reaplicar concessões na atualização | A instalação exige provisionamento e preservação das credenciais corretas     |
 
 As três primeiras situações têm regressões financeiras/de lembretes referenciadas no [guia de problemas](problem-solution.md). As duas últimas foram tratadas na [revisão de segurança](security.md). São dificuldades demonstradas pelo código e pelos testes; não são relatos de incidentes com clientes ou de experiência pessoal não registrada.
 
