@@ -1,7 +1,5 @@
 # Recuperar a carteira sem repetir seus efeitos
 
-> Registro histórico; execução em 22/09/2026, sem nova restauração nesta revisão. Fontes: [manifesto primário](evidence/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/manifest.json) e [executor](../scripts/prove_restore.py). Conferência documental: **22/09/2026**.
-
 As quatro imagens desta página são **históricas**, vinculadas ao manifesto da restauração. Mantêm o layout da execução original; veja as [telas atuais](image-captures.md) para a composição servida hoje.
 
 Restaurar um banco não basta para retomar cobranças: é preciso preservar a baixa já registrada e descobrir se uma tentativa pendente já foi aceita. Esta prova restaura uma carteira sintética em outro volume e confere esses fatos antes de continuar. O caso representa um risco técnico do domínio; não é um incidente de cliente.

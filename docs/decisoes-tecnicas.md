@@ -1,7 +1,5 @@
 # Decisões técnicas
 
-> Escolhas locais e mecanismos descritos. Fontes: [modelos](../backend/src/gestao_recebiveis/models.py), [importação](../backend/src/gestao_recebiveis/imports.py), [baixa](../backend/src/gestao_recebiveis/receivables.py) e [fila](../backend/src/gestao_recebiveis/reminders/service.py). Conferência documental: **22/09/2026**.
-
 Organizei a implementação para proteger três resultados: uma dívida não se repete ao importar, uma baixa não se repete ao pagar e uma tentativa incerta de envio não é tratada como uma entrega nova. O [guia de problemas e exemplos](problem-solution.md) mostra os casos, o resultado esperado e os testes correspondentes. As respostas abaixo detalham o mecanismo; caminhos sem link completo se referem a `backend/src/gestao_recebiveis/`.
 
 ## Dificuldades verificáveis e suas consequências
@@ -79,3 +77,7 @@ No candidato atual, agrupei o saldo aberto com suas parcelas vencido/em dia e se
 Verificar uma senha com Argon2 tem custo deliberado. Fazer isso antes de reservar capacidade permitiria gastar esse custo repetidamente sem uma cota atômica. [`login_admission.py`](../backend/src/gestao_recebiveis/login_admission.py) reserva a tentativa em transação independente: falhar a autenticação não desfaz a reserva, e um sucesso libera somente a própria. Identificadores dos contadores usam HMAC; o relógio comercial da demo não muda a expiração. A [suíte de admissão](../backend/tests/test_login_admission.py) verifica concorrência e as reservas.
 
 As contas de administração e migração precisam alterar a estrutura; API e worker precisam apenas manipular dados. [`provision_database.py`](../backend/src/gestao_recebiveis/provision_database.py) separa essas permissões, conferidas em [test_database_roles.py](../backend/tests/test_database_roles.py). O custo é provisionar identidades adicionais e migrar instalações antigas com cuidado. Isso limita o privilégio do runtime, mas não substitui a autorização por papel nem resolve sozinho a identificação de clientes atrás de proxies; esses limites e o procedimento estão em [segurança](security.md).
+
+## Código e evidências relacionados
+
+[modelos](../backend/src/gestao_recebiveis/models.py) · [importação](../backend/src/gestao_recebiveis/imports.py) · [baixa](../backend/src/gestao_recebiveis/receivables.py) · [fila](../backend/src/gestao_recebiveis/reminders/service.py).

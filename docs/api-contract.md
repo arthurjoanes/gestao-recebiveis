@@ -4,8 +4,6 @@ Base `/api/v1`, JSON e nomes `snake_case`. Valores `*_cents` são strings de int
 
 ## Sessão e erros
 
-Fontes do contrato local: [`auth.py`](../backend/src/gestao_recebiveis/auth.py), [`schemas.py`](../backend/src/gestao_recebiveis/schemas.py), [`errors.py`](../backend/src/gestao_recebiveis/errors.py). Conferência documental em **22/09/2026**; regras da implementação, não medição de produção.
-
 Cookie `cf_session`; mutações exigem `X-CSRF-Token` e `Origin` do frontend. Erros têm `code`, `message` e `details` opcional. Listas têm `items`, `total`, `page` e `page_size`.
 
 | HTTP | Significado                |
@@ -16,8 +14,6 @@ Cookie `cf_session`; mutações exigem `X-CSRF-Token` e `Origin` do frontend. Er
 | 422  | Validação                  |
 
 ## Rotas
-
-Fontes do contrato local: [`routes.py`](../backend/src/gestao_recebiveis/routes.py), [`responses.py`](../backend/src/gestao_recebiveis/responses.py). Conferência documental em **22/09/2026**; regras da implementação, não medição de produção.
 
 Os caminhos abaixo são relativos a `/api/v1`; saúde e Swagger aparecem separadamente.
 
@@ -48,8 +44,6 @@ Fora do prefixo: `/health`, `/health/ready` e Swagger `/docs`, com assets locais
 
 ## Objetos de resposta
 
-Fontes do contrato local: [`responses.py`](../backend/src/gestao_recebiveis/responses.py). Conferência documental em **22/09/2026**; regras da implementação, não medição de produção.
-
 As listas de campos abaixo resumem os modelos; não são exemplos de JSON executável. Tipos e nulabilidade completos estão em [responses.py](../backend/src/gestao_recebiveis/responses.py).
 
 | Objeto            | Campos                                                                                                                                                                                                            |
@@ -70,8 +64,6 @@ A lista de importações não transfere bytes, linhas ou relatório completo. O 
 
 ## Limites HTTP
 
-Fontes do contrato local: [`request_limits.py`](../backend/src/gestao_recebiveis/request_limits.py), [`database.py`](../backend/src/gestao_recebiveis/database.py), [`routes.py`](../backend/src/gestao_recebiveis/routes.py). Conferência documental em **22/09/2026**; regras da implementação, não medição de produção.
-
 Página 1–10.000, padrão 1; tamanho 1–100, padrão 20; busca `q` até 200 caracteres. Estados de lembrete: `pending`, `processing`, `retry_scheduled`, `sent`, `failed`, `canceled` ou `superseded`. Outros valores retornam 422.
 
 CSV: 2 MiB e 5.000 registros. Multipart: mais 64 KiB de envelope. Outras mutações: até 8 KiB. O limite é aplicado antes do parser, inclusive sem `Content-Length`; excesso retorna 413.
@@ -81,8 +73,6 @@ Pool por processo: até 10 conexões, espera por vaga de até 5 s, conexão de 5
 O e-mail é normalizado; senha é conferida exatamente como recebida, incluindo espaços. Rejeição de importação por regra de negócio retorna HTTP 200 com `status=rejected` e diagnóstico preservado; não representa sucesso financeiro. Erros de HTTP, autenticação ou indisponibilidade usam seus códigos próprios.
 
 ## Carteira e recebimentos
-
-Fontes do contrato local: [`receivables.py`](../backend/src/gestao_recebiveis/receivables.py), [`schemas.py`](../backend/src/gestao_recebiveis/schemas.py), [`reporting.py`](../backend/src/gestao_recebiveis/reporting.py). Conferência documental em **22/09/2026**; regras da implementação, não medição de produção.
 
 `overdue` significa título aberto com vencimento estritamente anterior à data comercial. `current` significa título aberto com vencimento igual ou posterior: inclui hoje. Ambos são recortes de consulta; o estado persistido continua `open`. No resumo, `open_cents = overdue_cents + current_cents` e a mesma decomposição vale para as contagens, dentro da busca e do intervalo de vencimento aplicados.
 
@@ -94,6 +84,14 @@ Pagamento é sempre **integral**: o valor vem do título bloqueado, não do corp
 
 ## Limite do login
 
-Fontes do contrato local: [`login_admission.py`](../backend/src/gestao_recebiveis/login_admission.py). Conferência documental em **22/09/2026**; regras da implementação, não medição de produção.
-
 `POST /api/v1/auth/login` pode retornar `429`, código `login_throttled`, com `Retry-After` em segundos. Cada janela dura 60 segundos desde a primeira reserva: cinco tentativas malsucedidas/em andamento por conta normalizada e origem, e trinta por origem. O limite é consultado antes do Argon2 e persistido mesmo quando a autenticação termina em 401. Uma conta já limitada não consome novamente o orçamento da origem. Credenciais válidas liberam apenas a reserva da própria requisição. Não há um contador global nem bloqueio de conta entre origens distintas.
+
+## Código e evidências relacionados
+
+| Tema                    | Implementação e critérios                                                                                                                                                       |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sessão e erros          | [`auth.py`](../backend/src/gestao_recebiveis/auth.py) · [`schemas.py`](../backend/src/gestao_recebiveis/schemas.py) · [`errors.py`](../backend/src/gestao_recebiveis/errors.py) |
+| Rotas                   | [`gestao_recebiveis/routes.py`](../backend/src/gestao_recebiveis/routes.py)                                                                                                     |
+| Limites HTTP            | [`request_limits.py`](../backend/src/gestao_recebiveis/request_limits.py) · [`database.py`](../backend/src/gestao_recebiveis/database.py)                                       |
+| Carteira e recebimentos | [`receivables.py`](../backend/src/gestao_recebiveis/receivables.py) · [`reporting.py`](../backend/src/gestao_recebiveis/reporting.py)                                           |
+| Limite do login         | [`login_admission.py`](../backend/src/gestao_recebiveis/login_admission.py)                                                                                                     |

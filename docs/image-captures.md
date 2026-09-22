@@ -1,7 +1,5 @@
 # Capturas da interface
 
-> Proveniência das imagens, conservando a data da execução original. Fontes: [manifesto das capturas](screenshots/current-20260922/capture.json) e [coletor](../scripts/capture_docs.cjs). Conferência documental: **22/09/2026**.
-
 As seis capturas de `screenshots/current-20260922/` vieram do Chromium/Playwright 1.63.0 acessando a aplicação local em 22/09/2026. A fonte autenticada corresponde a `deade1369`; o [registro da captura](screenshots/current-20260922/capture.json) contém horário, viewports e SHA-256. São recortes nativos de componentes, sem edição de pixels: viewport desktop 1440×1000 ou móvel 390×844. O coletor registra o seletor e as dimensões de cada foco; os recortes móveis têm no máximo 650 px de altura. Nenhuma captura de página inteira é incorporada nas docs.
 
 | Tela atual                                                          | O que conferir                                                            |
