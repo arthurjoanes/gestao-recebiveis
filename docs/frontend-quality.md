@@ -2,7 +2,7 @@
 
 Direção visual de 22/09/2026 sobre o commit `bd5aeb1c11d3fa2e98a4e401aa3e86b22e2945f4`. O baseline já tinha carteira, detalhe, filtros compactos e os quatro saldos visíveis. A nova composição separa **posição da carteira**, **movimentação recebida** e **conferência de títulos**, com marca e tipografia próprias.
 
-**Design aprovado pelo autor em 22/09/2026; validação de execução parcial:** lint, tipos, build, listagem da suíte e verificações estáticas passaram. Não houve inicialização do frontend, navegador ou novas capturas nesta rodada. A revisão automática já havia recusado o servidor com `blocked by policy`; não foi repetido nem contornado. A aprovação da direção visual não substitui a execução das jornadas do frontend atual, que permanece pendente. O [registro desta direção](evidence/visual-direction-static-20260922.json) identifica fontes, checks e limites; a [revisão anterior](evidence/frontend-quality-static-20260922.json) conserva sua própria proveniência.
+**Design aprovado pelo autor em 22/09/2026; execução automatizada comprovada no commit `5718cdad3c5052ddbf6f660797121e9c47aa46c8`:** o [CI do commit `5718cdad`](https://github.com/arthurjoanes/gestao-recebiveis/actions/runs/35744528178) aprovou 15 casos Playwright (14 jornadas interativas e 1 caso de formatação BRL), sem skip ou retry, e produziu 21 PNGs. A revisão local anterior aprovou lint, tipos, build e verificações estáticas; o lançamento foi recusado com `blocked by policy` e não foi repetido nem contornado. O CI posterior é uma prova remota distinta. O [recibo do CI](evidence/frontend-ci-20260922.json), o [registro da direção](evidence/visual-direction-static-20260922.json) e a [revisão anterior](evidence/frontend-quality-static-20260922.json) conservam seus escopos e fontes.
 
 ## Inventário e decisões que cada tela apoia
 
@@ -22,13 +22,13 @@ Carregamento, ausência de dados, erro de consulta e valor zero são estados dif
 
 ## Diagnóstico e duas alternativas antes de expandir
 
-As prioridades indicam o impacto do problema no baseline: P1 compromete a compreensão da tarefa; P2 representa atrito de leitura; P3 é refinamento visual. A linha de preservação não registra um defeito. A validação abaixo distingue a inspeção já registrada das verificações de navegador ainda bloqueadas.
+As prioridades indicam o impacto do problema no baseline: P1 compromete a compreensão da tarefa; P2 representa atrito de leitura; P3 é refinamento visual. A linha de preservação não registra um defeito. A validação abaixo distingue inspeção estática, jornadas remotas no SHA publicado e verificações ainda não realizadas.
 
 | Evidência do baseline atual | Efeito sobre a decisão | Prioridade | Intervenção | Validação e limite |
 |---|---|---|---|---|
-| Quatro saldos lado a lado, com peso semelhante | Recebido parece uma parcela do aberto | P1 | Aberto ocupa a largura de seu grupo; vencido e em dia aparecem abaixo como partes. Recebido ocupa superfície separada com período e ressalva explícita | [Fonte do Resumo](../frontend/src/features/overview.tsx) conserva os quatro valores da API e explicita as relações. Confronto visual com API, recortes e larguras: não verificado |
-| Carteira já apresenta código/origem, cliente, vencimento, valor e situação juntos | Tabela sustenta conferência real | Não aplicável: preservação | Preservar tabela e filtros aplicados; não trocar títulos por cartões | [Fonte da carteira](../frontend/src/features/receivables.tsx) mantém campos e paginação. Filtros combinados, retorno ao título e foco no candidato: não verificados |
-| Detalhe já reúne valor, situação e baixa | Proximidade correta, mas superfície igual às demais | P2 | Borda de identificação do registro e separação entre decisão financeira e metadados; mesmas ações e permissões | Inspeção de fontes preserva ações e papéis. Leitura em tela estreita, confirmação e retorno de foco no candidato: não verificados |
+| Quatro saldos lado a lado, com peso semelhante | Recebido parece uma parcela do aberto | P1 | Aberto ocupa a largura de seu grupo; vencido e em dia aparecem abaixo como partes. Recebido ocupa superfície separada com período e ressalva explícita | [Fonte do Resumo](../frontend/src/features/overview.tsx) conserva os quatro valores da API e explicita as relações. CI aprovou visibilidade dos quatro saldos, recortes e ausência de overflow nas cinco larguras da suíte; confronto visual pareado com o baseline permanece não verificado |
+| Carteira já apresenta código/origem, cliente, vencimento, valor e situação juntos | Tabela sustenta conferência real | Não aplicável: preservação | Preservar tabela e filtros aplicados; não trocar títulos por cartões | [Fonte da carteira](../frontend/src/features/receivables.tsx) mantém campos e paginação. CI aprovou filtros, retorno à página e foco, inclusive resposta atrasada sem roubar a digitação |
+| Detalhe já reúne valor, situação e baixa | Proximidade correta, mas superfície igual às demais | P2 | Borda de identificação do registro e separação entre decisão financeira e metadados; mesmas ações e permissões | Inspeção de fontes preserva ações e papéis. CI aprovou detalhe com dados longos nas cinco larguras, confirmação e retorno de foco; não é estudo de leitura com pessoas |
 | Ícone quadrado genérico e fonte de sistema | Produtos diferentes pareciam o mesmo shell | P3 | Símbolo original derivado do R/coluna de registros, IBM Plex Sans e cabeçalho navy | SVGs/fontes e amostras 16/24/32 px inspecionados estaticamente. Carregamento, fallback e favicon na aplicação: não verificados |
 
 As duas propostas usam **os mesmos dados** da demo já consultada: referência 17/08/2026, aberto R$ 515.153,87 (192 títulos), vencido R$ 243.020,08 (96), em dia R$ 272.133,79 (96), recebido de 01 a 17/08 R$ 117.816,83 (48). Não são indicadores novos.
@@ -65,30 +65,30 @@ Conteúdo centrado até 1440 px, margens 36/24/16 px. A posição ocupa duas par
 
 ## Matriz das 11 dimensões
 
-Cada célula mostra **antes → depois**. C = Conforme no escopo da inspeção de fontes; P = Parcialmente conforme; NC = Não conforme; NV = Não verificado; NA = Não aplicável. O estado C documental/estático não implica conformidade visual, teste de usuário ou WCAG integral. “Depois” se refere ao candidato, não a uma publicação.
+Cada célula mostra **antes → depois**. C = Conforme no escopo da inspeção de fontes; P = Parcialmente conforme; NC = Não conforme; NV = Não verificado; NA = Não aplicável. O estado C documental/estático não implica conformidade visual, teste de usuário ou WCAG integral. “Depois” se refere à direção implementada em `5718cdad`; a execução remota torna parciais os itens antes não verificados, sem transformar cobertura limitada em conformidade integral.
 
 | Dimensão | Login | Resumo | Carteira | Detalhe + confirmação | Importações + prévia | Lembretes + tentativas | Demo | Navegação + conta |
 |---|---|---|---|---|---|---|---|---|
 | 1. Objetivo e público | C→C | C→C | C→C | C→C | C→C | C→C | C→C | C→C |
 | 2. Hierarquia da informação | C→C | P→P | P→P | P→P | C→C | C→C | C→C | C→C |
-| 3. Layout, alinhamento, espaçamento, densidade | P→NV | P→NV | P→NV | P→NV | P→NV | P→NV | P→NV | P→NV |
+| 3. Layout, alinhamento, espaçamento, densidade | P→P | P→P | P→P | P→P | P→P | P→P | P→P | P→P |
 | 4. Tipografia, cores e consistência | P→P | P→P | P→P | P→P | P→P | P→P | P→P | P→P |
 | 5. Indicadores, gráficos e tabelas | NA→NA | P→P | P→P | C→C | C→C | C→C | C→C | NA→NA |
-| 6. Navegação, filtros, formulários e ações | P→NV | P→NV | P→NV | P→NV | P→NV | P→NV | P→NV | P→NV |
+| 6. Navegação, filtros, formulários e ações | P→P | P→P | P→P | P→P | P→P | P→P | P→P | P→P |
 | 7. Carregamento, vazio, erro e atualização | C→P | C→P | C→P | C→P | C→P | C→P | C→P | C→P |
-| 8. Acessibilidade e responsividade | P→NV | P→NV | P→NV | P→NV | P→NV | P→NV | P→NV | P→NV |
+| 8. Acessibilidade e responsividade | P→P | P→P | P→P | P→P | P→P | P→P | P→P | P→P |
 | 9. Desempenho | P→P | P→P | P→P | P→P | P→P | P→P | P→P | P→P |
 | 10. Manutenção e reaproveitamento | C→C | C→C | P→C | P→C | C→C | C→C | C→C | C→C |
 | 11. Dados, regras e permissões | C→C | C→C | C→C | C→C | C→C | C→C | C→C | C→C |
 
 NA na dimensão 5: login e navegação não apresentam informação analítica ou tabela. Os outros casos foram avaliados quanto aos números/tabelas existentes; não há justificativa para adicionar gráficos decorativos.
 
-P na hierarquia nova: o DOM entrega os dados na ordem proposta, mas faltam renderização e observação de uso. P em estados: ramificações e proteção contra resposta antiga permanecem, porém não foram percorridas novamente. P em desempenho: assets de build foram comparados, mas waterfall, paint, renderizações e interação não foram medidos. P nas cores: pares principais calculados; estados sobrepostos e todos os componentes não foram auditados visualmente.
+P na hierarquia nova: o CI renderizou a composição, mas não houve observação de uso com pessoas. P em estados: as jornadas exercitaram erros, vazios, expiração, filtros e proteção de foco; não esgotam todas as combinações. P em layout, navegação e acessibilidade: há checks reais e capturas no escopo da suíte, sem comparação pareada de todas as telas, zoom nativo ou leitor de tela. P em desempenho: assets de build foram comparados, mas waterfall, paint, renderizações e interação não foram medidos. P nas cores: pares principais calculados; estados sobrepostos e todos os componentes não foram auditados visualmente.
 
 ## Contratos e verificações
 
 Cliente HTTP, tipos, formatação com `BigInt`, hook de consulta, navegação/foco, backend, auth, papéis e regras ficaram fora do delta. O agrupamento usa os quatro valores retornados, sem somá-los novamente no frontend. O vencido é parte do aberto; recebido mantém suas próprias datas. Importação não passa a permitir inclusão parcial; lembretes continuam simulados; controles do leitor não ganham permissão.
 
-Nesta rodada: **ESLint, Prettier, TypeScript e build de produção aprovados; 15 casos Playwright apenas listados**, sem execução. Dez asserções puras de formatação e nove pares de contraste foram conferidos. O manifesto lista hashes e assets emitidos; bytes de build não medem transferência ou velocidade percebida. Não foram iniciados recursos de aplicação. Estilos do ícone anterior e da entrada animada foram retirados; nenhum runtime/biblioteca foi adicionado.
+Na revisão local: **ESLint, Prettier, TypeScript e build de produção aprovados; 15 casos Playwright apenas listados**. Dez asserções puras de formatação e nove pares de contraste foram conferidos. O manifesto histórico lista hashes e assets emitidos; bytes de build não medem transferência ou velocidade percebida. Depois, o [CI do commit `5718cdad`](https://github.com/arthurjoanes/gestao-recebiveis/actions/runs/35744528178) executou os **15 casos com sucesso em 33,4 s**: 14 jornadas interativas e 1 caso de formatação, Chromium/Playwright 1.63.0, um worker, zero skip/retry, sem filtro de seleção. As jornadas incluem cinco larguras (1440/1366/768/390/320), dados longos, baixa/importação, papéis, filtros, página/foco, erro e recuperação. As [21 capturas do artefato](https://github.com/arthurjoanes/gestao-recebiveis/actions/runs/35744528178/artifacts/10702621807) pertencem a essa execução; seus estados podem variar conforme os casos modificam a massa. Não foram iniciados recursos locais de aplicação nesta atualização.
 
-As imagens em `docs/img/` continuam históricas. O baseline da API não é captura de UI: a imagem antiga do Resumo usa totais depois de outras jornadas e não forma par comparável com as propostas. Para fechar, executar baseline/candidato com mesmo seed, perfil, relógio, filtros e recorte `TIT-0001`/vencido/18-07-2026. Capturar todas as telas do inventário em 1440×900, 1366×768, 768×1024, 390×844, 320×844 e wide 2560; medir zoom nativo 200%, teclado, foco, overflow e movimento reduzido. Validar quatro saldos contra API, leitor/operador, baixa, importação, retorno à página e proteção de foco sob resposta atrasada. **Tudo que depende de navegador permanece Não verificado.** A aprovação do design não comprova essas verificações, conformidade AA integral ou desempenho em produção.
+As imagens em `docs/img/` continuam históricas. A [captura publicada do Resumo](screenshots/publication-20260922/overview.png) veio do CI `5718cdad`; não forma par controlado com o baseline. Ainda falta comparar baseline/candidato com mesmo seed, perfil, relógio, filtros e recorte `TIT-0001`/vencido/18-07-2026, cobrindo todas as telas do inventário e wide 2560. Zoom nativo de 200%, leitor de tela, fallback/favicon e desempenho percebido continuam não verificados. A aprovação do design e os testes automatizados não comprovam conformidade AA integral ou desempenho em produção.
