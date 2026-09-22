@@ -43,6 +43,7 @@ export function OverviewView({
       <div className="page-heading">
         <div>
           <h1>Resumo</h1>
+          <p>Saldo da carteira, vencimentos e pagamentos recebidos.</p>
         </div>
         <button
           className="button secondary"

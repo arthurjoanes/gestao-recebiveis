@@ -13,6 +13,17 @@ O banco de testes usa `tmpfs`. A jornada tem banco e serviços próprios, no pro
 
 Na revisão de 21/09/2026, uma cópia contendo apenas os arquivos de publicação construiu as imagens e passou os 145 testes de backend, os 12 casos Chromium e as verificações de estilo e tipos. A jornada adicional pelo proxy confirmou 243 títulos após importar três registros, duas tentativas no retry e preservação dos saldos após conflito. A prova de interrupção e reinício manteve uma tentativa e uma entrega, recusando o token do worker antigo. As três imagens de execução tiveram zero achados no Trivy dessa data.
 
+## Interface da carteira — 22/09/2026
+
+A adaptação foi validada com frontend compilado em modo standalone e a API da revisão de segurança, em um projeto Compose separado (`ui-gr-redesign-20260922`) com PostgreSQL temporário. As capturas representativas estão em `docs/img/`. O teste adicional de navegação faz parte da suíte versionada em `frontend/tests/journey.spec.ts`.
+
+- ESLint, Prettier, TypeScript e build de produção passaram.
+- Os 13 testes Playwright passaram no Microsoft Edge/Chromium local: os 12 percursos existentes e a regressão de preservação de filtros, página, rolagem e foco ao consultar as tentativas de um lembrete, inclusive após atualizar a fila, aplicar um filtro sem resultados ou abrir o lembrete a partir de um título.
+- As cinco áreas foram verificadas em 1440, 768, 390 e 320 px e com zoom CSS de 200%, sem overflow horizontal da página ou erros JavaScript. As tabelas mantêm rolagem na própria região. A suíte também cobre 1366 px, dados longos, confirmações, navegação por teclado, sessão expirada, erro de rede e ausência de resultados.
+- As capturas da carteira, do resumo e do título foram feitas a partir do frontend de produção e da carteira sintética inicial. Os textos e rótulos correspondem às ações existentes.
+
+A mudança reorganiza componentes React, CSS e textos, sem alterar as regras de importação, baixa, autorização ou recuperação. As provas de backend abaixo continuam identificadas pela revisão em que foram realizadas; não representam uma nova prova de carga ou de entrega externa.
+
 ## Correção de segurança — 21/09/2026
 
 A revisão posterior separou as identidades de administração, migração e execução e adicionou admissão persistente ao login. O backend foi reconstruído; os serviços usaram bancos descartáveis em `fix-gr-20260922` e `fix-gr-proof-20260922`, sem publicar portas. Os arquivos locais da execução ficam em `artifacts/security-fix/`, ignorados pelo Git.

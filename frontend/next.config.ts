@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const config: NextConfig = {
   output: "standalone",
+  agentRules: false,
   poweredByHeader: false,
   async rewrites() {
     return [

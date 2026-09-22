@@ -58,12 +58,14 @@ export function WorkspaceNavigation({
       <aside className="sidebar">
         <Brand />
         <div className="company">
-          <span className="company-avatar">GR</span>
+          <Icon name="titles" />
           <div>
-            <strong>Distribuidora fictícia</strong>
+            <strong>Contas a receber</strong>
+            <small>Carteira em reais · BRL</small>
           </div>
         </div>
 
+        <p className="nav-label">Financeiro</p>
         {navigation}
 
         <div className="user-block">

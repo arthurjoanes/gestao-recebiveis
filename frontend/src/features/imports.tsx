@@ -95,6 +95,7 @@ export function ImportsView({ session }: { session: Session }) {
       <div className="page-heading">
         <div>
           <h1>Importações</h1>
+          <p>Confira o arquivo antes de incluir os títulos na carteira.</p>
         </div>
         <button
           className="button secondary"
@@ -103,6 +104,21 @@ export function ImportsView({ session }: { session: Session }) {
           <Icon name="refresh" /> Atualizar
         </button>
       </div>
+      <ol className="import-steps" aria-label="Etapas da importação">
+        <li aria-current={!batch ? "step" : undefined}>
+          <span>1</span>Selecionar arquivo
+        </li>
+        <li
+          aria-current={
+            batch && batch.status !== "confirmed" ? "step" : undefined
+          }
+        >
+          <span>2</span>Conferir linhas
+        </li>
+        <li aria-current={batch?.status === "confirmed" ? "step" : undefined}>
+          <span>3</span>Confirmar importação
+        </li>
+      </ol>
       {session.user.role === "operator" ? (
         <section className="panel upload-panel">
           <div className="upload-icon" aria-hidden="true">

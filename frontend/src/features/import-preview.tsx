@@ -18,7 +18,7 @@ export function ImportPreview({
   const [page, setPage] = useState(1);
   const [errorPage, setErrorPage] = useState(1);
   return (
-    <section className="panel batch-preview" aria-label="Prévia do lote">
+    <section className="panel" aria-label="Prévia do lote">
       <div className="section-heading">
         <div>
           <p className="eyebrow">Lote #{batch.id}</p>
@@ -122,7 +122,10 @@ export function ImportPreview({
       )}
       {canConfirm && !["confirmed", "rejected"].includes(batch.status) && (
         <div className="panel-footer">
-          <p>Um conflito bloqueia o lote inteiro.</p>
+          <p>
+            Títulos idênticos serão ignorados. Uma divergência impede a
+            confirmação de todo o lote.
+          </p>
           <button
             className="button"
             disabled={busy || batch.report.errors.length > 0}

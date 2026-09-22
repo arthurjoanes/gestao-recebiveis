@@ -105,8 +105,15 @@ export function ReceivableDetailView({
             </div>
             {success && <Alert success>{success}</Alert>}
             <div className="detail-grid">
-              <section className="panel detail-summary">
-                <p className="eyebrow">Valor original</p>
+              <section
+                className="panel detail-summary"
+                aria-label="Dados do título"
+              >
+                <div className="invoice-caption">
+                  <span>CONTAS A RECEBER</span>
+                  <span>{data.source_system}</span>
+                </div>
+                <p className="eyebrow">Valor do título</p>
                 <strong className="detail-amount">
                   {money(data.amount_cents)}
                 </strong>
@@ -141,7 +148,7 @@ export function ReceivableDetailView({
                   )}
                 </dl>
                 {data.status === "open" && session.user.role === "operator" && (
-                  <div className="stack">
+                  <div className="invoice-actions">
                     <button
                       className="button"
                       onClick={() => {
@@ -164,13 +171,15 @@ export function ReceivableDetailView({
                   </div>
                 )}
                 <p className="footnote">
-                  Pagamento integral. Envios já autorizados podem terminar.
+                  A baixa quita o valor integral e cancela os lembretes
+                  pendentes. Uma tentativa de envio já autorizada pode terminar.
                 </p>
               </section>
-              <section className="panel timeline-panel">
+              <section className="panel">
                 <div className="section-heading">
                   <div>
                     <h2>Linha do tempo</h2>
+                    <p>Importação, alterações e registro da baixa.</p>
                   </div>
                 </div>
                 {data.events.length ? (
@@ -263,7 +272,7 @@ export function ReceivableDetailView({
           <p className="modal-amount">{money(data.amount_cents)}</p>
           <p>
             {action === "pay"
-              ? "A baixa usa a data comercial atual e cancela lembretes pendentes."
+              ? `O título ${data.external_receivable_id} será quitado pelo valor integral. A baixa usa a data comercial atual e cancela os lembretes pendentes.`
               : "O título sai da carteira em aberto, sem registrar pagamento."}
           </p>
           {error && (

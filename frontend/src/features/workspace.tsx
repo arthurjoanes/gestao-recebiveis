@@ -34,8 +34,11 @@ export function Workspace({
   const [reminderId, setReminderId] = useState<number | null>(null);
   const [demoRevision, setDemoRevision] = useState(0);
   useEffect(() => {
-    document.getElementById("main-content")?.focus({ preventScroll: true });
-  }, [area, titleId, reminderId]);
+    const destination =
+      (area === "reminders" && document.getElementById("reminder-heading")) ||
+      document.getElementById("main-content");
+    destination?.focus({ preventScroll: true });
+  }, [area, titleId]);
   const demo = useResource<Demo>("/demo", demoRevision);
   const [logoutError, setLogoutError] = useState("");
   const [loggingOut, setLoggingOut] = useState(false);
@@ -85,8 +88,8 @@ export function Workspace({
       <div className="workspace-body">
         <header className="topbar">
           <div>
-            <span className="status-dot" />
-            <span>Ambiente de demonstração</span>
+            <span className="environment-label">Demonstração</span>
+            <span>Distribuidora fictícia</span>
           </div>
           <div className="business-clock">
             <span>Data comercial</span>
