@@ -25,6 +25,10 @@ A composição foi refeita com navegação horizontal, carteira com filtros pró
 
 A mudança reorganiza componentes React, CSS e textos, sem alterar as regras de importação, baixa, autorização ou recuperação. As provas de backend abaixo continuam identificadas pela revisão em que foram realizadas; não representam uma nova prova de carga ou de entrega externa.
 
+## Limpeza de variáveis CSS — 22/09/2026
+
+Foram removidas somente as declarações `--amber` e `--amber-soft`, sem consumidores nos 22 arquivos de `frontend/src` nem no restante das fontes versionadas. A inspeção também conferiu acesso dinâmico a propriedades CSS e a configuração do frontend. O [registro separado](evidence/interface-cleanup-20260922.json) guarda o escopo e os hashes antes/depois. As provas e capturas anteriores foram preservadas; esta limpeza teve apenas conferência de diff e formato, sem novo build, teste de aplicação ou revisão visual.
+
 ## Correção de segurança — 21/09/2026
 
 A revisão posterior separou as identidades de administração, migração e execução e adicionou admissão persistente ao login. O backend foi reconstruído; os serviços usaram bancos descartáveis em `fix-gr-20260922` e `fix-gr-proof-20260922`, sem publicar portas. Os arquivos locais da execução ficam em `artifacts/security-fix/`, ignorados pelo Git.
