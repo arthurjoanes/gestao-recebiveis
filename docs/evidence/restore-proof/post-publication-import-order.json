@@ -1,0 +1,18 @@
+{
+  "status": "PASSED_LOCAL_CI_PENDING",
+  "base_commit": "7607f9ad097fbaf2569f47c540b79735b2d8c9f8",
+  "failed_ci": "https://github.com/arthurjoanes/gestao-recebiveis/actions/runs/35698694847",
+  "reason": "Five I001 import ordering findings; initial local command used repository root, CI runs in backend",
+  "changed_file": "backend/tests/restore_probe.py",
+  "before_sha256": "74e459cb664728a35771ccd765f74ad58cce9711aca93886c630a5d72c2a44e0",
+  "after_sha256": "a11dd9bb5ee9ec1041e34c24e2c25b314b3a4eaaea6f1819122f7e3bdc110cf6",
+  "comparison": "AST identical after sorting only contiguous import statements; no other code changes",
+  "check_working_directory": "backend",
+  "checks": [
+    "ruff check src tests: passed",
+    "ruff format --check src tests: 40 files formatted",
+    "16 host guard/CLI tests: passed"
+  ],
+  "financial_proof_repeated": false,
+  "prior_proof_sources_preserved": true
+}

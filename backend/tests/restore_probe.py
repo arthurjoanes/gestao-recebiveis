@@ -50,9 +50,10 @@ def load_private(name: str) -> dict:
 
 
 def snapshot() -> dict:
+    from sqlalchemy import text
+
     from gestao_recebiveis.database import engine
     from gestao_recebiveis.models import Base
-    from sqlalchemy import text
 
     state = {"tables": {}, "sequences": {}}
     with engine.connect() as connection:
@@ -100,8 +101,9 @@ def save_snapshot(name: str) -> dict:
 
 
 def empty_destination(contract: Contract) -> dict:
-    from gestao_recebiveis.database import engine
     from sqlalchemy import text
+
+    from gestao_recebiveis.database import engine
 
     require(contract.role == "dst", "Only destination can receive a restore")
     with engine.connect() as connection:
@@ -116,11 +118,12 @@ def empty_destination(contract: Contract) -> dict:
 
 
 def initialize(contract: Contract) -> dict:
+    from sqlalchemy import select
+
     from gestao_recebiveis.auth import password_hasher
     from gestao_recebiveis.database import SessionLocal
     from gestao_recebiveis.imports import confirm_batch, create_preview
     from gestao_recebiveis.models import DemoState, Receivable, User
-    from sqlalchemy import select
 
     require(contract.role == "src", "Fixture may only be created in source")
     before = snapshot()
@@ -242,12 +245,13 @@ def conflict(contract: Contract) -> dict:
 
 
 def prepare_cut(contract: Contract) -> dict:
+    from sqlalchemy import func, select
+
     from gestao_recebiveis.database import SessionLocal
     from gestao_recebiveis.models import Attempt, Delivery, DemoState, Payment, Receivable, Reminder
     from gestao_recebiveis.receivables import pay
     from gestao_recebiveis.reminders.provider import FakeProvider, ResponseLost
     from gestao_recebiveis.reminders.service import authorize, claim, schedule
-    from sqlalchemy import func, select
 
     require(contract.role == "src", "Cut fixture is source-only")
     fixture = load_private("fixture")
@@ -306,10 +310,11 @@ def prepare_cut(contract: Contract) -> dict:
 
 
 def verify_roles() -> dict:
-    from gestao_recebiveis.database import engine
-    from gestao_recebiveis.models import Base
     from sqlalchemy import text
     from sqlalchemy.exc import DBAPIError
+
+    from gestao_recebiveis.database import engine
+    from gestao_recebiveis.models import Base
 
     with engine.connect() as connection:
         require(
