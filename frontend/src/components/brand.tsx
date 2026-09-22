@@ -7,7 +7,7 @@ export function Brand() {
         <Icon name="titles" />
       </span>
       <span>
-        Gestão<span className="brand-light"> de recebíveis</span>
+        Recebíveis<small>Gestão da carteira</small>
       </span>
     </div>
   );

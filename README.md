@@ -1,33 +1,31 @@
 # Gestão de recebíveis
 
-Aplicação de contas a receber com importação CSV, pagamentos integrais e lembretes simulados. A demonstração usa dados fictícios e permite verificar repetição de requisições e recuperação de falhas.
+Acompanhe títulos por vencimento, confira arquivos CSV antes da importação e registre pagamentos integrais. A carteira reúne cliente, valor e situação; o detalhe do título mostra a baixa, o histórico e os lembretes associados.
 
-![Resumo da carteira fictícia](docs/img/resumo.png)
+![Carteira de títulos com filtros e vencimentos](docs/img/carteira.png)
 
-Reenviar um CSV não aumenta a dívida, e repetir uma baixa não duplica o pagamento. O backend protege essas operações e registra as tentativas de lembretes para recuperar resultados incertos.
+*Dados fictícios da demonstração. Os filtros consultam toda a carteira; a tabela apresenta uma página por vez.*
 
-## Arquitetura
+## Um percurso para conferir o resultado
 
-A interface envia as operações à API. O PostgreSQL guarda a carteira e a fila; um worker processa os lembretes usando um provedor fictício persistente.
+1. Entre como operador e abra **Importações**. Envie [`valid.csv`](data/samples/valid.csv): a prévia apresenta três títulos novos e R$ 2.000,00. Confira as linhas e confirme.
+2. Reenvie [`repeated.csv`](data/samples/repeated.csv). Os títulos aparecem como existentes; a confirmação preserva a quantidade e o saldo.
+3. Em **Títulos**, procure `DEMO-001` e abra o detalhe. Registre o pagamento integral e confira a baixa na linha do tempo. Uma repetição da mesma operação não cria outro pagamento.
+4. Em **Lembretes**, selecione **Ver tentativas** para consultar o resultado de cada envio sem perder a busca ou a página da fila.
 
-```mermaid
-flowchart LR
-    UI[Next.js] --> API[FastAPI]
-    API --> DB[(PostgreSQL)]
-    Worker[Worker Python] <--> DB
-    Worker --> Fake[Provedor fictício]
-    Fake --> DB
-```
+O [roteiro de demonstração](docs/demo.md) inclui uma falha transitória, recuperação do envio e conflito de importação. Os lembretes usam um provedor simulado persistente: uma entrega registrada na página não representa uma mensagem enviada a um cliente.
 
-## Decisões técnicas
+## Ler a carteira
 
-- Dinheiro é armazenado em centavos e enviado como string no JSON para conservar precisão; a interface faz a conversão explicitamente.
-- O login reserva cotas atômicas antes de verificar senhas. API e worker usam credenciais distintas das migrações e da administração do banco.
-- O CSV é revalidado na confirmação. Transações e chaves idempotentes permitem repetir baixas sem duplicar efeitos.
-- A fila usa PostgreSQL com `SKIP LOCKED`, lease e heartbeat. A coordenação permanece no banco, sem exigir um broker separado.
-- O provedor fictício persiste a aceitação antes de simular uma resposta perdida. Isso permite testar recuperação após reinício; a entrega por um serviço externo exige outra integração.
+| Área | O que conferir |
+|---|---|
+| [Resumo](docs/img/resumo.png) | Saldo aberto e vencimentos, separados dos pagamentos recebidos no período |
+| Títulos | Busca por cliente/código, vencimento, situação, pagamento e cancelamento |
+| Importações | Arquivo → conferência das linhas → confirmação, com conflitos identificados |
+| Lembretes | Etapa, tentativas, próxima execução e detalhe da entrega simulada |
+| Demonstração | Data comercial, pausa do processamento e cenários de falha |
 
-As [decisões técnicas](docs/decisoes-tecnicas.md) e o roteiro da [demo](docs/demo.md) estão em `docs/`.
+O perfil **leitor** consulta as mesmas informações, sem importar, pagar, cancelar ou controlar a demonstração.
 
 ## Rodar localmente
 
@@ -55,43 +53,36 @@ docker compose run --rm --no-deps seed
 docker compose up -d --wait --wait-timeout 180 db api worker frontend
 ```
 
-## Verificação
+## Como verificar
 
 ```powershell
 .\scripts\gestao-recebiveis.ps1 test
 .\scripts\gestao-recebiveis.ps1 proof
 ```
 
-Passaram 158 testes de backend e 12 testes Playwright, além de Ruff e mypy. A suíte cobre importação, concorrência, permissões, pagamentos e navegação. A revisão de segurança acrescenta testes de limitação de login, privilégios do banco e atualização do schema antigo preservando os dados. Resultados e escopo estão em [verificação](docs/verification.md).
+`test` executa as verificações de backend e frontend e percorre a interface no navegador, usando bancos descartáveis. `proof` interrompe o processamento depois de uma aceitação, reinicia seu PostgreSQL de teste e verifica a recuperação da mesma tentativa, sem duplicar a entrega simulada.
 
-O `proof` é o teste de reinício do banco: interrompe o processamento após uma aceitação, reinicia seu banco descartável e verifica a recuperação sem duplicar a entrega simulada. Só existe em PowerShell (`scripts/prove.ps1`).
+Os [resultados e o escopo das revisões](docs/verification.md) distinguem a validação da interface das provas de concorrência, permissões, migração e recuperação. Os comandos completos de automação estão no [workflow de CI](.github/workflows/ci.yml).
 
-Os mesmos testes, com os comandos do CI (`.github/workflows/ci.yml`):
+## Como funciona
 
-```sh
-docker compose --profile test build db
-docker compose --profile test build api
-docker compose --profile test build frontend
-docker compose --profile test build frontend-checks
-docker compose --profile test build e2e
-docker compose run --rm test
-docker compose up -d --wait --force-recreate db-upgrade-test
-docker compose run --rm --no-deps upgrade-test
-docker compose run --rm --no-deps frontend-checks
-docker compose -f compose.yaml -f compose.e2e.yaml -p pf-gestao-recebiveis-e2e up -d --wait db
-docker compose -f compose.yaml -f compose.e2e.yaml -p pf-gestao-recebiveis-e2e run --rm migrate
-docker compose -f compose.yaml -f compose.e2e.yaml -p pf-gestao-recebiveis-e2e run --rm --no-deps seed
-docker compose -f compose.yaml -f compose.e2e.yaml -p pf-gestao-recebiveis-e2e up -d --wait --wait-timeout 180 api worker frontend
-docker compose -f compose.yaml -f compose.e2e.yaml -p pf-gestao-recebiveis-e2e run --rm --no-deps e2e
-docker compose -f compose.yaml -f compose.e2e.yaml -p pf-gestao-recebiveis-e2e --profile test --profile tools down --remove-orphans
-docker compose stop db-test db-upgrade-test
+```mermaid
+flowchart LR
+    UI[Next.js] --> API[FastAPI]
+    API --> DB[(PostgreSQL)]
+    Worker[Worker Python] <--> DB
+    Worker --> Fake[Provedor simulado]
+    Fake --> DB
 ```
+
+Valores são armazenados em centavos. A confirmação do CSV revalida os dados no banco; transações e chaves idempotentes impedem a repetição de efeitos financeiros. A fila usa PostgreSQL com `SKIP LOCKED`, lease e heartbeat. O provedor simulado persiste a aceitação antes de reproduzir uma resposta perdida, permitindo verificar a recuperação após reinício.
+
+O login reserva cotas atômicas antes de conferir senhas. API e worker usam credenciais distintas da administração e das migrações. Consulte as [decisões técnicas](docs/decisoes-tecnicas.md) e o [procedimento de atualização preservando dados](docs/security.md).
 
 ## Limites
 
-O escopo é uma empresa, BRL e pagamento integral. Envio externo, Pix, boleto, juros e estorno não estão implementados. Integrar um provedor real exige validar seu contrato de idempotência e reconciliação. A demonstração ainda não foi avaliada com usuários reais.
+O escopo é uma empresa, BRL e pagamento integral. Envio externo, Pix, boleto, juros e estorno não estão implementados. Um provedor real exige validar seu contrato de idempotência e reconciliação. A demonstração não foi avaliada com usuários reais.
 
-A configuração demonstrada publica os serviços em loopback. O login limita tentativas malsucedidas/em andamento no PostgreSQL; API e worker usam uma conta sem privilégios administrativos. O proxy local compartilha uma origem de rede: uma publicação para múltiplos usuários precisa de uma borda que identifique clientes com confiança. Consulte [segurança e atualização sem apagar dados](docs/security.md).
-
+Os serviços são publicados em loopback. Uma implantação para múltiplos usuários precisa de uma borda que identifique clientes com confiança, conforme a [documentação de segurança](docs/security.md).
 
 Python 3.13, FastAPI, SQLAlchemy, PostgreSQL 18, Next.js 16, TypeScript e Docker. Licença MIT.

@@ -807,3 +807,86 @@ test("prévia pagina 51 registros sem gravar títulos e trata arquivo vazio e gr
     before,
   );
 });
+
+test("detalhe do lembrete preserva filtros, página, rolagem e foco na fila", async ({
+  page,
+}) => {
+  await login(page);
+  await navigate(page, "Lembretes");
+  await page.getByLabel("Cliente ou título").fill("TIT-");
+  await page
+    .getByRole("button", { name: "Filtrar lembretes", exact: true })
+    .click();
+  const list = page.getByRole("region", {
+    name: "Fila de lembretes",
+    exact: true,
+  });
+  await expect(list.locator("tbody tr").first()).toBeVisible();
+  await list.getByRole("button", { name: "Próxima", exact: true }).click();
+  await expect(list.locator(".pagination")).toContainText("Página 2");
+  const trigger = list
+    .getByRole("button", { name: "Ver tentativas", exact: true })
+    .last();
+  await trigger.scrollIntoViewIfNeeded();
+  const scrollBefore = await list
+    .locator(".table-scroll")
+    .evaluate((el) => el.scrollTop);
+  const titleBefore = await list.locator("tbody tr").last().innerText();
+  await trigger.click();
+  await expect(page.locator("#reminder-heading")).toBeFocused();
+  await expect(page.getByLabel("Cliente ou título")).toHaveValue("TIT-");
+  await expect(list.locator(".pagination")).toContainText("Página 2");
+  await expect(list.locator("tbody tr").last()).toHaveText(titleBefore, {
+    useInnerText: true,
+  });
+  expect(
+    await list.locator(".table-scroll").evaluate((el) => el.scrollTop),
+  ).toBe(scrollBefore);
+  await page
+    .getByRole("button", { name: "Fechar detalhe", exact: true })
+    .click();
+  await expect(trigger).toBeFocused();
+  await expect(page.locator("#reminder-detail")).toHaveCount(0);
+
+  await trigger.click();
+  await page.getByRole("button", { name: "Atualizar", exact: true }).click();
+  await expect(list.locator(".loading")).toHaveCount(0);
+  await page
+    .getByRole("button", { name: "Fechar detalhe", exact: true })
+    .click();
+  await expect(trigger).toBeFocused();
+
+  await trigger.click();
+  await page
+    .getByLabel("Cliente ou título")
+    .fill("sem-correspondencia-na-fila");
+  await page
+    .getByRole("button", { name: "Filtrar lembretes", exact: true })
+    .click();
+  await expect(
+    list.getByText("Nenhum lembrete encontrado", { exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Fechar detalhe", exact: true })
+    .click();
+  await expect(
+    list.getByRole("heading", { name: "Fila de envios", exact: true }),
+  ).toBeFocused();
+
+  await navigate(page, "Títulos");
+  await page.getByLabel("Cliente ou título").fill("TIT-0001");
+  await page
+    .getByRole("button", { name: "Filtrar títulos", exact: true })
+    .click();
+  await page.getByRole("button", { name: "TIT-0001", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Ver tentativas", exact: true })
+    .first()
+    .click();
+  await expect(page.locator("#reminder-heading")).toBeFocused();
+  await expect(list.locator(".loading")).toHaveCount(0);
+  await page
+    .getByRole("button", { name: "Fechar detalhe", exact: true })
+    .click();
+  await expect(list.locator(":focus")).toHaveCount(1);
+});

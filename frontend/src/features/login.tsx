@@ -39,7 +39,9 @@ export function Login({
       </div>
       <div className="login-grid">
         <section className="login-card">
+          <p className="eyebrow">ACESSO À CARTEIRA</p>
           <h1>Entrar</h1>
+          <p>Consulte títulos, confira importações e acompanhe lembretes.</p>
 
           {notice && <Alert>{notice}</Alert>}
           {error && <Alert>{error}</Alert>}
@@ -76,8 +78,8 @@ export function Login({
               <Icon name="right" />
             </button>
           </form>
-          <details className="demo-credentials">
-            <summary>Contas demo</summary>
+          <details className="demo-credentials" open>
+            <summary>Contas de demonstração</summary>
             <p>
               <strong>Operador:</strong> operador@example.com
               <br />
