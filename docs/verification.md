@@ -29,6 +29,12 @@ A mudança reorganiza componentes React, CSS e textos, sem alterar as regras de 
 
 Foram removidas somente as declarações `--amber` e `--amber-soft`, sem consumidores nos 22 arquivos de `frontend/src` nem no restante das fontes versionadas. A inspeção também conferiu acesso dinâmico a propriedades CSS e a configuração do frontend. O [registro separado](evidence/interface-cleanup-20260922.json) guarda o escopo e os hashes antes/depois. As provas e capturas anteriores foram preservadas; esta limpeza teve apenas conferência de diff e formato, sem novo build, teste de aplicação ou revisão visual.
 
+## Asserção de foco no retorno — 22/09/2026
+
+No [CI do commit `1cf6919`](https://github.com/arthurjoanes/gestao-recebiveis/actions/runs/35694688719), a primeira tentativa parou no download do índice Alpine por erro TLS; a segunda passou build, 158 testes de backend, scans e lint/tipos, mas teve 13 jornadas aprovadas e uma falha. A jornada esperava foco permanente no conteúdo após voltar de um título, embora a aplicação já restaurasse o foco no título depois de carregar a lista. A captura da falha mostrou `TIT-0001` focado, com filtros preservados. Logs e artefatos das duas tentativas foram preservados externamente.
+
+A jornada agora retém somente a resposta de retorno, confere carregamento e foco inicial no conteúdo, libera a resposta e exige o título focado, busca, situação, ambas as datas e uma única linha. Aplicação, timeouts e retries permanecem iguais. Esta conferência local cobre formato, lint e listagem; não inclui a execução do teste corrigido. O resultado de cada execução deve ser conferido no workflow do respectivo commit.
+
 ## Correção de segurança — 21/09/2026
 
 A revisão posterior separou as identidades de administração, migração e execução e adicionou admissão persistente ao login. O backend foi reconstruído; os serviços usaram bancos descartáveis em `fix-gr-20260922` e `fix-gr-proof-20260922`, sem publicar portas. Os arquivos locais da execução ficam em `artifacts/security-fix/`, ignorados pelo Git.
