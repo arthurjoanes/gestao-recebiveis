@@ -68,53 +68,55 @@ export function OverviewView({
                 className="metrics"
                 aria-label="Posição da carteira e recebimentos"
               >
-                <article className="metric metric-open">
-                  <div className="metric-label">Carteira em aberto</div>
-                  <strong>{money(data.open_cents)}</strong>
-                  <p>
-                    {data.open_count}{" "}
-                    {data.open_count === 1
-                      ? "título em aberto"
-                      : "títulos em aberto"}
-                    , incluindo vencidos
-                  </p>
-                  <small>
-                    {portfolioScope(filters)}
-                    {filters.q ? ` · Busca: ${filters.q}` : ""}
-                  </small>
-                  <button
-                    className="text-button"
-                    onClick={() => openTitles("open")}
-                  >
-                    Ver títulos em aberto <Icon name="right" />
-                  </button>
-                </article>
-                <article className="metric metric-overdue">
-                  <div className="metric-label">Vencido</div>
-                  <strong>{money(data.overdue_cents)}</strong>
-                  <p>{data.overdue_count} títulos · parte do aberto</p>
-                  <small>Antes de {date(data.business_date)}</small>
-                  <button
-                    className="text-button"
-                    onClick={() => openTitles("overdue")}
-                  >
-                    Ver títulos vencidos <Icon name="right" />
-                  </button>
-                </article>
-                <article className="metric metric-current">
-                  <div className="metric-label">Em dia</div>
-                  <strong>{money(data.current_cents)}</strong>
-                  <p>{data.current_count} títulos · parte do aberto</p>
-                  <small>
-                    A partir de {date(data.business_date)} · inclui hoje
-                  </small>
-                  <button
-                    className="text-button"
-                    onClick={() => openTitles("current")}
-                  >
-                    Ver títulos em dia <Icon name="right" />
-                  </button>
-                </article>
+                <div className="balance-position">
+                  <article className="metric metric-open">
+                    <div className="metric-label">Carteira em aberto</div>
+                    <strong>{money(data.open_cents)}</strong>
+                    <p>
+                      {data.open_count}{" "}
+                      {data.open_count === 1
+                        ? "título em aberto"
+                        : "títulos em aberto"}
+                      , incluindo vencidos
+                    </p>
+                    <small>
+                      {portfolioScope(filters)}
+                      {filters.q ? ` · Busca: ${filters.q}` : ""}
+                    </small>
+                    <button
+                      className="text-button"
+                      onClick={() => openTitles("open")}
+                    >
+                      Ver títulos em aberto <Icon name="right" />
+                    </button>
+                  </article>
+                  <article className="metric metric-overdue">
+                    <div className="metric-label">Vencido</div>
+                    <strong>{money(data.overdue_cents)}</strong>
+                    <p>{data.overdue_count} títulos · parte do aberto</p>
+                    <small>Antes de {date(data.business_date)}</small>
+                    <button
+                      className="text-button"
+                      onClick={() => openTitles("overdue")}
+                    >
+                      Ver títulos vencidos <Icon name="right" />
+                    </button>
+                  </article>
+                  <article className="metric metric-current">
+                    <div className="metric-label">Em dia</div>
+                    <strong>{money(data.current_cents)}</strong>
+                    <p>{data.current_count} títulos · parte do aberto</p>
+                    <small>
+                      A partir de {date(data.business_date)} · inclui hoje
+                    </small>
+                    <button
+                      className="text-button"
+                      onClick={() => openTitles("current")}
+                    >
+                      Ver títulos em dia <Icon name="right" />
+                    </button>
+                  </article>
+                </div>
                 <article className="metric metric-accent">
                   <div className="metric-label">Recebido no período</div>
                   <strong>{money(data.received_cents)}</strong>
@@ -130,6 +132,9 @@ export function OverviewView({
                     {data.received_to ? date(data.received_to) : "hoje"}
                     {filters.q ? ` · Busca: ${filters.q}` : ""}
                   </small>
+                  <p className="movement-note">
+                    Recebimentos não compõem o saldo em aberto.
+                  </p>
                 </article>
               </div>
             </>

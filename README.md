@@ -1,44 +1,37 @@
 # Gestão de recebíveis
 
-Uma planilha reenviada não pode aumentar a dívida de um cliente. Um pagamento confirmado não deve gerar outra baixa nem autorizar novos lembretes. O Gestão de Recebíveis trata esses problemas com conferência de CSV, transações no banco e acompanhamento das tentativas de envio.
+Desenvolvi uma aplicação de demonstração para quem confere contas a receber: importar títulos, registrar pagamentos integrais e acompanhar lembretes sem repetir seus efeitos. O público é o operador financeiro; o perfil leitor acompanha a mesma carteira sem alterá-la. Os dados representam uma empresa fictícia, em BRL.
 
-A carteira reúne cliente, vencimento, valor e situação; o detalhe do título mostra o pagamento, o histórico e os lembretes associados. Operadores fazem as alterações e leitores consultam os resultados.
+O problema aparece quando um arquivo chega novamente ou a conexão cai depois de uma baixa. Repetir a entrada não pode criar outra dívida ou outro pagamento. Na prova documentada, dois títulos de **R$ 50 + R$ 75 = R$ 125** continuaram sendo os mesmos após reimportação e restauração; repetir a baixa de R$ 50 devolveu o pagamento já registrado e manteve **R$ 75 em aberto**.
 
-![Carteira de títulos com filtros e vencimentos](docs/img/carteira.png)
+![Título fictício RESTORE-PAID com pagamento integral de R$ 50 e registro na linha do tempo](docs/screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/04-mesma-baixa-preservada.png)
 
-*Captura histórica com dados fictícios. Os filtros consultam toda a carteira; a tabela apresenta uma página por vez. O novo ajuste de composição ainda não tem capturas nem jornadas de navegador validadas; veja o [escopo da revisão de frontend](docs/frontend-quality.md).*
+*Captura histórica real da execução `11adf9df…`, de 22/09/2026. Confira o valor pago e o evento na linha do tempo; a igualdade do pagamento foi verificada no banco, não deduzida da imagem. [Imagem completa](docs/screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/04-mesma-baixa-preservada.png) · [cenário, fontes e limites](docs/restore-proof.md). A composição local posterior ainda não foi executada no navegador: [escopo do frontend](docs/frontend-quality.md).*
 
-## Problemas que o projeto resolve
+## Como trato as repetições
 
-| Situação | Como o sistema responde | Exemplo para conferir |
-|---|---|---|
-| O mesmo lote chega duas vezes, com outro nome ou ordem | Compara a identidade de cada título; não depende do nome do arquivo | Importar `valid.csv` e `reordered.csv` mantém três títulos e R$ 2.000,00 do lote |
-| Um arquivo mistura dados novos com uma alteração conflitante | Revalida a prévia e rejeita o lote inteiro sem alterar a carteira parcialmente | `conflicting.csv` tenta mudar `DEMO-001`; `DEMO-004` também não entra |
-| O operador repete a baixa depois de perder a resposta | A mesma chave e conteúdo recuperam o pagamento já registrado | Duas chamadas iguais produzem um pagamento; conteúdo diferente retorna conflito |
-| O envio foi aceito, mas a resposta não chegou ao worker | Reconcilia a tentativa persistida antes de autorizar outra | O cenário de resposta perdida termina com uma entrega simulada |
+- **Mesmo título, outro arquivo:** a identidade é sistema de origem + código externo. Reordenar ou renomear o CSV não cria uma obrigação nova.
+- **Linha nova junto de um conflito:** a confirmação rejeita o lote inteiro. Nenhuma linha válida fica gravada pela metade.
+- **Mesma baixa após perder a resposta:** a chave e o conteúdo recuperam o pagamento já confirmado. Conteúdo diferente com a mesma chave retorna conflito.
+- **Mensagem aceita com resposta perdida:** mantenho a tentativa desconhecida até reconciliá-la. Entrega simulada e tentativa são registros distintos.
 
-O [guia de problema, solução e exemplos](docs/problem-solution.md) liga cada situação à regra e à prova correspondente. As [decisões técnicas](docs/decisoes-tecnicas.md) explicam por que usar centavos, transações, fila no PostgreSQL e tentativas separadas das entregas, com os respectivos limites.
+O [guia de casos](docs/problem-solution.md) liga esses problemas às entradas, ao código e aos testes. As capturas de importação, conflito e reconciliação ficam junto de seus casos, com a versão identificada. Lembretes usam exclusivamente um provedor fictício persistente; nenhuma mensagem é enviada a cliente real.
 
-## Um percurso para conferir o resultado
+## O que eu implementei
 
-1. Entre como operador e abra **Importações**. Envie [`valid.csv`](data/samples/valid.csv): a prévia apresenta três títulos novos e R$ 2.000,00. Confira as linhas e confirme.
-2. Reenvie [`repeated.csv`](data/samples/repeated.csv). Os títulos aparecem como existentes; a confirmação preserva a quantidade e o saldo.
-3. Em **Títulos**, procure `DEMO-001` e abra o detalhe. Registre o pagamento integral e confira a baixa na linha do tempo. Uma repetição da mesma operação não cria outro pagamento.
-4. Em **Lembretes**, selecione **Ver tentativas** para consultar o resultado de cada envio sem perder a busca ou a página da fila.
+- O parser de CSV, a prévia por linha e a confirmação transacional, com identidade composta, comparação dos registros e rejeição sem efeito parcial ([importação](backend/src/gestao_recebiveis/imports.py), [parser](backend/src/gestao_recebiveis/import_csv.py)).
+- A baixa integral, a idempotência — repetir uma operação sem repetir seu efeito — e a auditoria financeira, coordenadas com o cancelamento de pendências ([pagamento](backend/src/gestao_recebiveis/receivables.py)).
+- A fila de lembretes com prazo de posse, renovação, token que invalida o worker antigo e reconciliação de resultado incerto ([serviço](backend/src/gestao_recebiveis/reminders/service.py), [simulador](backend/src/gestao_recebiveis/reminders/provider.py)).
+- Os papéis operador/leitor, as sessões, a proteção de mutações e a reserva persistente de capacidade antes de verificar a senha ([autenticação](backend/src/gestao_recebiveis/auth.py), [admissão](backend/src/gestao_recebiveis/login_admission.py)).
+- A carteira, os fluxos de conferência e os testes de concorrência, repetição e recuperação; também configurei os ambientes descartáveis e a prova de restauração ([interface](frontend/src/features/workspace.tsx), [testes](backend/tests), [prova](scripts/prove_restore.py)).
 
-O [roteiro de demonstração](docs/demo.md) inclui uma falha transitória, recuperação do envio e conflito de importação. Os lembretes usam um provedor simulado persistente: uma entrega registrada na página não representa uma mensagem enviada a um cliente.
+FastAPI atende HTTP; SQLAlchemy/psycopg acessam PostgreSQL; Next.js/React apresentam a carteira. São ferramentas de terceiros que integrei ao domínio, não produtos que desenvolvi. As justificativas em [decisões técnicas](docs/decisoes-tecnicas.md) descrevem efeitos e compromissos da implementação atual; não inventam uma motivação histórica ou experiência com clientes.
 
-## Ler a carteira
+## Reproduzir um lote pequeno
 
-| Área | O que conferir |
-|---|---|
-| [Resumo](docs/img/resumo.png) | Saldo aberto e vencimentos, separados dos pagamentos recebidos no período |
-| Títulos | Busca por cliente/código, vencimento, situação, pagamento e cancelamento |
-| Importações | Arquivo → conferência das linhas → confirmação, com conflitos identificados |
-| Lembretes | Etapa, tentativas, próxima execução e detalhe da entrega simulada |
-| Demonstração | Data comercial, pausa do processamento e cenários de falha |
+Na demonstração iniciada, importe [valid.csv](data/samples/valid.csv): `1250.09 + 480.10 + 269.81 = 2000.00`, três títulos. Confirme, reenvie [reordered.csv](data/samples/reordered.csv) e confira que quantidade e saldo do lote não aumentaram. Depois envie [conflicting.csv](data/samples/conflicting.csv): ele tenta mudar `DEMO-001` e incluir `DEMO-004`; o lote inteiro deve ser rejeitado.
 
-O perfil **leitor** consulta as mesmas informações, sem importar, pagar, cancelar ou controlar a demonstração.
+Essa fixture de R$ 2.000 é independente dos dois títulos de R$ 125 da imagem. O [roteiro](docs/demo.md) descreve baixa e tentativas simuladas; o [contrato HTTP](docs/api-contract.md) permite conferir a resposta exata. No Resumo, vencido e em dia compõem o aberto; recebido usa seu próprio período de pagamento.
 
 ## Rodar localmente
 
@@ -66,38 +59,25 @@ docker compose run --rm --no-deps seed
 docker compose up -d --wait --wait-timeout 180 db api worker frontend
 ```
 
-## Como verificar
+## Verificação e situação atual
 
 ```powershell
 .\scripts\gestao-recebiveis.ps1 test
 .\scripts\gestao-recebiveis.ps1 proof
 ```
 
-`test` executa as verificações de backend e frontend e percorre a interface no navegador, usando bancos descartáveis. `proof` interrompe o processamento depois de uma aceitação, reinicia seu PostgreSQL de teste e verifica a recuperação da mesma tentativa, sem duplicar a entrega simulada.
+`test` reúne verificações de código, backend e navegador em bancos descartáveis. `proof` também interrompe o processamento e reinicia um PostgreSQL de teste para verificar a mesma tentativa. Esses comandos completos incluem frontend; não foram repetidos nesta revisão editorial.
 
-A [prova de restauração em outro volume](docs/restore-proof.md) acrescenta um caso controlado: R$ 125 em títulos, R$ 50 pagos e R$ 75 abertos, com a mesma baixa e entrega simulada após recuperar o banco. Inclui capturas reais, recusas de backup corrompido/destino ocupado, hashes e tempos locais. Ela usa uma fixture própria de dois títulos, separada dos exemplos de R$ 2.000 acima.
+Nesta rodada, o backend atual passou em **158 testes com PostgreSQL**, Ruff, formato e mypy. A instalação frontend pelo lock, tipos e build passaram, sem iniciar a aplicação. O primeiro lint apontou formato em quatro arquivos locais; apliquei somente Prettier nesses arquivos e o lint completo passou. Não alterei regras, contratos ou composição. Os [resultados, ambiente e limites](docs/verification.md#revisão-autoral-de-portfólio--22092026) distinguem essa execução das provas históricas. As novas jornadas visuais permanecem bloqueadas pela recusa automática anterior de inicialização; não foi tentado outro método.
 
-Os [resultados e o escopo das revisões](docs/verification.md) distinguem a validação da interface das provas de concorrência, permissões, migração e recuperação. Os comandos completos de automação estão no [workflow de CI](.github/workflows/ci.yml).
+A [restauração em volume novo](docs/restore-proof.md) é uma prova histórica adicional de conteúdo, sequências, pagamento e tentativa preservados. Não confundo dump gerado com restauração validada. Fontes e tentativas com falha permanecem rastreáveis nos seus manifestos.
 
-## Como funciona
+## Decisões e limites
 
-```mermaid
-flowchart LR
-    UI[Next.js] --> API[FastAPI]
-    API --> DB[(PostgreSQL)]
-    Worker[Worker Python] <--> DB
-    Worker --> Fake[Provedor simulado]
-    Fake --> DB
-```
+Escolhi centavos inteiros para as operações em BRL; deixei a autorização e a confirmação no servidor; mantive a fila no mesmo banco para coordenar título, baixa e lembrete. Isso reduz serviços da demonstração e permite transações compartilhadas, mas concentra a operação no PostgreSQL e exige representar a incerteza de um envio. [Arquitetura e fronteiras](docs/architecture.md) · [alternativas e compromissos](docs/decisoes-tecnicas.md).
 
-Valores são armazenados em centavos. A confirmação do CSV revalida os dados no banco; transações e chaves idempotentes impedem a repetição de efeitos financeiros. A fila usa PostgreSQL com `SKIP LOCKED`, lease e heartbeat. O provedor simulado persiste a aceitação antes de reproduzir uma resposta perdida, permitindo verificar a recuperação após reinício.
+O escopo é uma empresa e pagamento integral. Pix, boleto, juros, estorno e envio externo não estão implementados. Uma baixa impede autorizações futuras; não desfaz uma autorização anterior em trânsito. O [plano de provedor real](docs/provider-integration-plan.md) descreve ensaios ainda necessários. Não medi produtividade com usuários, tolerância à perda do host ou capacidade de produção.
 
-O login reserva cotas atômicas antes de conferir senhas. API e worker usam credenciais distintas da administração e das migrações. Consulte as [decisões técnicas](docs/decisoes-tecnicas.md) e o [procedimento de atualização preservando dados](docs/security.md).
+O setup publica serviços somente em loopback. Uso por múltiplos clientes exige uma borda que identifique origens com confiança e configuração de segurança apropriada: [limites e atualização](docs/security.md). O design foi aprovado pelo autor em 22/09/2026. A **validação de execução da interface atual permanece pendente**; testes de backend não substituem essa etapa.
 
-## Limites
-
-O escopo é uma empresa, BRL e pagamento integral. Envio externo, Pix, boleto, juros e estorno não estão implementados. O [plano de integração com provedor real](docs/provider-integration-plan.md) define o contrato e os ensaios ainda pendentes de idempotência e reconciliação. A demonstração não foi avaliada com usuários reais.
-
-Os serviços são publicados em loopback. Uma implantação para múltiplos usuários precisa de uma borda que identifique clientes com confiança, conforme a [documentação de segurança](docs/security.md).
-
-Python 3.13, FastAPI, SQLAlchemy, PostgreSQL 18, Next.js 16, TypeScript e Docker. Licença MIT.
+Código sob MIT. A fonte IBM Plex Sans mantém sua [licença OFL 1.1](frontend/src/app/fonts/plex-LICENSE.txt) e [origem](frontend/src/app/fonts/sources.json).
