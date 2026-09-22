@@ -44,3 +44,7 @@ O comando constrói backend, frontend e navegador pelo código atual, aplica mig
 O diretório `artifacts/proof/<execução>/` guarda relatório, hashes e resultados. Código inesperado interrompe a execução; o cleanup ocorre mesmo em falha. Logs e arquivos de uma execução com falha permanecem para diagnóstico. Capturas Chromium ficam em `artifacts/proof-e2e/`.
 
 O cenário interrompe o processo do teste no mesmo limite transacional usado pelo worker e reinicia o PostgreSQL. Não cobre perda de disco, desastre do host, carga de produção ou contrato de um provedor externo.
+
+## Percurso documentado de restauração
+
+Para apresentar recuperação sem alterar a carteira do setup, use a [história com quatro capturas](restore-proof.md): lote de R$ 125 confirmado, arquivo conflitante de R$ 150 rejeitado, mesma tentativa reconciliada e baixa de R$ 50 preservada. O valor rejeitado é o total do arquivo candidato; a carteira permaneceu em R$ 125. A fixture, os hashes e o comando de reprodução estão nessa página. É uma prova separada de restauração em outro volume, com provedor fictício e dados sintéticos; não representa teste com operadores reais.

@@ -66,6 +66,14 @@ O teste de reinício roda em `pf-gestao-recebiveis-proof`, sem portas no host. I
 
 Comandos, códigos de saída, hashes e resultados ficam em `artifacts/proof/<execução>/`. O código 86 é esperado apenas no ponto de interrupção controlada; qualquer outro resultado inesperado encerra o teste. Isso verifica o provedor fictício persistente; não cobre entrega externa nem perda de disco.
 
+## Restauração em volume novo — 22/09/2026
+
+A [prova de recuperação da carteira](restore-proof.md), execução `11adf9df35ba4314945ffdd4fbaeabfc`, passou em 157,672 s no host local. O destino vazio recebeu as mesmas 16 tabelas públicas e 12 sequências; a baixa de R$ 50 não se repetiu e a tentativa #1 foi reconciliada mantendo a entrega simulada #1. A carteira sintética totalizou R$ 125, com R$ 75 em aberto. Origem e dump ficaram intactos; a limpeza deixou zero recursos dos dois projetos.
+
+O [manifesto](evidence/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/manifest.json) liga 104 fontes congeladas às imagens, verifica 44 arquivos Python efetivos do backend, registra recusas de corrupção/destino ocupado/modo incorreto e contém quatro capturas reais. O [suplemento posterior](evidence/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/cli-supplement.json) confirma saídas 0/2 da CLI de integridade, **16 testes host**, Ruff, formato e sintaxe JS. As duas preparações que falharam também estão no [índice](evidence/restore-proof/index.json).
+
+Esta prova não repetiu a suíte completa de 158 testes de backend, as 14 jornadas de interface nem a varredura de dependências. O probe chama a lógica real em etapas, sem worker autônomo; o navegador faz login e leitura dos estados. Provedor externo, perda do host e desempenho com carteira maior continuam sem comprovação. O [plano de integração](provider-integration-plan.md) descreve o que depende desses próximos ambientes.
+
 ## Conferência visual adicional
 
 Com o ambiente E2E em execução e a imagem de navegador construída:
@@ -99,3 +107,7 @@ Volumes criados com a antiga imagem Debian não devem ser reutilizados diretamen
 4. Inicie API, worker e frontend nesse mesmo projeto. Confira contagens de clientes, títulos, pagamentos, entregas e saldos contra o banco anterior antes de adotar a nova cópia. Os scripts PowerShell têm nome de projeto fixo; nessa migração use os comandos Compose com `-p recebiveis-migracao`.
 
 Esses passos preservam o volume anterior e permitem retornar à versão que o criou. A prova de reinício valida persistência na base atual; não é uma prova de migração de uma carteira externa.
+
+## Conferência dos arquivos de publicação — 22/09/2026
+
+Gitleaks 8.30.1 identificou quatro ocorrências dos hashes SHA-256 de `auth.py` e `test_api.py` dentro dos comandos registrados em dois manifestos da restauração. Os valores foram recalculados a partir das fontes. A [configuração](../.gitleaks.toml) conserva as regras padrão e limita a exceção à regra, aos dois valores e aos dois caminhos exatos. O [controle separado](evidence/restore-proof/secret-fingerprint-review.json) confirmou ausência de achados nos arquivos publicáveis e detecção de uma chave sintética no mesmo arquivo permitido. A verificação de histórico completo é feita pelo workflow de segredos de cada commit; caches, `.env` local e artefatos ignorados não são parte da publicação.

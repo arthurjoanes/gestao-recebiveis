@@ -53,3 +53,7 @@ O operador precisa comparar linhas, abrir um detalhe e continuar de onde saiu. A
 Ao voltar de um título, os filtros e a página são preservados e o foco volta ao título, quando ele ainda pertence ao recorte. Se a carteira mudou e a página ficou vazia, há uma ação explícita para voltar à primeira página. O detalhe do lembrete conserva a lista montada para manter busca, página e rolagem.
 
 Código: [`workspace.tsx`](../frontend/src/features/workspace.tsx), [`receivables.tsx`](../frontend/src/features/receivables.tsx) e [`reminders.tsx`](../frontend/src/features/reminders.tsx). Jornadas: [journey.spec.ts](../frontend/tests/journey.spec.ts). Resultados executados e limitações: [verificação](verification.md).
+
+## Recuperar também a identidade dos efeitos
+
+Depois de restaurar um backup, a aplicação precisa reconhecer uma baixa repetida e uma tentativa cuja resposta se perdeu. A [prova em outro volume](restore-proof.md) conferiu todas as tabelas e sequências antes de repetir a baixa e reconciliar o envio: preservou pagamento #1, tentativa #1 e entrega simulada #1. O token antigo perdeu a posse. Isso relaciona o mecanismo à consequência financeira observada, sem tratar um backup existente como recuperação automaticamente validada. O provedor simulado está no mesmo banco; o [contrato para integração externa](provider-integration-plan.md) continua proposto.

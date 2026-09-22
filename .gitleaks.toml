@@ -1,0 +1,17 @@
+[extend]
+useDefault = true
+
+[[rules]]
+id = "generic-api-key"
+
+[[rules.allowlists]]
+description = "Verified source SHA-256 values in two frozen restore proof commands"
+condition = "AND"
+paths = [
+  '''^docs/evidence/restore-proof/(11adf9df35ba4314945ffdd4fbaeabfc|4c354c0640af4c6cae4428a01f4caa56)/manifest\.json$''',
+]
+regexTarget = "match"
+regexes = [
+  '''auth\.py': '99cb7e1939e8f9266efd4ee9444631acfdf82779a46711318f3f91938632a323''',
+  '''test_api\.py': '1425acb54f02989425c328395bfbf33dd54cba4e4986dac56add542a956ead50''',
+]

@@ -39,3 +39,9 @@ Nenhum passo remove volumes ou trunca dados. `down --volumes` e `reset` não faz
 Os testes de banco usam o runtime restrito para executar a lógica e o owner somente para limpar fixtures/migrar. As regressões verificam negação de DDL, alteração de versão, criação de papel e `SET ROLE`, além de persistência de 401, concorrência e isolamento de cotas. O probe `backend/tests/database_upgrade_probe.py` inicia no schema anterior, sem apagar um banco preexistente, repete o provisionamento e verifica usuários, clientes, títulos, total pago e propriedade de sequências. Ele exige banco vazio com sufixo `_test`.
 
 O controle não contém autenticação federada, MFA, recuperação de senha nem proteção distribuída de borda. O papel runtime ainda pode alterar dados da aplicação, como necessário ao produto; uma execução arbitrária dentro da API continuaria sendo grave. Uma configuração local e testes finitos não demonstram resistência contra todos os ataques.
+
+## Integridade e isolamento da prova de recuperação
+
+O [ensaio de restauração](restore-proof.md) recusa modo/banco/projeto fora de seu contrato, destino ocupado e dump com checksum divergente. A limpeza exige os rótulos de propriedade do ensaio. Arquivos completos e credenciais ficam fora do repositório/OneDrive, em diretório com ACL conferida antes de escrevê-los; evidência pública contém hashes e resultados selecionados. API e banco não publicam portas nessa prova, e o frontend temporário é acessível somente em loopback. O runtime restrito foi novamente verificado com negações reais de operações administrativas.
+
+Um hash local detecta divergência do arquivo em relação ao manifesto; quem puder alterar ambos pode substituí-los. Não há assinatura, criptografia do backup nem validação de cópia externa neste resultado. Procedimento proposto e condições para provedor/armazenamento externo estão no [plano de integração](provider-integration-plan.md).
