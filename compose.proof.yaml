@@ -71,9 +71,11 @@ services:
     environment:
       BASE_URL: http://localhost:3101
       PLAYWRIGHT_OUTPUT_DIR: /artifacts
+      PLAYWRIGHT_REPORT_DIR: /reports
     network_mode: service:frontend
     volumes:
       - ./artifacts/proof-e2e:/artifacts
+      - ./artifacts/proof-e2e-report:/reports
 
 volumes:
   proof-postgres:

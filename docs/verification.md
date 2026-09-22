@@ -1,5 +1,48 @@
 # Verificação local
 
+## Auditoria final — 22/09/2026
+
+Base examinada: [`4bb9b57edc1b298cada00bdf9045efb861ed0faa`](https://github.com/arthurjoanes/gestao-recebiveis/tree/4bb9b57edc1b298cada00bdf9045efb861ed0faa), branch `main`, remote `https://github.com/arthurjoanes/gestao-recebiveis.git`, árvore inicialmente limpa. Inventário: 167 arquivos rastreados e nenhum novo; `.env`, instruções locais `AGENTS.md`, dependências, caches e resultados ignorados foram distinguidos dos arquivos publicáveis. Nenhum histórico, imagem ou manifesto foi removido ou atualizado para representar outra versão.
+
+Chamaria o autor para entrevista pelos mecanismos de importação atômica, baixa idempotente, permissões e recuperação de tentativa incerta. Os testes verificam estados financeiros, identidade de efeitos e concorrência, além de respostas HTTP. A fila no mesmo PostgreSQL tem benefício demonstrado: compartilhar a transação entre título, pagamento e cancelamento. O custo é uma máquina de estados que exige manter a ordem dos locks e a reconciliação. Uma pergunta de domínio útil seria explicar a disputa de dois títulos pela mesma chave de pagamento e o que muda quando o provedor externo não volta ao estado de um backup.
+
+Foram inspecionados os contratos, rotas, parser/importação, pagamento, totais e fusos, sessões/admissão, fila/worker, migrações, Dockerfiles, workflows e scripts de prova; asserções de concorrência e falhas foram lidas por amostragem. No frontend, foram revistos consulta/erros, navegação, filtros, detalhe, diálogos e seus testes. Isso não equivale a revisão linha a linha de todos os arquivos.
+
+| Requisito e evidência atual | Situação | Correção ou limite |
+| --- | --- | --- |
+| Instalação Windows a partir de fontes publicáveis | Conforme após correção P1 | Exportação com `core.autocrlf=true` falhou em 30 arquivos do Prettier; `.gitattributes` agora fixa LF no frontend, preservando fontes binárias/licença. Nova exportação passou lint, tipos e build |
+| Regras, dinheiro, datas, permissões e concorrência | Conforme no escopo demo | 158 testes PostgreSQL passaram; valor em centavos, recortes distintos e papéis continuam no servidor. Uma empresa, sem isolamento multiempresa contratado |
+| Regressões das guardas de restauração | Conforme após correção P2 | Os 16 testes host passavam localmente, mas não entravam no CI; o workflow agora os executa explicitamente |
+| Diagnósticos de navegador preservados | Conforme após correção P2 | Traces/PNGs já usavam volume e upload; relatório HTML era perdido no container removido. Compose normal e de prova agora têm volume próprio para o relatório, incluído no upload do CI |
+| Público, problema, entrada, exemplo, decisões, autoria e limites | Conforme na leitura simulada do README | Define título e baixa; distingue a prova de R$ 125 da fixture de R$ 2.000 e da massa visual; remove repetição de CI e justificativa processual; indica manutenção e ajuda. Não houve estudo com leitores |
+| Referências, identidade, hierarquia, densidade, foco e estados | Parcial | Fontes primárias e direção existente preservadas; 15 casos Chromium passaram, incluindo cinco larguras e teclado. Quatro capturas atuais foram inspecionadas: Resumo 1440/320, detalhe longo e diálogo 320. Não se certifica AA integral |
+| Contexto real e fronteira da simulação | Conforme | [Stripe documenta repetição idempotente](https://docs.stripe.com/api/idempotent_requests); o [caso de baixa](problem-solution.md#uma-resposta-perdida-não-pode-duplicar-o-pagamento) explicita mecanismo próprio e diferenças. Nenhuma integração ou benefício com usuários é presumido |
+| Arquivos públicos, dependências e provas históricas | Conforme no escopo do scan | Gitleaks e Trivy descritos abaixo; propostas visuais, capturas antigas, manifestos de falha, migrations e locks mantidos com sua função |
+| Restauração integral, produção e acessibilidade assistiva | Não verificado nesta rodada | Guardas e plano executados; não foi repetido o ensaio completo de restore/restart. Provedor externo, perda de host, leitor de tela, zoom nativo e medição de desempenho permanecem fora desta validação |
+
+O achado histórico do README em `5718cdad` já estava corrigido por `1198efd` e `4bb9b57`: a execução remota de 15 casos estava documentada, com limites visuais separados. Não foi tratado como falha atual.
+
+### Execuções desta auditoria
+
+Uma exportação `git archive` recebeu somente o diff candidato, sem `.env`, `node_modules` ou build pessoais. Credenciais temporárias foram geradas fora do repositório. Os serviços usaram os projetos Compose `gr-final-audit-20260922` e `gr-final-report-audit-20260922`, com o override E2E sem portas no host e bancos em `tmpfs`. As dependências foram instaladas pelos locks; o Docker reutilizou camadas/cache disponíveis. Não houve medição de capacidade durante as outras auditorias no mesmo host.
+
+- `docker compose -f compose.yaml -f compose.e2e.yaml -p gr-final-audit-20260922 --profile test build db api frontend frontend-checks e2e`: build aprovado; o candidato com LF foi novamente construído para frontend, checks e E2E.
+- `docker compose ... run --rm test`: Ruff, formato de 40 arquivos, mypy de 28 fontes e **158/158 pytest**, sem skip, aprovados. Houve dois avisos de depreciação de Starlette/HTTPX/AnyIO; não foram suprimidos.
+- `docker compose ... run --rm upgrade-test`: atualização legada preservou dois usuários, 60 clientes, 240 títulos e totais, com papéis reaplicáveis.
+- `docker compose ... run --rm --no-deps frontend-checks`: ESLint, Prettier e TypeScript aprovados no candidato após reproduzir e corrigir a falha Windows.
+- `docker compose ... run --rm --no-deps e2e`: **15/15 casos**, um worker, zero retry/skip, em 33,3 s; após corrigir a retenção de HTML, nova carteira descartável aprovou **15/15 em 32,3 s**, com `artifacts/e2e-report/index.html` preservado. Um teste temporário de falha intencional, fora do repositório, retornou 1 e conservou screenshot, contexto, `trace.zip` e HTML após `--rm`. Essa falha esperada valida a coleta; não integra nem substitui a suíte do produto. As imagens pertencem ao candidato local; não substituem as capturas históricas publicadas.
+- `python -m unittest discover -s scripts/tests -v`: **16/16**, incluindo códigos reais da CLI para backup válido/corrompido. `python scripts/prove_restore.py plan` e `node --check` dos dois scripts `.cjs` passaram. O pequeno ajuste de indentação em `visual-review.cjs` não altera comportamento.
+- Gitleaks **8.30.1**, binário conferido pelo SHA-256 da distribuição: `git --redact --log-opts=--all` examinou 19 commits; `dir --redact` examinou exportação dos arquivos publicáveis, ambos sem achados. A primeira varredura da pasta de execução detectou quatro credenciais descartáveis geradas no `.env` e cinco hashes já documentados; não se confundiu esse diretório privado com conteúdo publicado.
+- Trivy **0.74.0**, com o digest do CI, `--scanners vuln --ignorefile /dev/null --exit-code 1`: nenhuma vulnerabilidade relatada nas imagens backend, frontend e database em 22/09/2026. O scanner avisou que Alpine 3.24 não consta da sua lista EOL; resultado não comprova suporte de ciclo de vida nem ausência de falhas desconhecidas.
+
+Os resultados acima são locais, sobre o candidato sem commit. O novo workflow ainda não executou no GitHub. A prova remota e os registros anteriores continuam identificados abaixo com seus próprios SHAs.
+
+**Markdown publicado e candidata local:** em 22/09/2026, o README da raiz foi conferido no GitHub no baseline `4bb9b57e…`, incluindo hierarquia, parágrafos, código, imagens, textos alternativos, legendas, âncoras e navegação. Em 320 px não houve rolagem horizontal global; tabelas, quando presentes nos documentos examinados, mantiveram rolagem na própria região. Essa inspeção pertence à versão publicada, não às edições locais seguintes. O parser GFM também examinou os 13 Markdown da candidata sem falha de caminho local ou âncora.
+
+A candidata foi renderizada em Chromium offline com parser GFM e folhas de estilo obtidas do GitHub. A revisão conjunta dos seis READMEs cobriu 24 combinações: larguras de 1440 e 320 px, temas claro e escuro, quatro por projeto. As imagens carregaram e não houve overflow global; as aberturas e tabelas móveis foram inspecionadas. Esse preview verifica a composição local, mas não reproduz toda a sanitização, navegação ou recursos do GitHub e não comprova publicação da candidata.
+
+A [orientação oficial para README](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes) sustenta a precedência `.github` → raiz → `docs` e a preferência por links relativos internos; a [sintaxe oficial](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#section-links) explica âncoras e títulos repetidos. Um único título principal, a concisão dos parágrafos e a densidade escolhida de imagens são decisões editoriais desta revisão, não cotas impostas pelo GitHub.
+
 A [qualidade do frontend](frontend-quality.md) distingue a revisão estática local das jornadas remotas. O [CI do commit `5718cdad`](https://github.com/arthurjoanes/gestao-recebiveis/actions/runs/35744528178) executou a composição publicada; as provas mais antigas abaixo continuam limitadas às suas próprias versões.
 
 ## CI da interface publicada — 22/09/2026
@@ -7,6 +50,8 @@ A [qualidade do frontend](frontend-quality.md) distingue a revisão estática lo
 No SHA **`5718cdad3c5052ddbf6f660797121e9c47aa46c8`**, o run **[35744528178](https://github.com/arthurjoanes/gestao-recebiveis/actions/runs/35744528178)**, tentativa 1, terminou com sucesso. Build, 158 testes de backend, atualização do banco, scans e lint/tipos passaram. A suíte Chromium/Playwright 1.63.0 executou **15 casos em 33,4 s: 14 jornadas interativas e 1 caso de formatação BRL**, sem skip, retry ou filtro de seleção; um worker.
 
 O artefato [browser-evidence](https://github.com/arthurjoanes/gestao-recebiveis/actions/runs/35744528178/artifacts/10702621807) contém **21 PNGs e três relatórios de segurança**. Resumo e detalhe longo foram capturados em 1440×900, 1366×768, 768×1024, 390×844 e 320×844; há ainda importação, conflito, baixa, retry, menu e diálogo. A [imagem do Resumo](screenshots/publication-20260922/overview.png) foi copiada sem modificação, com SHA-256 e origem no [recibo](evidence/frontend-ci-20260922.json). Os casos alteram a massa durante a execução, portanto imagens diferentes não constituem uma comparação pareada do mesmo estado. A limpeza do workflow concluiu com sucesso.
+
+O download do artefato [exige login no GitHub e acesso de leitura](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/download-workflow-artifacts). A consulta anônima do link retornou 404 nesta auditoria, mas a API do run confirmou o artefato `10702621807`, não expirado, com expiração prevista em **21/12/2026**. O recibo sanitizado e a imagem versionada acima preservam a evidência pública que não depende desse download temporário.
 
 Esta prova remota não altera a recusa local anterior de inicialização. Também não comprova comparação baseline/candidato, zoom nativo, leitor de tela, conformidade AA integral ou desempenho percebido. O SHA acima identifica o código testado; esta atualização documental não foi uma nova execução da aplicação.
 
@@ -21,7 +66,7 @@ Na raiz do projeto, com Docker Desktop em modo Linux e PowerShell:
 
 `test` executa Ruff, mypy, pytest com PostgreSQL temporário, ESLint, TypeScript e a jornada Playwright. Os casos de backend verificam importação atômica, valores em centavos, concorrência, pagamentos idempotentes, sessões, permissões e recuperação de lembretes. O navegador cobre importação, repetição, retry, baixa, conflitos, navegação e telas estreitas.
 
-O banco de testes usa `tmpfs`. A jornada tem banco e serviços próprios, no projeto Compose `pf-gestao-recebiveis-e2e`, encerrado pelo script ao terminar. A carteira da demonstração fica em `pf-gestao-recebiveis_postgres-data` e não é usada pelos testes. Os resultados do navegador ficam em `artifacts/e2e/`, ignorado pelo Git.
+O banco de testes usa `tmpfs`. A jornada tem banco e serviços próprios, no projeto Compose `pf-gestao-recebiveis-e2e`, encerrado pelo script ao terminar. A carteira da demonstração fica em `pf-gestao-recebiveis_postgres-data` e não é usada pelos testes. Capturas e traces ficam em `artifacts/e2e/`; o relatório HTML, em `artifacts/e2e-report/index.html`. Ambos são ignorados pelo Git e preservados no upload do CI, inclusive em falha.
 
 Na revisão de 21/09/2026, uma cópia contendo apenas os arquivos de publicação construiu as imagens e passou os 145 testes de backend, os 12 casos Chromium e as verificações de estilo e tipos. A jornada adicional pelo proxy confirmou 243 títulos após importar três registros, duas tentativas no retry e preservação dos saldos após conflito. A prova de interrupção e reinício manteve uma tentativa e uma entrega, recusando o token do worker antigo. As três imagens de execução tiveram zero achados no Trivy dessa data.
 

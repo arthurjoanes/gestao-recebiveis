@@ -4,6 +4,9 @@
 Dockerfile* text eol=lf
 *.png binary
 
+# Prettier uses LF inside Docker even when a Windows checkout uses autocrlf.
+frontend/** text=auto eol=lf
+
 # Preserve published evidence checksums across Windows and Git checkouts.
 docs/evidence/restore-proof/**/*.json text eol=lf
 

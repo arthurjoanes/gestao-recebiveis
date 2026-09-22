@@ -213,9 +213,11 @@ services:
     environment:
       BASE_URL: http://localhost:3101
       PLAYWRIGHT_OUTPUT_DIR: /artifacts
+      PLAYWRIGHT_REPORT_DIR: /reports
     network_mode: service:frontend
     volumes:
       - ./artifacts/e2e:/artifacts
+      - ./artifacts/e2e-report:/reports
     depends_on:
       frontend:
         condition: service_healthy

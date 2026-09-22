@@ -1,6 +1,6 @@
 # Gestão de recebíveis
 
-Desenvolvi uma aplicação de demonstração para quem confere contas a receber: importar títulos, registrar pagamentos integrais e acompanhar lembretes sem repetir seus efeitos. O público é o operador financeiro; o perfil leitor acompanha a mesma carteira sem alterá-la. Os dados representam uma empresa fictícia, em BRL.
+Desenvolvi uma aplicação de demonstração para quem confere contas a receber. Um **título** registra o valor que um cliente deve e seu vencimento; dar **baixa** é registrar o pagamento integral dessa obrigação. O operador importa títulos por CSV, confere conflitos, registra pagamentos e acompanha lembretes simulados. O perfil leitor consulta a mesma carteira sem alterá-la. Os dados representam uma empresa fictícia, em reais (BRL).
 
 ![Resumo da carteira: posição em aberto, vencido, em dia e recebimentos do período](docs/screenshots/publication-20260922/overview.png)
 
@@ -12,7 +12,7 @@ O problema aparece quando um arquivo chega novamente ou a conexão cai depois de
 
 ![Título fictício RESTORE-PAID com pagamento integral de R$ 50 e registro na linha do tempo](docs/screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/04-mesma-baixa-preservada.png)
 
-*Captura histórica real da execução `11adf9df…`, de 22/09/2026. Confira o valor pago e o evento na linha do tempo; a igualdade do pagamento foi verificada no banco, não deduzida da imagem. [Imagem completa](docs/screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/04-mesma-baixa-preservada.png) · [cenário, fontes e limites](docs/restore-proof.md). A interface posterior foi exercitada no [CI do commit `5718cdad`](https://github.com/arthurjoanes/gestao-recebiveis/actions/runs/35744528178); esta imagem continua identificando a versão histórica da prova: [escopo do frontend](docs/frontend-quality.md).*
+*Captura histórica real da execução `11adf9df…`, de 22/09/2026. Confira o valor pago e o evento na linha do tempo; a igualdade do pagamento foi verificada no banco, não deduzida da imagem. [Imagem completa](docs/screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/04-mesma-baixa-preservada.png) · [cenário, fontes e limites](docs/restore-proof.md). A composição atual da interface aparece na primeira imagem.*
 
 ## Como trato as repetições
 
@@ -31,7 +31,7 @@ O [guia de casos](docs/problem-solution.md) liga esses problemas às entradas, a
 - Os papéis operador/leitor, as sessões, a proteção de mutações e a reserva persistente de capacidade antes de verificar a senha ([autenticação](backend/src/gestao_recebiveis/auth.py), [admissão](backend/src/gestao_recebiveis/login_admission.py)).
 - A carteira, os fluxos de conferência e os testes de concorrência, repetição e recuperação; também configurei os ambientes descartáveis e a prova de restauração ([interface](frontend/src/features/workspace.tsx), [testes](backend/tests), [prova](scripts/prove_restore.py)).
 
-FastAPI atende HTTP; SQLAlchemy/psycopg acessam PostgreSQL; Next.js/React apresentam a carteira. São ferramentas de terceiros que integrei ao domínio, não produtos que desenvolvi. As justificativas em [decisões técnicas](docs/decisoes-tecnicas.md) descrevem efeitos e compromissos da implementação atual; não inventam uma motivação histórica ou experiência com clientes.
+FastAPI atende HTTP; SQLAlchemy/psycopg acessam PostgreSQL; Next.js/React apresentam a carteira. As [decisões técnicas](docs/decisoes-tecnicas.md) explicam como integrei essas ferramentas, os efeitos e os compromissos da implementação.
 
 ## Reproduzir um lote pequeno
 
@@ -72,9 +72,9 @@ docker compose up -d --wait --wait-timeout 180 db api worker frontend
 .\scripts\gestao-recebiveis.ps1 proof
 ```
 
-`test` reúne verificações de código, backend e navegador em bancos descartáveis. `proof` também interrompe o processamento e reinicia um PostgreSQL de teste para verificar a mesma tentativa. Esses comandos completos incluem frontend; não foram repetidos nesta revisão editorial.
+`test` reúne verificações de código, backend e navegador em bancos descartáveis. `proof` também interrompe o processamento e reinicia um PostgreSQL de teste para verificar a mesma tentativa. Nesta auditoria foram executadas as etapas isoladas de build, backend, atualização do banco, checks frontend e navegador; o ensaio completo `proof` não foi repetido.
 
-O backend atual passou em **158 testes com PostgreSQL**, Ruff, formato e mypy; instalação frontend pelo lock, lint, tipos e build também passaram. O [CI do commit `5718cdad`](https://github.com/arthurjoanes/gestao-recebiveis/actions/runs/35744528178) executou **15 casos Playwright: 14 jornadas interativas e 1 caso de formatação BRL**, todos aprovados, sem skip ou retry. Os [resultados, ambiente e limites](docs/verification.md) identificam as versões testadas e preservam as provas históricas.
+O candidato local baseado em `4bb9b57` passou em **158 testes com PostgreSQL**, **16 testes das guardas de restauração**, Ruff, formato e mypy; instalação frontend pelo lock, lint, tipos e build também passaram. Os **15 casos Playwright: 14 jornadas interativas e 1 caso de formatação BRL** passaram sem skip ou retry. Os [resultados, ambiente e limites](docs/verification.md) registram a falha inicial de formato no Windows, a correção e a repetição dos checks; preservam também o [CI histórico de `5718cdad`](https://github.com/arthurjoanes/gestao-recebiveis/actions/runs/35744528178). O novo workflow ainda não foi executado no GitHub.
 
 A [restauração em volume novo](docs/restore-proof.md) é uma prova histórica adicional de conteúdo, sequências, pagamento e tentativa preservados. Não confundo dump gerado com restauração validada. Fontes e tentativas com falha permanecem rastreáveis nos seus manifestos.
 
@@ -84,6 +84,8 @@ Escolhi centavos inteiros para as operações em BRL; deixei a autorização e a
 
 O escopo é uma empresa e pagamento integral. Pix, boleto, juros, estorno e envio externo não estão implementados. Uma baixa impede autorizações futuras; não desfaz uma autorização anterior em trânsito. O [plano de provedor real](docs/provider-integration-plan.md) descreve ensaios ainda necessários. Não medi produtividade com usuários, tolerância à perda do host ou capacidade de produção.
 
-O setup publica serviços somente em loopback. Uso por múltiplos clientes exige uma borda que identifique origens com confiança e configuração de segurança apropriada: [limites e atualização](docs/security.md). O design foi aprovado pelo autor em 22/09/2026. A execução automatizada da interface foi comprovada no [CI do commit `5718cdad`](https://github.com/arthurjoanes/gestao-recebiveis/actions/runs/35744528178). Comparação visual pareada com o baseline, zoom nativo, leitor de tela, conformidade AA integral e desempenho percebido continuam sem comprovação.
+O setup publica serviços somente em loopback. Uso por múltiplos clientes exige uma borda que identifique origens com confiança e configuração de segurança apropriada: [limites e atualização](docs/security.md). Comparação visual pareada com o baseline, zoom nativo, leitor de tela, conformidade AA integral e desempenho percebido continuam sem comprovação; o [escopo da revisão visual](docs/frontend-quality.md) separa essas verificações das jornadas automatizadas.
+
+Para manutenção, comece pelos [contratos HTTP](docs/api-contract.md) e [de dados](docs/data-contract.md), localize a regra nos arquivos ligados acima e rode os testes antes de mudar seu comportamento. Em falha de inicialização, confira `docker compose ps` e `docker compose logs --tail 100 api worker`; o [guia de verificação](docs/verification.md) cobre banco antigo e ambientes de teste. Problemas reproduzíveis podem ser relatados nas [issues do projeto](https://github.com/arthurjoanes/gestao-recebiveis/issues), sem credenciais ou dados reais.
 
 Código sob MIT. A fonte IBM Plex Sans mantém sua [licença OFL 1.1](frontend/src/app/fonts/plex-LICENSE.txt) e [origem](frontend/src/app/fonts/sources.json).

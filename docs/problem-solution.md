@@ -28,6 +28,8 @@ Código: [`imports.py`](../backend/src/gestao_recebiveis/imports.py), funções 
 
 Depois de clicar em pagar, perder a conexão não informa se a baixa foi gravada. Impedir um segundo clique ajuda a interface, mas não resolve a repetição da requisição ou dois operadores atuando juntos.
 
+A documentação [Idempotent requests, da Stripe](https://docs.stripe.com/api/idempotent_requests), consultada em 22/09/2026, descreve repetição após erro de conexão usando a mesma chave e recusa quando os parâmetros mudam. Este projeto reproduz esse risco na baixa integral: compara título e observação e recupera o pagamento persistido. Não integra Stripe nem implementa seu cache de respostas ou sua política de expiração de chaves.
+
 Implementei `pay` para serializar a chave idempotente: ele confere o conteúdo associado e bloqueia o título antes de mudar seu estado. A baixa e o cancelamento das pendências pertencem à mesma transação.
 
 **Exemplo:** para o mesmo título, repetir `{"idempotency_key":"pagamento-demo-01","note":"Conferido"}` devolve o mesmo pagamento. O pedido não contém valor: a API usa o valor integral do título. Reutilizar essa chave com outra observação gera conflito 409. O valor vem do título bloqueado: o cliente não escolhe um valor menor para fazer uma baixa parcial.

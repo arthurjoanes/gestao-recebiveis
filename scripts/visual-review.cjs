@@ -61,7 +61,7 @@ const { chromium } = require("/app/node_modules/playwright");
     const evidence = {
       observedAt: new Date().toISOString(),
       application: "http://localhost:3101",
-    composeProject: process.env.COMPOSE_PROJECT_NAME || null,
+      composeProject: process.env.COMPOSE_PROJECT_NAME || null,
       scope:
         "Read-only reflow check after demo-reader login; separate from the Playwright suite.",
       result: "passed",
