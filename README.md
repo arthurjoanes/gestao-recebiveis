@@ -45,12 +45,31 @@ A prova histórica de **22/09/2026** usa outra massa: dois títulos de **R$ 50 +
 
 ```mermaid
 flowchart TB
-    Web["Interface Next.js<br/>localhost:3101"] --> API["API FastAPI<br/>localhost:8101"]
-    API --> DB[("PostgreSQL")]
-    Worker["Worker Python<br/>lembretes simulados"] --> DB
+    Browser["Operador ou leitor"]
+    Web["Next.js :3101<br/>carteira, CSV e histórico"]
+    API["FastAPI :8101<br/>sessão, CSRF e perfil<br/>importação e baixa integral"]
+    DB[("PostgreSQL interno<br/>lotes, carteira e pagamentos<br/>sessões, fila e auditoria")]
+    Worker["Worker Python<br/>etapas D-3 / D0 / D+3 / D+7<br/>lease e token de posse"]
+    Fake["FakeProvider no worker<br/>resultado por tentativa<br/>entrega por chave idempotente"]
+    Browser -->|"HTTP · cookie e CSRF"| Web
+    Web -->|"proxy /api/v1"| API
+    API -->|"SQL · commit antes da resposta"| DB
+    DB -.->|"polling de jobs"| Worker
+    Worker -->|"autoriza e finaliza em transações"| DB
+    Worker -->|"send após commit"| Fake
+    Fake -->|"resultado e entrega persistidos"| DB
 ```
 
-A API decide autorização, importação e baixa dentro de [transações](backend/src/gestao_recebiveis/database.py). O [worker](backend/src/gestao_recebiveis/worker.py) assume lembretes por prazo de posse; o [provedor fictício](backend/src/gestao_recebiveis/reminders/provider.py) guarda o resultado no mesmo banco. API e worker compartilham o pacote Python. O [Compose](compose.yaml) acrescenta tarefas de provisionamento, migração e seed; elas não são serviços de negócio permanentes. A [arquitetura detalhada](docs/architecture.md) explica essas fronteiras.
+O caminho HTTP é síncrono; a seta pontilhada representa o consumo em segundo plano por polling, sem chamada da API para o worker. API e worker compartilham o pacote Python; os módulos internos estão abertos no guia detalhado. O simulador roda no worker e usa o mesmo PostgreSQL; não existe serviço externo de e-mail nesta implementação.
+
+| Caminho | Responsabilidade e garantia |
+| --- | --- |
+| [CSV → prévia → confirmação](backend/src/gestao_recebiveis/imports.py) | Guarda bytes e diagnóstico; relê o lote e usa savepoint para rejeitar conflitos sem importação parcial |
+| [Baixa integral](backend/src/gestao_recebiveis/receivables.py) | Serializa a chave idempotente, bloqueia o título e grava pagamento, cancelamento de pendências e auditoria na mesma transação |
+| [Lembrete em segundo plano](backend/src/gestao_recebiveis/worker.py) | Assume o job por lease, autoriza antes de enviar e reconcilia a mesma tentativa quando o resultado é desconhecido |
+| [Persistência e acesso](backend/src/gestao_recebiveis/models.py) | Unicidade no banco protege título, pagamento e etapa; o runtime usa `gestao_app`, separado do papel de migração |
+
+O [Compose](compose.yaml) publica frontend/API apenas em loopback e mantém o banco interno. `db-init` provisiona papéis, `migrate` aplica o schema e `seed` carrega a demo como tarefas pontuais. O [guia de arquitetura](docs/architecture.md) detalha módulos, tabelas, sequência de recuperação e limites das transações.
 
 <a id="implementação"></a>
 <a id="o-que-eu-implementei"></a>

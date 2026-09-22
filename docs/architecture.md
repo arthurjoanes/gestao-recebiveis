@@ -8,25 +8,58 @@ Importação de títulos, recebimentos e lembretes simulados. Operadores importa
 
 ## Componentes
 
+São quatro processos permanentes no [Compose](../compose.yaml): `frontend`, `api`, `worker` e `db`. As caixas abaixo abrem os módulos Python e os grupos de tabelas; não representam microserviços ou bancos separados. API e worker usam SQLAlchemy síncrono/psycopg e compartilham `gestao_recebiveis`.
+
 ```mermaid
-flowchart LR
-  Browser[Navegador] --> Web[Next.js :3101]
-  Web --> API[FastAPI :8101]
-  API --> DB[(PostgreSQL)]
-  Worker[Worker Python] --> DB
-  Worker --> Fake[Provedor fictício persistente]
-  Fake --> DB
+flowchart TB
+    Browser["Navegador · operador ou leitor"]
+    Web["frontend · Next.js :3101<br/>rewrite /api para api:8101"]
+    subgraph ApiProcess["api · FastAPI :8101"]
+        Guard["routes.py + auth.py<br/>sessão, Origin, CSRF e perfil"]
+        Import["import_csv.py + imports.py<br/>prévia e confirmação do CSV"]
+        Financial["receivables.py + reporting.py<br/>baixa, cancelamento e consultas"]
+    end
+    subgraph WorkerProcess["worker · Python"]
+        Schedule["schedule + policy.py<br/>etapas e reserva do dia"]
+        Execute["claim → authorize → finish<br/>heartbeat e token de posse"]
+        Fake["FakeProvider.send<br/>módulo local, transação própria"]
+    end
+    subgraph Database["db · PostgreSQL interno · volume postgres-data"]
+        Access[("users · sessions<br/>login_admission · demo_state")]
+        Ledger[("customers · receivables · payments<br/>import_batches · import_lines<br/>audit_events")]
+        Queue[("reminders · attempts<br/>reminder_day_guards")]
+        ProviderLedger[("provider_results · deliveries")]
+    end
+    Browser -->|"HTTP /api/v1 · cookie e CSRF"| Web
+    Web -->|"proxy HTTP na rede Compose"| Guard
+    Guard -->|"identidade e estado demo"| Access
+    Guard -->|"operador: importar"| Import
+    Guard -->|"consulta; operador: mutação"| Financial
+    Import -->|"bytes, diagnóstico e savepoint financeiro"| Ledger
+    Financial -->|"locks, baixa e auditoria"| Ledger
+    Financial -->|"cancela pendências na mesma transação"| Queue
+    Schedule -->|"lê vencimentos e estado do título"| Ledger
+    Schedule -->|"insere etapa e reserva diária"| Queue
+    Queue -.->|"polling independente do HTTP"| Execute
+    Execute -->|"revalida título sob lock"| Ledger
+    Execute -->|"claim e atualização com lease/token"| Queue
+    Execute -->|"após commit da autorização"| Fake
+    Fake -->|"lê payload autorizado"| Queue
+    Fake -->|"grava resultado e entrega"| ProviderLedger
 ```
 
-API e worker compartilham o pacote Python. SQLAlchemy síncrono, psycopg e transações explícitas. Os jobs ficam no PostgreSQL para usar os mesmos locks e transações das regras financeiras, sem outro serviço.
+Setas contínuas são chamadas ou acessos síncronos dentro de cada fluxo. A pontilhada marca a retirada de trabalho durável em segundo plano: o worker consulta o banco, não recebe mensagens da API. `FakeProvider` também lê o payload de `attempts`; seu ledger fica no mesmo banco para permitir reproduzir resposta perdida e reinício.
 
-| Parte                       | Responsabilidade                                                              | Custo ou limite                                                                           |
-| --------------------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| Next.js                     | Conferir lote, consultar carteira e apresentar o histórico de pagamento/envio | Exige manter estados de carregamento, erro, filtros e foco; não decide a baixa financeira |
-| FastAPI e pacote de domínio | Autenticar, autorizar e executar regras dentro de transações                  | Requer contratos HTTP e tratamento explícito de conflitos                                 |
-| PostgreSQL                  | Unicidade, valores, pagamentos, auditoria, sessão e fila durável              | Concentra dados e coordenação; o banco precisa de backup e procedimento de recuperação    |
-| Worker                      | Agendar, assumir e concluir tentativas fora do ciclo da requisição            | Exige lease, renovação e recusa de posse antiga; não elimina resultado desconhecido       |
-| Provedor simulado           | Reproduzir aceitação e resposta perdida de forma controlada                   | Usa o mesmo banco; não reproduz a independência de um provedor externo                    |
+| Módulo / processo | Entrada → responsabilidade → saída | Fronteira |
+| --- | --- | --- |
+| [Cliente HTTP](../frontend/src/lib/api.ts) e [proxy](../frontend/next.config.ts) | Formulários e filtros → `/api/v1` com sessão/CSRF → estados de tela | A interface apresenta o resultado confirmado; não decide saldos |
+| [Autenticação](../backend/src/gestao_recebiveis/auth.py) e [admissão de login](../backend/src/gestao_recebiveis/login_admission.py) | Cookie ou credenciais → usuário/perfil → acesso ou 401/403 | Login reserva cota em transação independente; falha de senha não desfaz a reserva |
+| [Importação](../backend/src/gestao_recebiveis/imports.py) | CSV persistido → validação, comparação e confirmação → lote com relatório | Savepoint isola alterações financeiras do diagnóstico de rejeição |
+| [Recebíveis](../backend/src/gestao_recebiveis/receivables.py) | Título + chave de pagamento → locks e transição → pagamento integral | Pagamento, estado, pendências e auditoria compartilham commit |
+| [Worker](../backend/src/gestao_recebiveis/worker.py) e [fila](../backend/src/gestao_recebiveis/reminders/service.py) | Vencimento/job → agendamento, posse e autorização → tentativa finalizada ou reagendada | Claim, autorização e finalização têm transações curtas separadas |
+| [Simulador](../backend/src/gestao_recebiveis/reminders/provider.py) | `attempt_id` → resultado imutável e entrega por chave → sucesso/falha/resposta perdida | Executa após o commit da autorização; não é integração de envio externo |
+
+A API e o frontend são publicados em `127.0.0.1:8101/3101`; o PostgreSQL só tem endereço na rede Compose. O acesso direto à API continua sujeito às mesmas guardas. `db-init` usa o administrador para provisionar papéis; `migrate` usa `gestao_owner`; API, worker e seed usam `gestao_app`. A inicialização segue banco saudável → provisionamento → migração → API/worker; o frontend espera a saúde da API. O seed é uma tarefa do perfil `tools`.
 
 Esses processos rodam no mesmo computador na demonstração. Separar containers e volumes não cria tolerância à perda do host. Se a necessidade fosse apenas somar um CSV sem atualização concorrente nem envio, uma rotina de validação e relatório seria uma alternativa menor. A aplicação acrescenta persistência, permissões e coordenação para exercitar os casos descritos no [guia de problemas](problem-solution.md); não há benchmark que prove superioridade sobre essa alternativa.
 
@@ -37,6 +70,27 @@ Importação: lote bloqueado; savepoint para clientes/títulos/auditoria; erro d
 Pagamento/cancelamento: lock título antes de jobs, alteração financeira, cancelamento de pendências e auditoria na mesma transação. Pagamento também serializa a chave idempotente com advisory lock; reutilizar a chave para outro título ou conteúdo resulta em conflito. Os locks decisivos atualizam a instância SQLAlchemy com `populate_existing`, evitando decisões sobre um objeto cacheado antes de uma mudança concorrente.
 
 Na API, `get_session` abre a transação e a dependência FastAPI usa escopo `function`: o commit termina antes de enviar a resposta ao cliente. Casos de uso não fazem commit. O worker e os comandos de seed abrem suas próprias transações, usando os mesmos casos de uso.
+
+### Relações que sustentam as garantias
+
+| Tabelas em `models.py` | Relação e restrição usada pelo fluxo |
+| --- | --- |
+| `customers` → `receivables` | Um cliente tem vários títulos; cada identidade externa é única dentro de `source_system` |
+| `import_batches` → `import_lines` | Lote mantém conteúdo binário e SHA-256; linhas são únicas por lote/número e conservam a conferência |
+| `receivables` → `payments` | Até um pagamento por título; `idempotency_key` é única e `request_hash` compara título/nota |
+| `receivables` → `reminders` → `attempts` | Job único por título/etapa e título/dia; tentativa única por job/número, com payload da autorização |
+| `reminder_day_guards` | Reserva única por título/data comercial; limita recuperação de etapas no mesmo dia |
+| `attempts` → `provider_results`; `reminders` → `deliveries` | Resultado único por tentativa; entrega única por lembrete e chave idempotente |
+| `audit_events` | Liga eventos ao título/ator quando aplicável; `dedupe_key` evita repetir o mesmo evento de fila |
+
+As restrições estão em [`models.py`](../backend/src/gestao_recebiveis/models.py). O arquivo CSV fica em `import_batches.content`, dentro do PostgreSQL; não há volume de arquivos de upload separado.
+
+### Duas requisições que alteram a carteira
+
+1. **Importação:** `POST /api/v1/imports` valida o CSV e persiste uma prévia, sem inserir títulos. `POST /api/v1/imports/{id}/confirm` bloqueia o lote, relê seus bytes e revalida contra a carteira atual. Inserções e auditoria financeira ficam num savepoint; qualquer conflito desfaz esse trecho e mantém `status=rejected`, linhas e relatório na transação externa. Uma confirmação repetida retorna o lote já encerrado.
+2. **Baixa:** `POST /api/v1/receivables/{id}/payments` recebe chave e nota. O advisory lock serializa a chave antes de verificar um pagamento anterior. A mesma chave/conteúdo devolve o pagamento existente; conteúdo diferente conflita. Para um pagamento novo, o lock do título antecede os jobs; `paid`, pagamento, cancelamento de pendências e evento de auditoria são confirmados juntos.
+
+Esses limites são exercitados em [`test_financial.py`](../backend/tests/test_financial.py): prévia revalidada, conflito atômico, imports concorrentes e uma chave de pagamento disputada por dois títulos.
 
 ## Contratos HTTP
 
@@ -62,6 +116,37 @@ Cada varredura bloqueia primeiro os títulos e carrega seus jobs em lote; tentat
 
 Fake guarda resultado imutável por tentativa e entrega única por chave. Resposta perdida ocorre depois do commit da entrega. O padrão é cinco tentativas; retries 30/120/600/1800s, ou 1/2/4/8s no demo. `MAX_ATTEMPTS` e `DEMO_RETRY_BASE_SECONDS` permitem ajustar limite e escala no ambiente. Reconciliação não consome tentativa nova.
 Baixa confirmada impede novas autorizações. Autorização anterior pode produzir efeito e fica rastreável; não há promessa geral de entrega única em provedores externos.
+
+### Resposta perdida depois da aceitação
+
+```mermaid
+sequenceDiagram
+    participant W as Worker
+    participant DB as PostgreSQL
+    participant P as FakeProvider no worker
+    W->>DB: claim: SKIP LOCKED, lease e token + 1
+    DB-->>W: COMMIT da posse
+    W->>DB: authorize: lock título → job, grava attempt
+    DB-->>W: COMMIT da autorização e attempt_id
+    Note over W,P: Nenhum lock financeiro atravessa send()
+    W->>P: send(attempt_id)
+    P->>DB: grava delivery e provider_result
+    DB-->>P: COMMIT da aceitação
+    P--xW: ResponseLost após commit
+    W->>DB: finish: attempt unknown, job retry_scheduled
+    DB-->>W: COMMIT, aguarda next_attempt_at
+    W->>DB: novo claim + authorize, recupera mesma attempt
+    DB-->>W: COMMIT, token novo e mesmo attempt_id
+    W->>P: send(mesmo attempt_id)
+    P->>DB: lê provider_result já persistido
+    DB-->>P: resultado original
+    P-->>W: success, sem nova delivery
+    W->>DB: finish confere token/lease e marca sent
+```
+
+Se o processo cair antes de `finish`, o job permanece `processing` até o lease expirar; outro claim pode continuar a mesma tentativa. O heartbeat renova a posse durante `send`, mas a finalização sempre revalida token e prazo. Um worker atrasado não pode sobrescrever o resultado de um sucessor.
+
+A baixa pode ocorrer entre autorização e entrega. Ela bloqueia novas autorizações, mas conserva a tentativa já autorizada para reconciliação; por isso o diagrama não promete que uma baixa desfaz uma entrega em trânsito. A sequência e essa corrida têm casos em [`test_reminders.py`](../backend/tests/test_reminders.py), incluindo `test_lost_response_replays_same_attempt_after_provider_restart` e `test_payment_authorization_race_has_explicit_lock_order`.
 
 ## Relógios, segurança e operação
 
