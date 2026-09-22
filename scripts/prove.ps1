@@ -48,6 +48,7 @@ try {
     Invoke-ProofCommand 'runtime-images' @('image', 'inspect', '--format', '{{.RepoTags}} {{.Id}}', 'gestao-recebiveis-database:local', 'gestao-recebiveis-backend:local', 'gestao-recebiveis-frontend:local', 'gestao-recebiveis-e2e:local')
     Invoke-ProofCommand 'fresh-proof' ($ComposePrefix + @('down', '--volumes', '--remove-orphans'))
     Invoke-ProofCommand 'database-ready' ($ComposePrefix + @('up', '-d', '--wait', '--wait-timeout', '120', 'db'))
+    Invoke-ProofCommand 'provision-runtime-roles' ($ComposePrefix + @('run', '--rm', '--no-deps', 'db-init'))
     Invoke-ProofCommand 'backend-checks' ($ComposePrefix + @('run', '--rm', '--no-deps', '-e', 'LEASE_SECONDS=60', '-e', 'HEARTBEAT_SECONDS=20', 'probe', 'sh', '/scripts/check-backend.sh'))
     Invoke-ProofCommand 'wrong-mode-rejected' ($ComposePrefix + @('run', '--rm', '--no-deps', '-e', 'CF_PROOF_MODE=denied', 'probe', 'python', 'tests/persistence_probe.py', 'prepare')) 1
     Invoke-ProofCommand 'accepted-process-interrupted' ($ComposePrefix + @('run', '--rm', '--no-deps', 'probe', 'python', 'tests/persistence_probe.py', 'prepare')) 86
@@ -56,6 +57,7 @@ try {
     Invoke-ProofCommand 'recover-persisted-acceptance' ($ComposePrefix + @('run', '--rm', '--no-deps', 'probe', 'python', 'tests/persistence_probe.py', 'verify'))
     Invoke-ProofCommand 'fresh-journey' ($ComposePrefix + @('down', '--volumes', '--remove-orphans'))
     Invoke-ProofCommand 'journey-database-ready' ($ComposePrefix + @('up', '-d', '--wait', '--wait-timeout', '120', 'db'))
+    Invoke-ProofCommand 'journey-runtime-roles' ($ComposePrefix + @('run', '--rm', '--no-deps', 'db-init'))
     Invoke-ProofCommand 'journey-migrate' ($ComposePrefix + @('run', '--rm', '--no-deps', 'probe', 'alembic', 'upgrade', 'head'))
     Invoke-ProofCommand 'journey-seed' ($ComposePrefix + @('run', '--rm', '--no-deps', 'probe', 'python', '-m', 'gestao_recebiveis.seed'))
     Invoke-ProofCommand 'journey-application-ready' ($ComposePrefix + @('up', '-d', '--wait', '--wait-timeout', '120', 'api', 'worker', 'frontend'))

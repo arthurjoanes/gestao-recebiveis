@@ -4,7 +4,7 @@ x-backend: &backend
   image: gestao-recebiveis-backend:local
   init: true
   environment: &environment
-    DATABASE_URL: postgresql+psycopg://gestao_recebiveis:proof_local_only@db:5432/gestao_recebiveis_proof_test
+    DATABASE_URL: postgresql+psycopg://gestao_app:proof_runtime_only_password_123456@db:5432/gestao_recebiveis_proof_test
     SESSION_SECRET: gestao_recebiveis_disposable_proof_secret_not_for_deployment_123456
     DEMO_MODE: "true"
     FRONTEND_ORIGIN: http://localhost:3101
@@ -27,14 +27,27 @@ services:
       interval: 2s
       timeout: 3s
       retries: 30
+  db-init:
+    <<: *backend
+    environment:
+      DATABASE_ADMIN_URL: postgresql+psycopg://gestao_recebiveis:proof_local_only@db:5432/gestao_recebiveis_proof_test
+      DATABASE_OWNER_PASSWORD: proof_owner_only_password_123456
+      DATABASE_APP_PASSWORD: proof_runtime_only_password_123456
+    command: [python, -m, gestao_recebiveis.provision_database]
+    depends_on:
+      db:
+        condition: service_healthy
   probe:
     <<: *backend
+    environment:
+      <<: *environment
+      MIGRATION_DATABASE_URL: postgresql+psycopg://gestao_owner:proof_owner_only_password_123456@db:5432/gestao_recebiveis_proof_test
     volumes:
       - ${CF_PROOF_EVIDENCE_DIR:?Use scripts/prove.ps1}:/evidence
     command: [python, tests/persistence_probe.py, verify]
   api:
     <<: *backend
-    command: [uvicorn, "gestao_recebiveis.app:app", --host, "0.0.0.0", --port, "8101"]
+    command: [uvicorn, "gestao_recebiveis.app:app", --host, "0.0.0.0", --port, "8101", --no-proxy-headers]
     healthcheck:
       test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8101/health/ready', timeout=2)"]
       interval: 3s

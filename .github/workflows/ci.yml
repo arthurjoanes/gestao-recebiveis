@@ -26,13 +26,21 @@ jobs:
           echo "::add-mask::$database_password"
           echo "SESSION_SECRET=$session_secret" >> "$GITHUB_ENV"
           echo "DATABASE_PASSWORD=$database_password" >> "$GITHUB_ENV"
+          for key in DATABASE_OWNER_PASSWORD DATABASE_APP_PASSWORD; do
+            value="$(openssl rand -hex 24)"
+            echo "::add-mask::$value"
+            echo "$key=$value" >> "$GITHUB_ENV"
+          done
       - name: Build application and checks
         run: |
           for service in db api frontend frontend-checks e2e; do
             docker compose --profile test build "$service"
           done
       - name: Backend checks on PostgreSQL
-        run: docker compose run --rm test
+        run: |
+          docker compose run --rm test
+          docker compose up -d --wait --force-recreate db-upgrade-test
+          docker compose run --rm --no-deps upgrade-test
       - name: Scan runtime images
         run: |
           mkdir -p artifacts/security
@@ -50,7 +58,7 @@ jobs:
       - name: Migrate and seed isolated browser stack
         run: |
           docker compose -f compose.yaml -f compose.e2e.yaml -p pf-gestao-recebiveis-e2e up -d --wait db
-          docker compose -f compose.yaml -f compose.e2e.yaml -p pf-gestao-recebiveis-e2e run --rm --no-deps migrate
+          docker compose -f compose.yaml -f compose.e2e.yaml -p pf-gestao-recebiveis-e2e run --rm migrate
           docker compose -f compose.yaml -f compose.e2e.yaml -p pf-gestao-recebiveis-e2e run --rm --no-deps seed
       - name: Start isolated application
         run: docker compose -f compose.yaml -f compose.e2e.yaml -p pf-gestao-recebiveis-e2e up -d --wait --wait-timeout 180 api worker frontend
@@ -71,4 +79,4 @@ jobs:
           docker compose --profile test logs --tail 200
           docker compose -f compose.yaml -f compose.e2e.yaml -p pf-gestao-recebiveis-e2e --profile test logs --tail 200
           docker compose -f compose.yaml -f compose.e2e.yaml -p pf-gestao-recebiveis-e2e --profile test --profile tools down --remove-orphans
-          docker compose stop db-test
+          docker compose stop db-test db-upgrade-test

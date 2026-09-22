@@ -18,6 +18,7 @@ from gestao_recebiveis.clock import business_date, business_now
 from gestao_recebiveis.config import get_settings
 from gestao_recebiveis.errors import DomainError
 from gestao_recebiveis.import_csv import MAX_BYTES
+from gestao_recebiveis.login_admission import admit_login, release_success
 from gestao_recebiveis.models import (
     Attempt,
     Customer,
@@ -72,7 +73,9 @@ def session_view(user: User, csrf: str) -> dict[str, Any]:
 @router.post("/auth/login", response_model=AuthResponse)
 def login(body: LoginInput, request: Request, response: Response, session: Db) -> dict[str, Any]:
     check_origin(request)
+    admission = admit_login(body.email, request.client.host if request.client else "unknown")
     user = authenticate(session, body.email, body.password)
+    release_success(session, admission)
     token, login_session = create_login(session, user)
     settings = get_settings()
     response.set_cookie(

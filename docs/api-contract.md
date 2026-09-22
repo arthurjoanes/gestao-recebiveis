@@ -35,3 +35,7 @@ O e-mail é normalizado; senha é conferida exatamente como recebida, incluindo 
 Pagamento é sempre **integral**: o valor vem do título bloqueado, não do corpo da requisição. `amount_cents`, `amount_brl` ou qualquer campo adicional são rejeitados com 422 e identificação do campo; nenhuma baixa parcial é gravada. `idempotency_key` aceita 8–100 caracteres e `note` até 500, após remoção de espaços externos. Mesmo título/chave/conteúdo retorna o mesmo pagamento; mesma chave com outro conteúdo retorna 409. `reason` de cancelamento exige 3–500 caracteres após trim.
 
 `enabled` no controle de worker exige booleano JSON real (`true`/`false`), sem aceitar string ou inteiro. `receivable_id` no cenário exige inteiro JSON positivo dentro da faixa dos IDs. Valores fora da faixa são rejeitados antes da consulta ao PostgreSQL.
+
+## Limite do login
+
+`POST /api/v1/auth/login` pode retornar `429`, código `login_throttled`, com `Retry-After` em segundos. Cada janela dura 60 segundos desde a primeira reserva: cinco tentativas malsucedidas/em andamento por conta normalizada e origem, e trinta por origem. O limite é consultado antes do Argon2 e persistido mesmo quando a autenticação termina em 401. Uma conta já limitada não consome novamente o orçamento da origem. Credenciais válidas liberam apenas a reserva da própria requisição. Não há um contador global nem bloqueio de conta entre origens distintas.

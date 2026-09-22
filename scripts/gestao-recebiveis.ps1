@@ -19,6 +19,12 @@ if ((Get-Content -LiteralPath $ComposeFile -Raw) -notmatch '(?m)^name: pf-gestao
     throw 'O script só pode operar o projeto Compose pf-gestao-recebiveis.'
 }
 
+function New-LocalSecret {
+    $Bytes = [byte[]]::new(32)
+    [System.Security.Cryptography.RandomNumberGenerator]::Fill($Bytes)
+    return [Convert]::ToHexString($Bytes).ToLowerInvariant()
+}
+
 function Initialize-Environment {
     if (-not (Test-Path -LiteralPath $EnvFile)) {
         $SecretBytes = New-Object byte[] 48
@@ -32,8 +38,17 @@ function Initialize-Environment {
         $Template = Get-Content -LiteralPath (Join-Path $ProjectRoot '.env.example') -Raw
         $Template = $Template.Replace('REPLACE_WITH_RANDOM_SECRET', $SessionSecret)
         $Template = $Template.Replace('REPLACE_WITH_RANDOM_DATABASE_PASSWORD', $DatabasePassword)
+        $Template = $Template.Replace('REPLACE_WITH_RANDOM_OWNER_PASSWORD', (New-LocalSecret))
+        $Template = $Template.Replace('REPLACE_WITH_RANDOM_APP_PASSWORD', (New-LocalSecret))
         [System.IO.File]::WriteAllText($EnvFile, $Template, (New-Object System.Text.UTF8Encoding($false)))
         Write-Host '.env criado.'
+    }
+    # Upgrade preserves the original bootstrap password and database volume.
+    $Existing = Get-Content -LiteralPath $EnvFile -Raw
+    foreach ($Key in @('DATABASE_OWNER_PASSWORD', 'DATABASE_APP_PASSWORD')) {
+        if ($Existing -notmatch "(?m)^$Key=.+$") {
+            [System.IO.File]::AppendAllText($EnvFile, "`n$Key=$(New-LocalSecret)`n", [System.Text.UTF8Encoding]::new($false))
+        }
     }
 }
 
@@ -93,14 +108,14 @@ switch ($Action) {
             Invoke-CobraCompose -ComposeArgs @('build', $BuildService)
         }
         Invoke-CobraCompose -ComposeArgs @('up', '-d', '--wait', 'db')
-        Invoke-CobraCompose -ComposeArgs @('run', '--rm', '--no-deps', 'migrate')
+        Invoke-CobraCompose -ComposeArgs @('run', '--rm', 'migrate')
         Invoke-CobraCompose -ComposeArgs @('run', '--rm', '--no-deps', 'seed')
         Start-Application
     }
     'start' { Start-Application }
     'seed' {
         Invoke-CobraCompose -ComposeArgs @('up', '-d', '--wait', 'db')
-        Invoke-CobraCompose -ComposeArgs @('run', '--rm', '--no-deps', 'migrate')
+        Invoke-CobraCompose -ComposeArgs @('run', '--rm', 'migrate')
         Invoke-CobraCompose -ComposeArgs @('run', '--rm', '--no-deps', 'seed')
     }
     'test' {
@@ -109,16 +124,18 @@ switch ($Action) {
                 Invoke-CobraCompose -ComposeArgs @('build', $BuildService)
             }
             Invoke-CobraCompose -ComposeArgs @('run', '--rm', 'test')
+            Invoke-CobraCompose -ComposeArgs @('up', '-d', '--wait', '--force-recreate', 'db-upgrade-test')
+            Invoke-CobraCompose -ComposeArgs @('run', '--rm', '--no-deps', 'upgrade-test')
             Invoke-CobraCompose -ComposeArgs @('run', '--rm', '--no-deps', 'frontend-checks')
             Invoke-IsolatedCompose -ComposeArgs @('up', '-d', '--wait', 'db')
-            Invoke-IsolatedCompose -ComposeArgs @('run', '--rm', '--no-deps', 'migrate')
+            Invoke-IsolatedCompose -ComposeArgs @('run', '--rm', 'migrate')
             Invoke-IsolatedCompose -ComposeArgs @('run', '--rm', '--no-deps', 'seed')
             Invoke-IsolatedCompose -ComposeArgs @('up', '-d', '--wait', '--wait-timeout', '180', 'api', 'worker', 'frontend')
             Invoke-IsolatedCompose -ComposeArgs @('run', '--rm', '--no-deps', 'e2e')
         }
         finally {
             Invoke-IsolatedCompose -ComposeArgs @('--profile', 'test', '--profile', 'tools', 'down', '--remove-orphans')
-            Invoke-CobraCompose -ComposeArgs @('stop', 'db-test')
+            Invoke-CobraCompose -ComposeArgs @('stop', 'db-test', 'db-upgrade-test')
         }
     }
     'demo' {
