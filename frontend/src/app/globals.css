@@ -3,15 +3,20 @@
 :root {
   --ink: #172b49;
   --muted: #526176;
-  --canvas: #f3f6fa;
+  --canvas: #f0f2f5;
   --paper: #ffffff;
-  --line: #cdd7e3;
+  --line: #d0d6df;
   --accent: #1e57a4;
   --accent-dark: #16427e;
   --accent-soft: #edf3fc;
   --positive: #226b4b;
   --red: #a3323c;
   --red-soft: #fff0f0;
+  --brand-ink: #152c49;
+  --balance: #1e477f;
+  --movement: #e8f0ec;
+  --control: #7a899e;
+  --focus-inverse: #a7caff;
 }
 * {
   box-sizing: border-box;
@@ -20,7 +25,7 @@ body {
   margin: 0;
   color: var(--ink);
   background: var(--canvas);
-  font-family: "Segoe UI Variable Text", "Segoe UI", Arial, sans-serif;
+  font-family: var(--font-product), Arial, sans-serif;
   font-size: 14px;
   line-height: 1.5;
 }
@@ -59,7 +64,7 @@ textarea {
   width: 100%;
   min-width: 0;
   min-height: 40px;
-  border: 1px solid #7a899e;
+  border: 1px solid var(--control);
   background: var(--paper);
   border-radius: 4px;
   color: var(--ink);
@@ -103,13 +108,13 @@ h1 {
   font-size: 26px;
   line-height: 1.25;
   letter-spacing: -0.6px;
-  font-weight: 650;
+  font-weight: 600;
   overflow-wrap: anywhere;
 }
 h2 {
   font-size: 16px;
   line-height: 1.4;
-  font-weight: 650;
+  font-weight: 600;
 }
 h3 {
   font-size: 14px;
@@ -145,7 +150,7 @@ legend {
 .eyebrow {
   color: var(--muted);
   font-size: 11px;
-  font-weight: 650;
+  font-weight: 600;
   letter-spacing: 0.9px;
   margin-bottom: 8px;
 }
@@ -373,7 +378,7 @@ td small {
 }
 .row-link {
   font-size: 14px;
-  font-weight: 650;
+  font-weight: 600;
 }
 .truncate {
   max-width: 250px;
@@ -562,7 +567,7 @@ td small {
   align-items: center;
   gap: 10px;
   font-size: 20px;
-  font-weight: 650;
+  font-weight: 600;
   letter-spacing: -0.5px;
   line-height: 1.2;
 }
@@ -573,20 +578,6 @@ td small {
   font-size: 11px;
   font-weight: 400;
   letter-spacing: 0;
-}
-.brand-icon {
-  display: grid;
-  place-content: center;
-  width: 34px;
-  height: 36px;
-  border-radius: 5px;
-  background: var(--accent);
-  color: #fff;
-  flex-shrink: 0;
-}
-.brand-icon > svg {
-  width: 22px;
-  height: 22px;
 }
 .attention-actions {
   display: flex;
@@ -669,7 +660,7 @@ td small {
   font-size: clamp(22px, 5.7vw, 29px);
   overflow-wrap: anywhere;
   color: var(--ink);
-  font-weight: 650;
+  font-weight: 600;
   margin: 16px 0;
 }
 .modal-actions {
@@ -1097,4 +1088,9 @@ summary {
     transition: none !important;
     scroll-behavior: auto !important;
   }
+}
+
+.brand-symbol {
+  flex: 0 0 32px;
+  color: inherit;
 }

@@ -15,3 +15,14 @@ regexes = [
   '''auth\.py': '99cb7e1939e8f9266efd4ee9444631acfdf82779a46711318f3f91938632a323''',
   '''test_api\.py': '1425acb54f02989425c328395bfbf33dd54cba4e4986dac56add542a956ead50''',
 ]
+
+[[rules.allowlists]]
+description = "Verified LF source SHA-256 in the frozen frontend review, exact JSON key and path"
+condition = "AND"
+paths = [
+  '''^docs/evidence/frontend-quality-static-20260922\.json$''',
+]
+regexTarget = "line"
+regexes = [
+  '''^\n?[ \t]*"frontend/src/lib/api\.ts":[ \t]*"c0beb7ccf5520c874b546d82e94dbfd88ac00ecd0f51b78f292b1194ba5161fa",?[ \t]*\r?$''',
+]

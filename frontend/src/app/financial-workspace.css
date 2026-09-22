@@ -3,16 +3,16 @@
 }
 .desktop-header :focus-visible,
 .mobile-header :focus-visible {
-  outline-color: #9fc5ff;
+  outline-color: var(--focus-inverse);
 }
 .desktop-header {
-  background: #142b49;
+  background: var(--brand-ink);
   color: #fff;
 }
 .masthead {
   max-width: 1440px;
-  min-height: 76px;
-  padding: 16px 36px;
+  min-height: 64px;
+  padding: 12px 36px;
   margin: auto;
   display: flex;
   align-items: center;
@@ -23,10 +23,6 @@
 }
 .masthead .brand small {
   color: #d1dded;
-}
-.masthead .brand-icon {
-  background: #dbe9ff;
-  color: #174275;
 }
 .workspace-label {
   display: flex;
@@ -96,7 +92,7 @@
 .desktop-header nav button.active {
   color: white;
   background: #23456f;
-  border-bottom-color: #9fc5ff;
+  border-bottom-color: var(--focus-inverse);
 }
 .nav-current {
   display: none;
@@ -161,7 +157,7 @@
   min-width: 0;
 }
 .page-heading {
-  animation: reveal-page 180ms ease-out;
+  min-width: 0;
 }
 .button,
 .text-button,
@@ -176,16 +172,7 @@ textarea {
     border-color 150ms ease-out,
     color 150ms ease-out;
 }
-@keyframes reveal-page {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
+
 .portfolio-workbench {
   display: grid;
   grid-template-columns: 224px minmax(0, 1fr);
@@ -198,7 +185,7 @@ textarea {
   flex-wrap: nowrap;
   gap: 17px;
   padding: 24px 20px;
-  background: #f5f8fc;
+  background: #edf0f4;
 }
 .portfolio-panel .portfolio-filters label {
   flex: none;
@@ -244,17 +231,13 @@ textarea {
 }
 .metrics {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-top: 3px solid var(--ink);
+  grid-template-columns: minmax(0, 2fr) minmax(270px, 1fr);
+  gap: 24px;
+  align-items: stretch;
 }
 .metric {
   min-width: 0;
-  padding: 22px;
-}
-.metric + .metric {
-  border-left: 1px solid var(--line);
+  padding: 24px;
 }
 .metric-label {
   font-size: 14px;
@@ -263,8 +246,7 @@ textarea {
 .metric > strong {
   display: block;
   margin: 12px 0 8px;
-  font-size: clamp(23px, 2vw, 30px);
-  letter-spacing: -0.7px;
+  font-size: clamp(24px, 2.3vw, 34px);
   line-height: 1.2;
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
@@ -272,7 +254,7 @@ textarea {
 .metric > p,
 .metric > small {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
 }
 .metric > small {
   display: block;
@@ -282,13 +264,15 @@ textarea {
   margin-top: 12px;
 }
 .metric-open {
-  background: #edf3fc;
+  grid-column: 1 / -1;
+  background: var(--balance);
+  color: white;
 }
 .metric-overdue > strong {
-  color: #87560f;
+  color: #805519;
 }
 .metric-accent > strong {
-  color: var(--positive);
+  color: #224c3d;
 }
 .filter-scope {
   padding: 18px 20px 0;
@@ -304,7 +288,7 @@ textarea {
 }
 .responsive-filters {
   min-width: 0;
-  background: #f5f8fc;
+  background: #edf0f4;
   border-right: 1px solid var(--line);
 }
 .filter-toggle {
@@ -318,7 +302,8 @@ textarea {
 }
 .detail-summary {
   padding: 24px;
-  border-top: 3px solid var(--accent);
+  border: 0;
+  border-left: 4px solid var(--balance);
 }
 .invoice-decision {
   display: flex;
@@ -326,6 +311,8 @@ textarea {
   align-items: center;
   justify-content: space-between;
   gap: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--line);
 }
 .invoice-balance {
   min-width: 0;
@@ -426,7 +413,7 @@ textarea {
   grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
 }
 .reminder-list .section-heading {
-  background: #142b49;
+  background: var(--brand-ink);
   color: white;
 }
 .reminder-list .section-heading .muted {
@@ -441,7 +428,8 @@ textarea {
   padding-right: 14px;
 }
 .reminder-detail {
-  border-top: 3px solid var(--accent);
+  border: 0;
+  border-left: 4px solid var(--balance);
 }
 .reminder-detail .section-heading {
   align-items: start;
@@ -534,6 +522,49 @@ textarea {
 .login-card form > .button {
   justify-content: space-between;
 }
+
+.balance-position {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  background: white;
+}
+.metric-open > strong {
+  font-size: clamp(28px, 3.3vw, 44px);
+}
+.metric-open > p,
+.metric-open > small,
+.metric-open > .text-button {
+  color: #e2ecfa;
+}
+.metric-open > .text-button:hover {
+  color: white;
+}
+.metric-open :focus-visible {
+  outline-color: var(--focus-inverse);
+}
+.metric-current {
+  border-left: 1px solid var(--line);
+}
+.metric-accent {
+  background: var(--movement);
+  border-left: 3px solid var(--positive);
+}
+.metric-accent .movement-note {
+  margin-top: 20px;
+  color: #375745;
+}
+.overview-collection > .panel {
+  border: 0;
+  background: transparent;
+}
+.overview-collection .section-heading {
+  padding: 0 0 18px;
+}
+.overview-collection .table-scroll {
+  background: white;
+  border: 1px solid var(--line);
+}
+
 @media (max-width: 1050px) {
   .masthead,
   .desktop-header nav {
@@ -557,13 +588,7 @@ textarea {
     padding: 20px 16px;
   }
   .metrics {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .metric:nth-child(3) {
-    border-left: 0;
-  }
-  .metric:nth-child(n + 3) {
-    border-top: 1px solid var(--line);
+    grid-template-columns: minmax(0, 1fr);
   }
   .detail-grid {
     grid-template-columns: minmax(0, 1fr);
@@ -592,7 +617,7 @@ textarea {
     justify-content: space-between;
     align-items: center;
     gap: 8px;
-    background: #142b49;
+    background: var(--brand-ink);
     color: white;
     padding: 14px 16px;
   }
@@ -603,12 +628,6 @@ textarea {
   .mobile-header .brand small {
     color: #d1dded;
     font-size: 10px;
-  }
-  .mobile-header .brand-icon {
-    background: #dbe9ff;
-    color: #174275;
-    width: 30px;
-    height: 34px;
   }
   .mobile-header .button-group {
     gap: 5px;
@@ -649,7 +668,7 @@ textarea {
     gap: 20px;
   }
   .metric {
-    padding: 18px;
+    padding: 20px;
   }
   .portfolio-workbench {
     grid-template-columns: minmax(0, 1fr);
@@ -894,12 +913,15 @@ textarea {
   }
 }
 @media (max-width: 480px) {
-  .metrics {
+  .balance-position {
     grid-template-columns: minmax(0, 1fr);
   }
-  .metric + .metric {
+  .metric-current {
     border-left: 0;
     border-top: 1px solid var(--line);
+  }
+  .metrics {
+    grid-template-columns: minmax(0, 1fr);
   }
   .metric > strong {
     font-size: 28px;

@@ -1,6 +1,6 @@
 # Decisões técnicas
 
-Estas decisões protegem três resultados: uma dívida não se repete ao importar, uma baixa não se repete ao pagar e uma tentativa incerta de envio não é tratada como uma entrega nova. O [guia de problemas e exemplos](problem-solution.md) mostra os casos, o resultado esperado e os testes correspondentes. As respostas abaixo detalham o mecanismo; caminhos sem link completo se referem a `backend/src/gestao_recebiveis/`.
+Organizei a implementação para proteger três resultados: uma dívida não se repete ao importar, uma baixa não se repete ao pagar e uma tentativa incerta de envio não é tratada como uma entrega nova. O [guia de problemas e exemplos](problem-solution.md) mostra os casos, o resultado esperado e os testes correspondentes. As respostas abaixo detalham o mecanismo; caminhos sem link completo se referem a `backend/src/gestao_recebiveis/`.
 
 ## Dificuldades verificáveis e suas consequências
 
@@ -16,7 +16,7 @@ As três primeiras situações têm regressões financeiras/de lembretes referen
 
 ## Por que a fila de jobs fica no PostgreSQL e não em um broker?
 
-Os lembretes já dividem título, pagamento e cancelamento no mesmo banco. Deixar a fila lá reaproveita os mesmos locks e as mesmas transações, sem subir outro serviço para o portfólio rodar. O `claim` busca job elegível com `with_for_update(skip_locked=True)`, que é o SELECT ... FOR UPDATE SKIP LOCKED do PostgreSQL. Fica em `reminders/service.py` (função `claim`) e no modelo `Reminder` em `models.py`.
+Mantive os lembretes no banco que já contém título, pagamento e cancelamento. A fila reaproveita os mesmos locks e as mesmas transações, sem subir outro serviço para o portfólio rodar. O `claim` busca job elegível com `with_for_update(skip_locked=True)`, que é o SELECT ... FOR UPDATE SKIP LOCKED do PostgreSQL. Fica em `reminders/service.py` (função `claim`) e no modelo `Reminder` em `models.py`.
 
 ## Onde as transações começam e terminam?
 
@@ -24,7 +24,7 @@ Na API, `get_session` abre a transação com `SessionLocal.begin()` e o commit a
 
 ## Como distingo intenção, tentativa e entrega de um lembrete?
 
-São três tabelas. `Reminder` é a intenção de uma etapa (D-3, D0, D+3, D+7) para um título; `Attempt` é uma tentativa autorizada dessa intenção; `Delivery` é a entrega simulada aceita pelo provedor. As tentativas da mesma intenção reusam a `idempotency_key` do `Reminder`, então repetir não vira outra intenção. Modelos em `models.py`; o fluxo está em `reminders/service.py` e `reminders/provider.py`.
+Separei três tabelas. `Reminder` é a intenção de uma etapa (D-3, D0, D+3, D+7) para um título; `Attempt` é uma tentativa autorizada dessa intenção; `Delivery` é a entrega simulada aceita pelo provedor. As tentativas da mesma intenção reusam a `idempotency_key` do `Reminder`, então repetir não vira outra intenção. Modelos em `models.py`; o fluxo está em `reminders/service.py` e `reminders/provider.py`.
 
 ## Por que dinheiro em centavos inteiros e não float?
 
@@ -70,7 +70,7 @@ Voltar de um título conserva os filtros e a página, e recupera o foco quando a
 
 O custo dessa composição é manter explicitamente o contexto entre lista e detalhe. Isso fica em [`workspace.tsx`](../frontend/src/features/workspace.tsx) e [`receivables.tsx`](../frontend/src/features/receivables.tsx), com regressões no [roteiro de navegador](../frontend/tests/journey.spec.ts). No celular, as linhas da carteira e dos vencidos reorganizam valor, cliente e situação; a ação fica no código do título, sem repetir um segundo botão na mesma linha. A rolagem horizontal, quando necessária em outras tabelas, fica dentro da região; o menu móvel e os diálogos mantêm teclado, Escape e retorno de foco.
 
-O resumo deixa saldo e lista de vencidos em primeiro nível. A composição por vencimento e os recebimentos ficam em “Vencimentos e recebimentos”, sem misturar posição da carteira com entradas no período. A área de trabalho tem largura máxima e margens centrais em monitores largos; valores usam alinhamento numérico e o texto mantém seu eixo de leitura. Regras dessa composição ficam em [`financial-workspace.css`](../frontend/src/app/financial-workspace.css), enquanto controles compartilhados permanecem em `globals.css`. Foram removidas as regras da antiga barra lateral, evitando dois layouts concorrentes. Transições curtas sinalizam mudança de área e interação; a preferência por movimento reduzido as desativa.
+No candidato atual, agrupei o saldo aberto com suas parcelas vencido/em dia e separei recebido em outra superfície, com datas próprias. Os quatro valores ficam visíveis sem abrir disclosure; isso mantém posição da carteira e entradas no período distintas. A [matriz do frontend](frontend-quality.md) registra que essa composição ainda não foi executada no navegador. A área de trabalho tem largura máxima e margens centrais em monitores largos; valores usam alinhamento numérico e o texto mantém seu eixo de leitura. Regras dessa composição ficam em [`financial-workspace.css`](../frontend/src/app/financial-workspace.css), enquanto controles compartilhados permanecem em `globals.css`. Foram removidas as regras da antiga barra lateral, evitando dois layouts concorrentes. Transições curtas de cor sinalizam interação; a preferência por movimento reduzido as desativa.
 
 ## Por que limitar o login antes de conferir a senha e separar as contas do banco?
 

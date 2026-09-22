@@ -1,0 +1,284 @@
+{
+  "date": "2026-09-22T09:23:02.590317+00:00",
+  "review": "Direção visual: proposta comparada e implementação estática",
+  "baseline_head": "bd5aeb1c11d3fa2e98a4e401aa3e86b22e2945f4",
+  "baseline_includes_local_changes": false,
+  "scope": "Frontend e documentação; nenhum servidor, navegador, screenshot de aplicação ou chamada paga executado nesta rodada.",
+  "checks": {
+    "eslint": "passed",
+    "prettier": "passed",
+    "typescript": "passed",
+    "next_build": "passed",
+    "playwright_list": 15,
+    "browser_http_executed": 0,
+    "pure_tests": null,
+    "pure_format_assertions": 10,
+    "contrast_pairs": 9,
+    "font_source_hashes": "verified",
+    "brand_sizes_px": [
+      16,
+      24,
+      32
+    ]
+  },
+  "sources": [
+    {
+      "path": "frontend/public/brand/mark-mono.svg",
+      "baseline_lf_sha256": null,
+      "candidate_lf_sha256": "730873d937888ebcee827048a1d4db7bdc07827920053ea5a19924bb80657e31"
+    },
+    {
+      "path": "frontend/public/brand/mark-reverse.svg",
+      "baseline_lf_sha256": null,
+      "candidate_lf_sha256": "66f0510e2320af8533eb4a011af207388d3aa5645cbb1e073253661e21bef282"
+    },
+    {
+      "path": "frontend/public/brand/mark.svg",
+      "baseline_lf_sha256": null,
+      "candidate_lf_sha256": "d2f3c85354d3601694877e047f9559a9285f075d960d354b053d1ff46e6df913"
+    },
+    {
+      "path": "frontend/public/brand/mono.svg",
+      "baseline_lf_sha256": null,
+      "candidate_lf_sha256": "c1f9c9c2a8ac50d85ac6e0a7b40f30fb4c6ec7341644543f008d4546ca003910"
+    },
+    {
+      "path": "frontend/public/brand/reverse.svg",
+      "baseline_lf_sha256": null,
+      "candidate_lf_sha256": "9490b10a875f78bfd2bdb777ab4b6b5dca565a33ac3ea958bc377efff70b321c"
+    },
+    {
+      "path": "frontend/public/brand/wordmark.svg",
+      "baseline_lf_sha256": null,
+      "candidate_lf_sha256": "b0b14cd7cf55c089716b8187d9a2ed626186a48332c74550bb2a6439325c4652"
+    },
+    {
+      "path": "frontend/src/app/financial-workspace.css",
+      "baseline_lf_sha256": "d620829e3390a8b930aab601a15bbefebf39298a3881bbe274525482cd735a0a",
+      "candidate_lf_sha256": "e8b351317ee23ab7bb32fb36b975c52a8f84205755e0df0b6c42733c0177d036"
+    },
+    {
+      "path": "frontend/src/app/fonts/plex-LICENSE.txt",
+      "baseline_lf_sha256": null,
+      "candidate_lf_sha256": "37784b44044a4ffd9256702b7c0982c37e5c8887ba90c6dca0479aea93dc898d"
+    },
+    {
+      "path": "frontend/src/app/fonts/plex-sans-regular.woff2",
+      "baseline_lf_sha256": null,
+      "candidate_lf_sha256": "ce6dd7adc9ba30c452cd91a760d01b77f4a9998547108b711c3e8f9a480b663c"
+    },
+    {
+      "path": "frontend/src/app/fonts/plex-sans-semibold.woff2",
+      "baseline_lf_sha256": null,
+      "candidate_lf_sha256": "f78048030eab62e860efa39a0df79e2e5581bf122eb95b9bc42c0b8a4988d205"
+    },
+    {
+      "path": "frontend/src/app/fonts/sources.json",
+      "baseline_lf_sha256": null,
+      "candidate_lf_sha256": "1a2c7dbc091bea0b156e6f97390dc95cf10dfac3aef02317ae6b453112b37de0"
+    },
+    {
+      "path": "frontend/src/app/globals.css",
+      "baseline_lf_sha256": "8c27445a493cbfba1e0dbd0c584b28d4b3b7956ff123b0bf98051fe246990b22",
+      "candidate_lf_sha256": "ccacd50538bc5fce7db3803f08b3c9501be9a0f7569332284d0ed74d15c76db4"
+    },
+    {
+      "path": "frontend/src/app/icon.svg",
+      "baseline_lf_sha256": null,
+      "candidate_lf_sha256": "ba187835b033f794bdc201e86c58851747b09629c554320406d35d79155bde6e"
+    },
+    {
+      "path": "frontend/src/app/layout.tsx",
+      "baseline_lf_sha256": "7964d0e38ff1b477edbdc136c9fe65247395c211d274ee0088c97be2f2b5de5d",
+      "candidate_lf_sha256": "2ba5bee8bc4145a0ff086f97fad6263b584e913ca5341c84a75fb03c6ff2e5d2"
+    },
+    {
+      "path": "frontend/src/components/brand.tsx",
+      "baseline_lf_sha256": "c04b5694b776088e5527c956d7199da680467c0b455fc68d3ee58a135c129da7",
+      "candidate_lf_sha256": "946128bde719b4750feed08005fbbc6bb0beb630d94b5152172c010cd66e3a78"
+    },
+    {
+      "path": "frontend/src/features/overview.tsx",
+      "baseline_lf_sha256": "85c1840bdaf1891b7f5617cec238744650ccdba741efaaf1137e4d0392115544",
+      "candidate_lf_sha256": "3db6552696fc70f32c05c1da8d3e4e7537e7cc51201affe27ee044632b2155cb"
+    }
+  ],
+  "unchanged_frontend_sources": [
+    "frontend/src/app/error.tsx",
+    "frontend/src/app/page.tsx",
+    "frontend/src/components/responsive-filters.tsx",
+    "frontend/src/components/ui.tsx",
+    "frontend/src/components/workspace-navigation.tsx",
+    "frontend/src/features/demo.tsx",
+    "frontend/src/features/import-preview.tsx",
+    "frontend/src/features/imports.tsx",
+    "frontend/src/features/login.tsx",
+    "frontend/src/features/overview-filters.tsx",
+    "frontend/src/features/receivable-detail.tsx",
+    "frontend/src/features/receivables.tsx",
+    "frontend/src/features/reminders.tsx",
+    "frontend/src/features/workspace.tsx",
+    "frontend/src/lib/api.ts",
+    "frontend/src/lib/format.ts",
+    "frontend/src/lib/types.ts",
+    "frontend/src/lib/use-resource.ts"
+  ],
+  "contrasts": [
+    {
+      "name": "ink",
+      "foreground": "#172b49",
+      "background": "#ffffff",
+      "minimum": 4.5,
+      "ratio": 14.21
+    },
+    {
+      "name": "muted",
+      "foreground": "#526176",
+      "background": "#f0f2f5",
+      "minimum": 4.5,
+      "ratio": 5.62
+    },
+    {
+      "name": "open",
+      "foreground": "#ffffff",
+      "background": "#1e477f",
+      "minimum": 4.5,
+      "ratio": 9.28
+    },
+    {
+      "name": "open-detail",
+      "foreground": "#e2ecfa",
+      "background": "#1e477f",
+      "minimum": 4.5,
+      "ratio": 7.78
+    },
+    {
+      "name": "received",
+      "foreground": "#224c3d",
+      "background": "#e8f0ec",
+      "minimum": 4.5,
+      "ratio": 8.35
+    },
+    {
+      "name": "overdue",
+      "foreground": "#805519",
+      "background": "#ffffff",
+      "minimum": 4.5,
+      "ratio": 6.5
+    },
+    {
+      "name": "control",
+      "foreground": "#7a899e",
+      "background": "#ffffff",
+      "minimum": 3,
+      "ratio": 3.56
+    },
+    {
+      "name": "focus",
+      "foreground": "#1e57a4",
+      "background": "#f0f2f5",
+      "minimum": 3,
+      "ratio": 6.34
+    },
+    {
+      "name": "inverse-focus",
+      "foreground": "#a7caff",
+      "background": "#152c49",
+      "minimum": 3,
+      "ratio": 8.42
+    }
+  ],
+  "assets": [
+    {
+      "path": "static/chunks/0cegfsgm6lvdz.js",
+      "bytes": 183103,
+      "gzip_bytes": 48175,
+      "sha256": "82d28975ef4120af4576e36df96453dca7465c104a3dc53aa1be2625e8ef685d"
+    },
+    {
+      "path": "static/chunks/0cz1d0mv5g_q7.js",
+      "bytes": 112594,
+      "gzip_bytes": 39373,
+      "sha256": "0973c1d64c88adc8e3c950410cb58b288f72118d5965b78049438deb8f2f9683"
+    },
+    {
+      "path": "static/chunks/0rfi6qzsmq4sj.js",
+      "bytes": 398,
+      "gzip_bytes": 296,
+      "sha256": "e9235448e848dd14162b7a35463add6a7d63272e05bfeae7428aefb0c1397a71"
+    },
+    {
+      "path": "static/chunks/27t_qfc-3_lzs.js",
+      "bytes": 229156,
+      "gzip_bytes": 71459,
+      "sha256": "f71552684e86daa3e94faad9002fb69d4e8d308a997ca88fdde74e54b5191870"
+    },
+    {
+      "path": "static/chunks/3fntmmi971322.js",
+      "bytes": 14377,
+      "gzip_bytes": 3661,
+      "sha256": "34ed6abf4c6d0d1bb3dc56d3f133d2a5dbc3a3c89c791deab314e27143ac14ce"
+    },
+    {
+      "path": "static/chunks/3l04zcqx63h3y.js",
+      "bytes": 16797,
+      "gzip_bytes": 5835,
+      "sha256": "49cf866bf4d0282119e51835114325403f28e53fd0bccb63dde7ba3114a8e9fb"
+    },
+    {
+      "path": "static/chunks/3t3kt42mokhe-.css",
+      "bytes": 29599,
+      "gzip_bytes": 6769,
+      "sha256": "327ec2ceb6f6a3391ac9b79e03b2bb72a46df4fbccf19ae343f8b98d3a5122a4"
+    },
+    {
+      "path": "static/chunks/3wo1abxi6cob_.js",
+      "bytes": 57677,
+      "gzip_bytes": 14263,
+      "sha256": "a95e752b38c8cdc8b6144b86be1923c0066cf7ba7d48a64bdd1bab52e08c2ad0"
+    },
+    {
+      "path": "static/chunks/turbopack-36t3xf3k-le2x.js",
+      "bytes": 9688,
+      "gzip_bytes": 3842,
+      "sha256": "86aebdf799cefd732b2a1f287f7d4a357d8617fefa0d6c99009f4f0631659b0e"
+    },
+    {
+      "path": "static/J9f9xDjgCpzmLVIY6xjE6/_buildManifest.js",
+      "bytes": 272,
+      "gzip_bytes": 182,
+      "sha256": "9ef64d0b2db47b87ee7accd93ccb0cd9d9454e8e13cb28c1b8624fbce23b895d"
+    },
+    {
+      "path": "static/J9f9xDjgCpzmLVIY6xjE6/_clientMiddlewareManifest.js",
+      "bytes": 96,
+      "gzip_bytes": 66,
+      "sha256": "5483e3295dc35dfe29ea932efc85341c916f10ff78ff5b0e965e003710893a4a"
+    },
+    {
+      "path": "static/J9f9xDjgCpzmLVIY6xjE6/_ssgManifest.js",
+      "bytes": 80,
+      "gzip_bytes": 64,
+      "sha256": "678f6ce2cb80b1fe72fc67e7412be6e2ab6ada083111b64f7c40d35e3cba5e00"
+    },
+    {
+      "path": "static/media/plex_sans_regular-s.p.2e_-c_m03txvi.woff2",
+      "bytes": 63020,
+      "gzip_bytes": 63058,
+      "sha256": "ba711a3085ff9f27440b6b9c4550cfc47c97bf36591d5da958b975bb3add8c1a"
+    },
+    {
+      "path": "static/media/plex_sans_semibold-s.p.2sutjpuns2xc5.woff2",
+      "bytes": 67060,
+      "gzip_bytes": 67103,
+      "sha256": "f78048030eab62e860efa39a0df79e2e5581bf122eb95b9bc42c0b8a4988d205"
+    }
+  ],
+  "limits": [
+    "Propostas SVG/PNG são simulações, não execução da interface.",
+    "Pares de contraste não certificam todos os estados nem WCAG integral.",
+    "Fontes e marcas inspecionadas como arquivos/raster; carregamento e favicon no navegador não verificados.",
+    "Bloqueio anterior de inicialização preservado; sem repetição ou alternativa.",
+    "Nenhuma aprovação visual/publicação atribuída aos checks estáticos."
+  ]
+}

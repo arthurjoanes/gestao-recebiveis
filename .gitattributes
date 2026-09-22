@@ -6,3 +6,7 @@ Dockerfile* text eol=lf
 
 # Preserve published evidence checksums across Windows and Git checkouts.
 docs/evidence/restore-proof/**/*.json text eol=lf
+
+# Preserve upstream font license and binary font bytes.
+frontend/src/app/fonts/plex-LICENSE.txt -text
+*.woff2 binary

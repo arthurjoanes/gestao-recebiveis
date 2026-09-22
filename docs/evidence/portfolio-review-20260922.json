@@ -1,0 +1,141 @@
+{
+  "date": "2026-09-22",
+  "base_commit": "bd5aeb1c11d3fa2e98a4e401aa3e86b22e2945f4",
+  "scope": "local uncommitted candidate; documentation + exact Prettier output in four frontend files; no rule/contract/design change",
+  "source_fingerprint": {
+    "paths": "baseline Git tracked + nonignored untracked under backend/,frontend/,data/,scripts/",
+    "files": 115,
+    "normalization": "CRLF to LF; SHA256 of concatenated sorted path + NUL + source SHA256 + LF",
+    "sha256": "0cf095fca62495c537965b36fd3f7d2f64a53fe67d2a79dbcc100f87bba604de"
+  },
+  "backend": {
+    "dockerfile": "backend/Dockerfile",
+    "image": "sha256:1cf09bded5bb590e9eac61e935553d2f274ffc7b06c14c414cb8b876a09ceae1",
+    "python": "3.13.15",
+    "command": "/bin/sh /scripts/check-backend.sh",
+    "tests_passed": 158,
+    "skipped": 0,
+    "warnings": 2,
+    "seconds": 89.94,
+    "ruff": "passed",
+    "mypy": "passed",
+    "fresh_image_build": true,
+    "source_mount_override": false
+  },
+  "frontend": {
+    "fresh_install": "npm ci --no-audit --fund=false: passed",
+    "typecheck": "passed",
+    "production_build": "passed before formatting-only correction",
+    "lint": "initial Prettier failure in 4 files; final full lint passed after exact Prettier output",
+    "npm_audit_vulnerabilities": 0,
+    "browser": "not executed; previous startup policy rejection preserved",
+    "environment": {
+      "platform": "Windows host",
+      "node": "24.19.0",
+      "npm": "11.17.0",
+      "next": "16.3.5",
+      "react": "19.3.0"
+    }
+  },
+  "secrets": {
+    "tool": "Gitleaks 8.30.1",
+    "current_files": 165,
+    "reachable_commits": 16,
+    "config": ".gitleaks.toml unchanged",
+    "exit_code": 1,
+    "findings": 1,
+    "triage": "source SHA256 verified against frontend/src/lib/api.ts; no new exception"
+  },
+  "historical_screenshots": {
+    "run": "11adf9df35ba4314945ffdd4fbaeabfc",
+    "inspected": 4,
+    "new_images": 0,
+    "validate_current_frontend": false
+  },
+  "classification": "pending frontend validation",
+  "resources": "own temporary containers/network removed; no external volumes removed",
+  "backend_image_scan": {
+    "tool": "Trivy 0.74.0",
+    "scanner_digest": "sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969",
+    "artifact": "portfolio-autoria-receb-backend:20260922",
+    "exit_code": 0,
+    "vulnerabilities": 0,
+    "database_updated_at": "2026-09-22T07:24:27.402429319Z",
+    "scope": "current backend image via Docker only, OS and Python packages; no severity filter, empty ignorefile; no frontend image or deployment review",
+    "warnings": [
+      "third-party SBOM caution",
+      "Alpine 3.24 missing from EOL list",
+      "package metadata licenses may have additional terms"
+    ]
+  },
+  "secrets_followup": {
+    "date": "2026-09-22",
+    "tool": "Gitleaks 8.30.1",
+    "redaction": 100,
+    "config": ".gitleaks.toml",
+    "config_sha256": "72a735c212c8641736d3678d76d110f47d56f4d029145267adf26585f4dcfcca",
+    "rule": "generic-api-key",
+    "condition": "AND",
+    "path": "docs/evidence/frontend-quality-static-20260922.json",
+    "json_key": "frontend/src/lib/api.ts",
+    "verified_sha256_lf": "c0beb7ccf5520c874b546d82e94dbfd88ac00ecd0f51b78f292b1194ba5161fa",
+    "source_recomputed_match": true,
+    "frozen_evidence_unchanged": true,
+    "snapshot": {
+      "files": 166,
+      "scope": "Git tracked plus nonignored untracked, copied byte-for-byte; relative scan paths",
+      "exit_code": 0,
+      "findings": 0
+    },
+    "history": {
+      "scope": "all reachable refs (--all), current config",
+      "commits": 16,
+      "exit_code": 0,
+      "findings": 0
+    },
+    "controls": [
+      {
+        "case": "allowed-exact",
+        "exit_code": 0,
+        "findings": 0,
+        "rules": []
+      },
+      {
+        "case": "different-path",
+        "exit_code": 1,
+        "findings": 1,
+        "rules": [
+          "generic-api-key"
+        ]
+      },
+      {
+        "case": "different-key",
+        "exit_code": 1,
+        "findings": 1,
+        "rules": [
+          "generic-api-key"
+        ]
+      },
+      {
+        "case": "different-value",
+        "exit_code": 1,
+        "findings": 1,
+        "rules": [
+          "generic-api-key"
+        ]
+      },
+      {
+        "case": "positive-token-same-file",
+        "exit_code": 1,
+        "findings": 1,
+        "rules": [
+          "github-pat"
+        ]
+      }
+    ],
+    "previous_exit_1_preserved": true,
+    "previous_scan": "The secrets section above describes the original scan before this additive configuration correction.",
+    "documentation": "https://github.com/gitleaks/gitleaks/blob/v8.30.1/README.md#configuration",
+    "limits": "No application edits, new browser execution or remote CI result. The snapshot scan preceded this additive documentation; these three final changed files are scanned separately."
+  }
+}
