@@ -33,6 +33,20 @@ O [guia de casos](docs/problem-solution.md) liga esses problemas às entradas, a
 
 FastAPI atende HTTP; SQLAlchemy/psycopg acessam PostgreSQL; Next.js/React apresentam a carteira. As [decisões técnicas](docs/decisoes-tecnicas.md) explicam como integrei essas ferramentas, os efeitos e os compromissos da implementação.
 
+## Stack
+
+<p>
+  <img src="docs/stack/python.svg" alt="Python" width="72" height="72">
+  <img src="docs/stack/fastapi.svg" alt="FastAPI" width="72" height="72">
+  <img src="docs/stack/postgresql.svg" alt="PostgreSQL" width="72" height="72">
+  <img src="docs/stack/typescript.svg" alt="TypeScript" width="72" height="72">
+  <img src="docs/stack/react.svg" alt="React" width="72" height="72">
+  <img src="docs/stack/nextjs.svg" alt="Next.js" width="72" height="72">
+  <img src="docs/stack/docker.svg" alt="Docker" width="72" height="72">
+</p>
+
+Python e FastAPI na API e no worker; PostgreSQL na carteira e na fila; TypeScript, React e Next.js na interface. A demonstração roda com Docker Compose.
+
 ## Reproduzir um lote pequeno
 
 Na demonstração iniciada, importe [valid.csv](data/samples/valid.csv): `1250.09 + 480.10 + 269.81 = 2000.00`, três títulos. Confirme, reenvie [reordered.csv](data/samples/reordered.csv) e confira que quantidade e saldo do lote não aumentaram. Depois envie [conflicting.csv](data/samples/conflicting.csv): ele tenta mudar `DEMO-001` e incluir `DEMO-004`; o lote inteiro deve ser rejeitado.
@@ -74,7 +88,7 @@ docker compose up -d --wait --wait-timeout 180 db api worker frontend
 
 `test` reúne verificações de código, backend e navegador em bancos descartáveis. `proof` também interrompe o processamento e reinicia um PostgreSQL de teste para verificar a mesma tentativa. Nesta auditoria foram executadas as etapas isoladas de build, backend, atualização do banco, checks frontend e navegador; o ensaio completo `proof` não foi repetido.
 
-O candidato local baseado em `4bb9b57` passou em **158 testes com PostgreSQL**, **16 testes das guardas de restauração**, Ruff, formato e mypy; instalação frontend pelo lock, lint, tipos e build também passaram. Os **15 casos Playwright: 14 jornadas interativas e 1 caso de formatação BRL** passaram sem skip ou retry. Os [resultados, ambiente e limites](docs/verification.md) registram a falha inicial de formato no Windows, a correção e a repetição dos checks; preservam também o [CI histórico de `5718cdad`](https://github.com/arthurjoanes/gestao-recebiveis/actions/runs/35744528178). O novo workflow ainda não foi executado no GitHub.
+O candidato local baseado em `4bb9b57` passou em **158 testes com PostgreSQL**, **16 testes das guardas de restauração**, Ruff, formato e mypy; instalação frontend pelo lock, lint, tipos e build também passaram. Os **15 casos Playwright: 14 jornadas interativas e 1 caso de formatação BRL** passaram sem skip ou retry. Os [resultados, ambiente e limites](docs/verification.md) registram a falha inicial de formato no Windows, a correção e a repetição dos checks; preservam também o [CI histórico de `5718cdad`](https://github.com/arthurjoanes/gestao-recebiveis/actions/runs/35744528178). O [CI de `7907680`](https://github.com/arthurjoanes/gestao-recebiveis/actions/runs/35757413426) também aprovou essas correções após a publicação.
 
 A [restauração em volume novo](docs/restore-proof.md) é uma prova histórica adicional de conteúdo, sequências, pagamento e tentativa preservados. Não confundo dump gerado com restauração validada. Fontes e tentativas com falha permanecem rastreáveis nos seus manifestos.
 
@@ -89,3 +103,5 @@ O setup publica serviços somente em loopback. Uso por múltiplos clientes exige
 Para manutenção, comece pelos [contratos HTTP](docs/api-contract.md) e [de dados](docs/data-contract.md), localize a regra nos arquivos ligados acima e rode os testes antes de mudar seu comportamento. Em falha de inicialização, confira `docker compose ps` e `docker compose logs --tail 100 api worker`; o [guia de verificação](docs/verification.md) cobre banco antigo e ambientes de teste. Problemas reproduzíveis podem ser relatados nas [issues do projeto](https://github.com/arthurjoanes/gestao-recebiveis/issues), sem credenciais ou dados reais.
 
 Código sob MIT. A fonte IBM Plex Sans mantém sua [licença OFL 1.1](frontend/src/app/fonts/plex-LICENSE.txt) e [origem](frontend/src/app/fonts/sources.json).
+
+Ícones da stack: [Devicon — licença MIT](docs/stack/LICENSE.devicon).
