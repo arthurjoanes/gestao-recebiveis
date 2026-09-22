@@ -1,5 +1,7 @@
 # Demo de cinco minutos
 
+> Roteiro proposto, com duração estimada, não cronometrada. Fontes: [seed](../backend/src/gestao_recebiveis/seed.py), [amostra CSV](../data/samples/valid.csv), [política](../backend/src/gestao_recebiveis/reminders/policy.py) e [executor](../scripts/gestao-recebiveis.ps1). Conferência documental: **22/09/2026**.
+
 Pré-condição: execute `./scripts/gestao-recebiveis.ps1 setup` e entre em http://localhost:3101 como `operador@example.com`, senha `Recebiveis!2026`. Carteira inicial: 240 títulos e 48 pagamentos fictícios; data comercial 17/08/2026 às 10:00. O processamento inicia pausado; o agendador permanece ativo. Se esta carteira já foi alterada em apresentações anteriores, use o reset explícito descrito abaixo antes de começar. O tempo abaixo é aproximado e pressupõe as imagens já construídas.
 
 O reset remove os dados da demonstração local e recria a carteira inicial. Exige modo demo, confirmação e credenciais de operador; execute somente quando quiser reiniciar essa carteira:
@@ -19,7 +21,7 @@ $DemoCredential = Get-Credential -UserName 'operador@example.com'
 
 ![Recorte atual do saldo, situação e ações de TIT-0001, no valor de R$ 1.217,39](screenshots/current-20260922/titulo.png)
 
-*Captura real de 22/09/2026, sem efetuar baixa ou cancelamento. [Outras telas atuais e reprodução](image-captures.md). A imagem anterior em `img/titulo.png` permanece somente como evidência histórica.*
+_Captura real de 22/09/2026, sem efetuar baixa ou cancelamento. [Outras telas atuais e reprodução](image-captures.md). A imagem anterior em `img/titulo.png` permanece somente como evidência histórica._
 
 ## Cenários adicionais
 
@@ -50,3 +52,19 @@ O cenário interrompe o processo do teste no mesmo limite transacional usado pel
 ## Percurso documentado de restauração
 
 Para apresentar recuperação sem alterar a carteira do setup, use a [história com quatro capturas](restore-proof.md): lote de R$ 125 confirmado, arquivo conflitante de R$ 150 rejeitado, mesma tentativa reconciliada e baixa de R$ 50 preservada. O valor rejeitado é o total do arquivo candidato; a carteira permaneceu em R$ 125. A fixture, os hashes e o comando de reprodução estão nessa página. É uma prova separada de restauração em outro volume, com provedor fictício e dados sintéticos; não representa teste com operadores reais.
+
+## Executar sem PowerShell
+
+Copie `.env.example` para `.env` e substitua `SESSION_SECRET`, `DATABASE_PASSWORD`, `DATABASE_OWNER_PASSWORD` e `DATABASE_APP_PASSWORD` por valores aleatórios independentes. Execute na raiz do clone:
+
+```sh
+docker compose build db
+docker compose build api
+docker compose build frontend
+docker compose up -d --wait db
+docker compose run --rm migrate
+docker compose run --rm --no-deps seed
+docker compose up -d --wait --wait-timeout 180 db api worker frontend
+```
+
+A tarefa `migrate` depende de `db-init`, que provisiona os papéis. Fontes: [Compose](../compose.yaml) e [setup PowerShell](../scripts/gestao-recebiveis.ps1), conferidos em **22/09/2026**. Uma instalação legada deve seguir a [migração documentada](verification.md#banco-de-versões-anteriores) antes destes passos.

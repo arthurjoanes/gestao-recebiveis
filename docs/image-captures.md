@@ -1,15 +1,17 @@
 # Capturas da interface
 
+> Proveniência das imagens, conservando a data da execução original. Fontes: [manifesto das capturas](screenshots/current-20260922/capture.json) e [coletor](../scripts/capture_docs.cjs). Conferência documental: **22/09/2026**.
+
 As seis capturas de `screenshots/current-20260922/` vieram do Chromium/Playwright 1.63.0 acessando a aplicação local em 22/09/2026. A fonte autenticada corresponde a `deade1369`; o [registro da captura](screenshots/current-20260922/capture.json) contém horário, viewports e SHA-256. São recortes nativos de componentes, sem edição de pixels: viewport desktop 1440×1000 ou móvel 390×844. O coletor registra o seletor e as dimensões de cada foco; os recortes móveis têm no máximo 650 px de altura. Nenhuma captura de página inteira é incorporada nas docs.
 
-| Tela atual | O que conferir |
-| --- | --- |
-| [Resumo](screenshots/current-20260922/resumo.png) | Aberto de R$ 515.153,87, vencido e em dia como partes; recebido separado |
-| [Carteira](screenshots/current-20260922/carteira.png) | 240 títulos fictícios, filtros e paginação |
-| [Título](screenshots/current-20260922/titulo.png) | Saldo de TIT-0001, R$ 1.217,39, situação, ações e dados do título |
-| [Importações](screenshots/current-20260922/importacoes.png) | Área de escolha do CSV e regras de formato; nada foi importado na captura |
-| [Lembretes](screenshots/current-20260922/lembretes.png) | Fila simulada e acesso a tentativas; processamento não alterado |
-| [Resumo no celular](screenshots/current-20260922/resumo-mobile.png) | Somente posição em aberto, vencido e em dia, em 358×610 px |
+| Tela atual                                                          | O que conferir                                                            |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| [Resumo](screenshots/current-20260922/resumo.png)                   | Aberto de R$ 515.153,87, vencido e em dia como partes; recebido separado  |
+| [Carteira](screenshots/current-20260922/carteira.png)               | 240 títulos fictícios, filtros e paginação                                |
+| [Título](screenshots/current-20260922/titulo.png)                   | Saldo de TIT-0001, R$ 1.217,39, situação, ações e dados do título         |
+| [Importações](screenshots/current-20260922/importacoes.png)         | Área de escolha do CSV e regras de formato; nada foi importado na captura |
+| [Lembretes](screenshots/current-20260922/lembretes.png)             | Fila simulada e acesso a tentativas; processamento não alterado           |
+| [Resumo no celular](screenshots/current-20260922/resumo-mobile.png) | Somente posição em aberto, vencido e em dia, em 358×610 px                |
 
 As telas foram inspecionadas visualmente. A automação conferiu login, títulos esperados, conteúdo carregado, ausência de erros JavaScript e overflow nas seis vistas. Não efetuou pagamentos, cancelamentos, importações, reset nem envio externo. Não substitui a suíte funcional, comparação pixel a pixel com baseline, leitor de tela ou auditoria de acessibilidade integral.
 

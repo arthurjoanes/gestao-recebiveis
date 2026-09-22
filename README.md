@@ -1,129 +1,147 @@
 # Gestão de recebíveis
 
-Desenvolvi uma aplicação de demonstração para quem confere contas a receber. Um **título** registra o valor que um cliente deve e seu vencimento; dar **baixa** é registrar o pagamento integral dessa obrigação. O operador importa títulos por CSV, confere conflitos, registra pagamentos e acompanha lembretes simulados. O perfil leitor consulta a mesma carteira sem alterá-la. Os dados representam uma empresa fictícia, em reais (BRL).
+Aplicação de demonstração para importar contas a receber, registrar pagamentos integrais e acompanhar lembretes simulados. Desenvolvi a carteira, as regras financeiras e os fluxos de recuperação com dados de uma empresa fictícia em reais (BRL).
+
+<!-- Navegação do README -->
+<p>
+  <a href="#demonstração"><img src="docs/readme/badges/demo.svg" alt="Demonstração" width="139" height="28"></a>
+  <a href="#arquitetura"><img src="docs/readme/badges/architecture.svg" alt="Arquitetura" width="126" height="28"></a>
+  <a href="#executar-localmente"><img src="docs/readme/badges/run.svg" alt="Executar localmente" width="107" height="28"></a>
+  <a href="#verificação-e-evidências"><img src="docs/readme/badges/evidence.svg" alt="Verificação e evidências" width="119" height="28"></a>
+  <a href="https://www.linkedin.com/in/arthur-joanes-6a2967373/"><img src="docs/readme/badges/linkedin.svg" alt="Arthur Joanes no LinkedIn" width="108" height="28"></a>
+</p>
+
+## Visão geral
+
+Um **título** registra quanto um cliente deve e o vencimento; dar **baixa** é registrar o pagamento integral. O operador altera a carteira e o leitor apenas consulta. O problema central é preservar a mesma dívida e o mesmo pagamento quando um arquivo ou uma requisição se repete.
+
+| Situação                           | Comportamento implementado                                 |
+| ---------------------------------- | ---------------------------------------------------------- |
+| CSV renomeado ou reordenado        | Identifica o título por sistema de origem + código externo |
+| Linha nova junto de um conflito    | Rejeita a confirmação inteira, conservando o diagnóstico   |
+| Mesma baixa após perder a resposta | Recupera o pagamento para a mesma chave e conteúdo         |
+| Envio aceito com resposta perdida  | Reconcilia a tentativa antes de autorizar outra etapa      |
+
+Fontes da implementação, conferidas em **22/09/2026**: [importação](backend/src/gestao_recebiveis/imports.py), [pagamento](backend/src/gestao_recebiveis/receivables.py), [lembretes](backend/src/gestao_recebiveis/reminders/service.py) e [casos com critérios e testes](docs/problem-solution.md).
+
+<a id="na-prática"></a>
+<a id="como-trato-as-repetições"></a>
+
+## Demonstração
 
 ![Página principal do Gestão de recebíveis](docs/readme/home.png)
 
-*Página principal da demonstração.*
+_Página principal já versionada. Os [recortes com data, versão e hashes](docs/image-captures.md) permitem conferir estados específicos sem imagens de página inteira._
 
-[Na prática](#na-prática) · [Implementação](#implementação) · [Executar e verificar](#executar-e-verificar) · [Limites e manutenção](#limites-e-manutenção)
+<a id="reproduzir-um-lote-pequeno"></a>
 
-<p><img src="docs/readme/uso.svg" width="800" height="8" alt=""></p>
+Na demo iniciada, importe [valid.csv](data/samples/valid.csv): **R$ 1.250,09 + R$ 480,10 + R$ 269,81 = R$ 2.000,00**, três títulos. Reenvie [reordered.csv](data/samples/reordered.csv): quantidade e saldo do lote devem permanecer iguais. [conflicting.csv](data/samples/conflicting.csv) tenta mudar `DEMO-001` e incluir `DEMO-004`; a confirmação deve rejeitar o lote inteiro. Valores conferidos nos CSVs em **22/09/2026**. [Roteiro completo](docs/demo.md).
 
-## Na prática
+<a id="prova-histórica-a-mesma-baixa-após-restauração"></a>
 
-![Resumo da carteira: posição em aberto, vencido, em dia e recebimentos do período](docs/screenshots/current-20260922/resumo.png)
+A prova histórica de **22/09/2026** usa outra massa: dois títulos de **R$ 50 + R$ 75 = R$ 125**. Após restauração, repetir a baixa de R$ 50 conservou o pagamento e **R$ 75 em aberto**. A fonte é o [manifesto da execução `11adf9df…`](docs/evidence/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/manifest.json); [cenário, imagens e limites](docs/restore-proof.md). Não é uma nova execução da prova nesta revisão documental.
 
-*Recorte real dos indicadores, capturado localmente em 22/09/2026, sobre `deade1369`: 192 títulos fictícios em aberto e 48 pagamentos no período. Esta massa é distinta do caso de R$ 125 abaixo. [Telas atuais, reprodução e arquivo histórico](docs/image-captures.md).*
+## Arquitetura
 
-### Prova histórica: a mesma baixa após restauração
+```mermaid
+flowchart TB
+    Web["Interface Next.js<br/>localhost:3101"] --> API["API FastAPI<br/>localhost:8101"]
+    API --> DB[("PostgreSQL")]
+    Worker["Worker Python<br/>lembretes simulados"] --> DB
+```
 
-O problema aparece quando um arquivo chega novamente ou a conexão cai depois de uma baixa. Repetir a entrada não pode criar outra dívida ou outro pagamento. Na prova documentada, dois títulos de **R$ 50 + R$ 75 = R$ 125** continuaram sendo os mesmos após reimportação e restauração; repetir a baixa de R$ 50 devolveu o pagamento já registrado e manteve **R$ 75 em aberto**.
+A API decide autorização, importação e baixa dentro de transações. O worker assume lembretes por prazo de posse; o provedor fictício guarda o resultado no mesmo banco. API e worker compartilham o pacote Python. O Compose acrescenta tarefas de provisionamento, migração e seed; elas não são serviços de negócio permanentes.
 
-[Captura histórica completa: Título fictício RESTORE-PAID com pagamento integral de R$ 50 e registro na linha do tempo](docs/screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/04-mesma-baixa-preservada.png)
+Fontes: [Compose](compose.yaml), [transações](backend/src/gestao_recebiveis/database.py), [worker](backend/src/gestao_recebiveis/worker.py) e [simulador](backend/src/gestao_recebiveis/reminders/provider.py), conferidos em **22/09/2026**. [Arquitetura detalhada e fronteiras](docs/architecture.md).
 
-*Captura histórica real da execução `11adf9df…`, de 22/09/2026. Confira o valor pago e o evento na linha do tempo; a igualdade do pagamento foi verificada no banco, não deduzida da imagem. [Imagem completa](docs/screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/04-mesma-baixa-preservada.png) · [cenário, fontes e limites](docs/restore-proof.md). A composição atual da interface aparece na primeira imagem.*
+<a id="implementação"></a>
+<a id="o-que-eu-implementei"></a>
+<a id="stack"></a>
 
-### Como trato as repetições
-
-- **Mesmo título, outro arquivo:** a identidade é sistema de origem + código externo. Reordenar ou renomear o CSV não cria uma obrigação nova.
-- **Linha nova junto de um conflito:** a confirmação rejeita o lote inteiro. Nenhuma linha válida fica gravada pela metade.
-- **Mesma baixa após perder a resposta:** a chave e o conteúdo recuperam o pagamento já confirmado. Conteúdo diferente com a mesma chave retorna conflito.
-- **Mensagem aceita com resposta perdida:** mantenho a tentativa desconhecida até reconciliá-la. Entrega simulada e tentativa são registros distintos.
-
-O [guia de casos](docs/problem-solution.md) liga esses problemas às entradas, ao código e aos testes. As capturas de importação, conflito e reconciliação ficam junto de seus casos, com a versão identificada. Lembretes usam exclusivamente um provedor fictício persistente; nenhuma mensagem é enviada a cliente real.
-
-<p><img src="docs/readme/implementacao.svg" width="800" height="8" alt=""></p>
-
-## Implementação
-
-### O que eu implementei
-
-- O parser de CSV, a prévia por linha e a confirmação transacional, com identidade composta, comparação dos registros e rejeição sem efeito parcial ([importação](backend/src/gestao_recebiveis/imports.py), [parser](backend/src/gestao_recebiveis/import_csv.py)).
-- A baixa integral, a idempotência — repetir uma operação sem repetir seu efeito — e a auditoria financeira, coordenadas com o cancelamento de pendências ([pagamento](backend/src/gestao_recebiveis/receivables.py)).
-- A fila de lembretes com prazo de posse, renovação, token que invalida o worker antigo e reconciliação de resultado incerto ([serviço](backend/src/gestao_recebiveis/reminders/service.py), [simulador](backend/src/gestao_recebiveis/reminders/provider.py)).
-- Os papéis operador/leitor, as sessões, a proteção de mutações e a reserva persistente de capacidade antes de verificar a senha ([autenticação](backend/src/gestao_recebiveis/auth.py), [admissão](backend/src/gestao_recebiveis/login_admission.py)).
-- A carteira, os fluxos de conferência e os testes de concorrência, repetição e recuperação; também configurei os ambientes descartáveis e a prova de restauração ([interface](frontend/src/features/workspace.tsx), [testes](backend/tests), [prova](scripts/prove_restore.py)).
-
-FastAPI atende HTTP; SQLAlchemy/psycopg acessam PostgreSQL; Next.js/React apresentam a carteira. As [decisões técnicas](docs/decisoes-tecnicas.md) explicam como integrei essas ferramentas, os efeitos e os compromissos da implementação.
-
-### Stack
+## Stack e decisões
 
 <p>
-  <img src="docs/stack/python.svg" alt="Python" width="72" height="72">
-  <img src="docs/stack/fastapi.svg" alt="FastAPI" width="72" height="72">
-  <img src="docs/stack/postgresql.svg" alt="PostgreSQL" width="72" height="72">
-  <img src="docs/stack/typescript.svg" alt="TypeScript" width="72" height="72">
-  <img src="docs/stack/react.svg" alt="React" width="72" height="72">
-  <img src="docs/stack/nextjs.svg" alt="Next.js" width="72" height="72">
-  <img src="docs/stack/docker.svg" alt="Docker" width="72" height="72">
+  <img src="docs/stack/python.svg" alt="Python" width="64" height="64">
+  <img src="docs/stack/fastapi.svg" alt="FastAPI" width="64" height="64">
+  <img src="docs/stack/postgresql.svg" alt="PostgreSQL" width="64" height="64">
+  <img src="docs/stack/typescript.svg" alt="TypeScript" width="64" height="64">
+  <img src="docs/stack/react.svg" alt="React" width="64" height="64">
+  <img src="docs/stack/nextjs.svg" alt="Next.js" width="64" height="64">
+  <img src="docs/stack/docker.svg" alt="Docker" width="64" height="64">
 </p>
 
-Python e FastAPI na API e no worker; PostgreSQL na carteira e na fila; TypeScript, React e Next.js na interface. A demonstração roda com Docker Compose.
+| Camada       | Escolha e compromisso                                                                             |
+| ------------ | ------------------------------------------------------------------------------------------------- |
+| Interface    | Next.js, React e TypeScript apresentam a carteira; regras financeiras permanecem no servidor      |
+| API e worker | Python/FastAPI e SQLAlchemy/psycopg; transações e tratamento explícito de conflitos               |
+| Persistência | PostgreSQL para carteira e fila; permite coordenação transacional e concentra a operação no banco |
+| Execução     | Docker Compose, com bancos separados para demo e testes                                           |
 
-<p><img src="docs/readme/execucao.svg" width="800" height="8" alt=""></p>
+Escolhi centavos inteiros para BRL, pagamentos integrais e uma fila no mesmo banco. Essas escolhas estão ligadas ao problema e aos respectivos custos nas [decisões técnicas](docs/decisoes-tecnicas.md). Dependências e versões: [lock Python](backend/uv.lock), [lock frontend](frontend/package-lock.json) e [Dockerfile do banco](database/Dockerfile), conferidos em **22/09/2026**.
 
-## Executar e verificar
+<a id="executar-e-verificar"></a>
+<a id="rodar-localmente"></a>
 
-### Rodar localmente
+## Executar localmente
 
-Use Docker Desktop com containers Linux e PowerShell 7. Python, Node e PostgreSQL executam nos containers.
-
-Na raiz do projeto:
+Use Docker Desktop com containers Linux e PowerShell 7. Na raiz:
 
 ```powershell
 .\scripts\gestao-recebiveis.ps1 setup
 ```
 
-O setup gera a configuração local, constrói as imagens e carrega os dados fictícios. A interface fica em `http://localhost:3101`; a documentação da API, em `http://localhost:8101/docs`. As contas de demonstração aparecem no login.
+O script cria a configuração local, constrói as imagens e carrega os dados fictícios. Abra a [interface](http://localhost:3101) ou a [documentação da API](http://localhost:8101/docs). As contas demo aparecem no login. Fontes: [script de setup](scripts/gestao-recebiveis.ps1) e [Compose](compose.yaml), conferidos em **22/09/2026**.
 
-Se você já executou a versão com PostgreSQL Debian, siga a [migração do banco](docs/verification.md#banco-de-versões-anteriores) antes de iniciar esta versão Alpine.
+Se já usou a versão PostgreSQL Debian, leia a [migração do banco](docs/verification.md#banco-de-versões-anteriores). A [execução sem PowerShell](docs/demo.md#executar-sem-powershell) apresenta os mesmos passos do Compose. Para diagnóstico, confira `docker compose ps` e `docker compose logs --tail 100 api worker`.
 
-Sem PowerShell, copie `.env.example` para `.env`, troque `SESSION_SECRET`, `DATABASE_PASSWORD`, `DATABASE_OWNER_PASSWORD` e `DATABASE_APP_PASSWORD` por valores aleatórios independentes e rode o que o script faz:
+<a id="verificação-e-situação-atual"></a>
 
-```sh
-docker compose build db
-docker compose build api
-docker compose build frontend
-docker compose up -d --wait db
-docker compose run --rm migrate
-docker compose run --rm --no-deps seed
-docker compose up -d --wait --wait-timeout 180 db api worker frontend
-```
-
-### Reproduzir um lote pequeno
-
-Na demonstração iniciada, importe [valid.csv](data/samples/valid.csv): `1250.09 + 480.10 + 269.81 = 2000.00`, três títulos. Confirme, reenvie [reordered.csv](data/samples/reordered.csv) e confira que quantidade e saldo do lote não aumentaram. Depois envie [conflicting.csv](data/samples/conflicting.csv): ele tenta mudar `DEMO-001` e incluir `DEMO-004`; o lote inteiro deve ser rejeitado.
-
-Essa fixture de R$ 2.000 é independente dos dois títulos de R$ 125 da imagem. O [roteiro](docs/demo.md) descreve baixa e tentativas simuladas; o [contrato HTTP](docs/api-contract.md) permite conferir a resposta exata. No Resumo, vencido e em dia compõem o aberto; recebido usa seu próprio período de pagamento.
-
-### Verificação e situação atual
+## Verificação e evidências
 
 ```powershell
 .\scripts\gestao-recebiveis.ps1 test
 .\scripts\gestao-recebiveis.ps1 proof
 ```
 
-`test` reúne verificações de código, backend e navegador em bancos descartáveis. `proof` também interrompe o processamento e reinicia um PostgreSQL de teste para verificar a mesma tentativa. Nesta auditoria foram executadas as etapas isoladas de build, backend, atualização do banco, checks frontend e navegador; o ensaio completo `proof` não foi repetido.
+`test` verifica backend e navegador em ambientes descartáveis. `proof` exercita interrupção e reinício do banco de teste; a prova de restauração em volume novo tem [executor separado](scripts/prove_restore.py). Fontes: [script principal](scripts/gestao-recebiveis.ps1), [prova de reinício](scripts/prove.ps1) e [Compose E2E](compose.e2e.yaml), conferidos em **22/09/2026**.
 
-O candidato local baseado em `4bb9b57` passou em **158 testes com PostgreSQL**, **16 testes das guardas de restauração**, Ruff, formato e mypy; instalação frontend pelo lock, lint, tipos e build também passaram. Os **15 casos Playwright: 14 jornadas interativas e 1 caso de formatação BRL** passaram sem skip ou retry. Os [resultados, ambiente e limites](docs/verification.md) registram a falha inicial de formato no Windows, a correção e a repetição dos checks; preservam também o [CI histórico de `5718cdad`](https://github.com/arthurjoanes/gestao-recebiveis/actions/runs/35744528178). O [CI de `7907680`](https://github.com/arthurjoanes/gestao-recebiveis/actions/runs/35757413426) também aprovou essas correções após a publicação.
+O [recibo do CI de 22/09/2026](docs/evidence/frontend-ci-20260922.json), sobre `5718cdad`, registra **15 casos Playwright**; o [recibo da revisão local](docs/evidence/portfolio-review-20260922.json) registra **158 testes backend** na versão que identifica. A [verificação](docs/verification.md) separa essa execução das revisões locais e dos resultados posteriores. Contagens e capturas são históricas; editar a documentação não reexecuta as suítes.
 
-A [restauração em volume novo](docs/restore-proof.md) é uma prova histórica adicional de conteúdo, sequências, pagamento e tentativa preservados. Não confundo dump gerado com restauração validada. Fontes e tentativas com falha permanecem rastreáveis nos seus manifestos.
+<a id="limites-e-manutenção"></a>
+<a id="decisões-e-limites"></a>
 
-<p><img src="docs/readme/limites.svg" width="800" height="8" alt=""></p>
+## Limites e segurança
 
-## Limites e manutenção
+- Uma empresa, BRL e pagamento integral; Pix, boleto, juros, estorno e envio externo não estão implementados.
+- Baixa confirmada impede novas autorizações de lembrete; não desfaz uma autorização anterior em trânsito.
+- O provedor simulado usa o mesmo PostgreSQL. A restauração local não prova recuperação de um efeito em serviço externo ou perda do host.
+- O Compose publica serviços em loopback. Uso público exige identidade, HTTPS e configuração operacional próprios.
+- Produtividade com usuários, carga de produção, leitor de tela, zoom nativo e conformidade AA integral não foram demonstrados.
 
-### Decisões e limites
+Fontes e limites, conferidos em **22/09/2026**: [schemas financeiros](backend/src/gestao_recebiveis/schemas.py), [autorização de envio](backend/src/gestao_recebiveis/reminders/service.py), [Compose](compose.yaml), [segurança](docs/security.md) e [escopo visual](docs/frontend-quality.md). O [plano de provedor real](docs/provider-integration-plan.md) é trabalho proposto.
 
-Escolhi centavos inteiros para as operações em BRL; deixei a autorização e a confirmação no servidor; mantive a fila no mesmo banco para coordenar título, baixa e lembrete. Isso reduz serviços da demonstração e permite transações compartilhadas, mas concentra a operação no PostgreSQL e exige representar a incerteza de um envio. [Arquitetura e fronteiras](docs/architecture.md) · [alternativas e compromissos](docs/decisoes-tecnicas.md).
+## Documentação
 
-O escopo é uma empresa e pagamento integral. Pix, boleto, juros, estorno e envio externo não estão implementados. Uma baixa impede autorizações futuras; não desfaz uma autorização anterior em trânsito. O [plano de provedor real](docs/provider-integration-plan.md) descreve ensaios ainda necessários. Não medi produtividade com usuários, tolerância à perda do host ou capacidade de produção.
+| Para entender ou fazer                 | Guia                                                                                              |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Seguir um caso do problema até o teste | [Problema e solução](docs/problem-solution.md)                                                    |
+| Conferir contratos                     | [HTTP](docs/api-contract.md) · [CSV e dados](docs/data-contract.md)                               |
+| Entender componentes e escolhas        | [Arquitetura](docs/architecture.md) · [Decisões](docs/decisoes-tecnicas.md)                       |
+| Reproduzir e recuperar                 | [Demo](docs/demo.md) · [Verificação](docs/verification.md) · [Restauração](docs/restore-proof.md) |
+| Conferir afirmações e datas            | [Fontes e afirmações](docs/fontes-e-afirmacoes.md)                                                |
+| Manter a apresentação                  | [Capturas](docs/image-captures.md) · [Padrão documental](docs/padrao-documentacao.md)             |
 
-O setup publica serviços somente em loopback. Uso por múltiplos clientes exige uma borda que identifique origens com confiança e configuração de segurança apropriada: [limites e atualização](docs/security.md). Comparação visual pareada com o baseline, zoom nativo, leitor de tela, conformidade AA integral e desempenho percebido continuam sem comprovação; o [escopo da revisão visual](docs/frontend-quality.md) separa essas verificações das jornadas automatizadas.
+Relate problemas nas [issues](https://github.com/arthurjoanes/gestao-recebiveis/issues), com passos e versão, sem credenciais ou dados reais.
 
-Para manutenção, comece pelos [contratos HTTP](docs/api-contract.md) e [de dados](docs/data-contract.md), localize a regra nos arquivos ligados acima e rode os testes antes de mudar seu comportamento. Em falha de inicialização, confira `docker compose ps` e `docker compose logs --tail 100 api worker`; o [guia de verificação](docs/verification.md) cobre banco antigo e ambientes de teste. Problemas reproduzíveis podem ser relatados nas [issues do projeto](https://github.com/arthurjoanes/gestao-recebiveis/issues), sem credenciais ou dados reais.
+## Autor e licença
 
-Código sob MIT. A fonte IBM Plex Sans mantém sua [licença OFL 1.1](frontend/src/app/fonts/plex-LICENSE.txt) e [origem](frontend/src/app/fonts/sources.json).
+Desenvolvido por **Arthur Joanes**. Para conversar sobre recebíveis, consistência e recuperação:
 
-Ícones da stack: [Devicon — licença MIT](docs/stack/LICENSE.devicon).
+<p>
+  <a href="https://www.linkedin.com/in/arthur-joanes-6a2967373/">
+    <img src="docs/contact/linkedin.svg" alt="" width="24" height="24">
+    <strong>Arthur Joanes no LinkedIn</strong>
+  </a>
+</p>
+
+Código sob [licença MIT](LICENSE). IBM Plex Sans mantém a [licença OFL 1.1](frontend/src/app/fonts/plex-LICENSE.txt) e a [origem](frontend/src/app/fonts/sources.json). Ícones da stack e LinkedIn: [Devicon, licença MIT](docs/stack/LICENSE.devicon). Licenças conferidas nos arquivos em **22/09/2026**.
