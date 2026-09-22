@@ -726,12 +726,41 @@ test("saldo abre títulos com busca e vencimento preservados e retorno mantém r
     .focus();
   await page.keyboard.press("Enter");
   await expect(page.locator("#main-content")).toBeFocused();
-  await page.getByRole("button", { name: "Voltar para títulos" }).focus();
-  await page.keyboard.press("Enter");
-  await expect(page.locator("#main-content")).toBeFocused();
+  let releaseReturn!: () => void;
+  const delayedReturn = new Promise<void>((resolve) => {
+    releaseReturn = resolve;
+  });
+  await page.route(
+    "**/api/v1/receivables?**",
+    async (route) => {
+      await delayedReturn;
+      await route.continue();
+    },
+    { times: 1 },
+  );
+  try {
+    await page.getByRole("button", { name: "Voltar para títulos" }).focus();
+    await page.keyboard.press("Enter");
+    await expect(page.locator(".loading")).toBeVisible();
+    await expect(page.locator("#main-content")).toBeFocused();
+  } finally {
+    releaseReturn();
+  }
+  await expect(
+    page.getByRole("button", {
+      name: title.external_receivable_id,
+      exact: true,
+    }),
+  ).toBeFocused();
   await expect(page.getByLabel("Cliente ou título")).toHaveValue(
     title.external_receivable_id,
   );
+  await expect(
+    page.getByRole("combobox", { name: "Situação", exact: true }),
+  ).toHaveValue("overdue");
+  await expect(page.locator('[name="due_from"]')).toHaveValue(title.due_date);
+  await expect(page.locator('[name="due_to"]')).toHaveValue(title.due_date);
+  await expect(page.locator("tbody tr")).toHaveCount(1);
   await page.getByRole("button", { name: "Limpar filtros" }).click();
   await expect(page.getByLabel("Cliente ou título")).toHaveValue("");
   await expect(
