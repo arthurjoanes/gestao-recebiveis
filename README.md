@@ -2,6 +2,10 @@
 
 Desenvolvi uma aplicação de demonstração para quem confere contas a receber. Um **título** registra o valor que um cliente deve e seu vencimento; dar **baixa** é registrar o pagamento integral dessa obrigação. O operador importa títulos por CSV, confere conflitos, registra pagamentos e acompanha lembretes simulados. O perfil leitor consulta a mesma carteira sem alterá-la. Os dados representam uma empresa fictícia, em reais (BRL).
 
+![Página principal do Gestão de recebíveis](docs/readme/home.png)
+
+*Página principal da demonstração.*
+
 [Na prática](#na-prática) · [Implementação](#implementação) · [Executar e verificar](#executar-e-verificar) · [Limites e manutenção](#limites-e-manutenção)
 
 <p><img src="docs/readme/uso.svg" width="800" height="8" alt=""></p>
