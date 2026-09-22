@@ -14,11 +14,11 @@ Usei o par `source_system` e `external_receivable_id` como identidade do título
 
 Uma alternativa plausível seria deduplicar pelo hash do arquivo: é menor, mas não reconhece as mesmas dívidas quando a ordem das linhas muda. Renomear sem alterar os bytes, por outro lado, manteria esse hash. Outra seria aceitar apenas as linhas boas; isso exigiria um contrato de importação parcial que esta aplicação não oferece. Não são alternativas que afirmo ter testado historicamente.
 
-![Lote sintético de dois títulos totaliza R$ 125 e consta como confirmado](screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/01-lote-confirmado.png)
+[Captura histórica completa: Lote sintético de dois títulos totaliza R$ 125 e consta como confirmado](screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/01-lote-confirmado.png)
 
 *Prova visual histórica `11adf9df…`: fixture separada de R$ 50 + R$ 75, não o CSV de R$ 2.000 acima. A [conferência no banco](restore-proof.md#o-que-foi-conferido) verificou que o reenvio manteve dois títulos e R$ 125; a captura isolada não prova idempotência. [Abrir no tamanho original](screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/01-lote-confirmado.png).*
 
-![Conflito no título de R$ 50 junto de um título novo leva à rejeição do arquivo de R$ 150](screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/02-conflito-sem-alteracao-financeira.png)
+[Captura histórica completa: Conflito no título de R$ 50 junto de um título novo leva à rejeição do arquivo de R$ 150](screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/02-conflito-sem-alteracao-financeira.png)
 
 *Mesma execução e viewport: R$ 51 tentam substituir R$ 50, junto de R$ 99 novos. Os R$ 150 são o total do arquivo rejeitado; o banco permaneceu em R$ 125 e o título de R$ 99 não foi gravado. “Novo” descreve a análise da linha, não uma inclusão confirmada. [Imagem completa](screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/02-conflito-sem-alteracao-financeira.png).*
 
@@ -50,7 +50,7 @@ Separei a intenção (`Reminder`), a tentativa autorizada (`Attempt`) e a entreg
 
 **Por que assim:** manter a fila no PostgreSQL permite coordenar autorização, pagamento e cancelamento com a mesma ordem de locks. A chamada do provedor ocorre fora da transação de autorização, para não manter locks durante a espera externa. Em troca, é necessário representar o resultado desconhecido e reconciliá-lo. Uma baixa impede autorizações futuras, mas não desfaz uma autorização anterior já em trânsito.
 
-![Tentativa número 1 concluída e entrega simulada número 1 preservada após reconciliação](screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/03-mesma-tentativa-reconciliada.png)
+[Captura histórica completa: Tentativa número 1 concluída e entrega simulada número 1 preservada após reconciliação](screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/03-mesma-tentativa-reconciliada.png)
 
 *Captura histórica da mesma prova: o token de posse mudou, mas a identidade da tentativa e da entrega foi preservada. O [manifesto e as consultas](restore-proof.md) sustentam essa afirmação; não houve envio externo. A nova composição visual não foi executada nessa revisão histórica; sua prova posterior está no [CI do commit `5718cdad`](https://github.com/arthurjoanes/gestao-recebiveis/actions/runs/35744528178) e na [matriz do frontend](frontend-quality.md).*
 

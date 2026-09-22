@@ -1,5 +1,7 @@
 # Qualidade da interface financeira
 
+As [capturas locais atuais de 22/09/2026](image-captures.md) documentam seis vistas da aplicação sobre `deade1369`, com navegação sem alteração financeira. As provas de CI, restauração e design abaixo continuam vinculadas às respectivas fontes históricas.
+
 Direção visual de 22/09/2026 sobre o commit `bd5aeb1c11d3fa2e98a4e401aa3e86b22e2945f4`. O baseline já tinha carteira, detalhe, filtros compactos e os quatro saldos visíveis. A nova composição separa **posição da carteira**, **movimentação recebida** e **conferência de títulos**, com marca e tipografia próprias.
 
 **Design aprovado pelo autor em 22/09/2026; execução automatizada comprovada no commit `5718cdad3c5052ddbf6f660797121e9c47aa46c8`:** o [CI do commit `5718cdad`](https://github.com/arthurjoanes/gestao-recebiveis/actions/runs/35744528178) aprovou 15 casos Playwright (14 jornadas interativas e 1 caso de formatação BRL), sem skip ou retry, e produziu 21 PNGs. A revisão local anterior aprovou lint, tipos, build e verificações estáticas; o lançamento foi recusado com `blocked by policy` e não foi repetido nem contornado. O CI posterior é uma prova remota distinta. O [recibo do CI](evidence/frontend-ci-20260922.json), o [registro da direção](evidence/visual-direction-static-20260922.json) e a [revisão anterior](evidence/frontend-quality-static-20260922.json) conservam seus escopos e fontes.

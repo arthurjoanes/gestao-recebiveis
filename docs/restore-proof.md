@@ -1,5 +1,7 @@
 # Recuperar a carteira sem repetir seus efeitos
 
+As quatro imagens desta página são **históricas**, vinculadas ao manifesto da restauração. Mantêm o layout da execução original; veja as [telas atuais](image-captures.md) para a composição servida hoje.
+
 Restaurar um banco não basta para retomar cobranças: é preciso preservar a baixa já registrada e descobrir se uma tentativa pendente já foi aceita. Esta prova restaura uma carteira sintética em outro volume e confere esses fatos antes de continuar. O caso representa um risco técnico do domínio; não é um incidente de cliente.
 
 Em 22/09/2026, a execução `11adf9df35ba4314945ffdd4fbaeabfc` passou: **R$ 125 em títulos, R$ 50 pagos e R$ 75 abertos**, sem uma segunda baixa nem outra entrega simulada. O [índice](evidence/restore-proof/index.json) preserva também duas tentativas de preparação que falharam. O [manifesto da execução](evidence/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/manifest.json) contém imagens, fontes, fases, resultados, hashes e limpeza.
@@ -23,19 +25,19 @@ A reconciliação acrescentou dois eventos de auditoria e alterou o estado do le
 
 As páginas foram renderizadas pelo frontend real em Microsoft Edge/Chromium 153.0.4234.48, com viewport de 1440 × 1080 e captura de página inteira. Os dados são sintéticos; a data comercial da demonstração difere do horário real do ensaio. O probe preparou o cenário pelas funções de domínio; o navegador efetuou login e leitura. Estas imagens não representam uma jornada que digita e confirma todas as operações na interface.
 
-![Lote confirmado com dois títulos e total de R$ 125](screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/01-lote-confirmado.png)
+[Captura histórica completa: Lote confirmado com dois títulos e total de R$ 125](screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/01-lote-confirmado.png)
 
 *Lote #1: duas obrigações financeiras identificadas, sem depender do nome do arquivo para impedir repetição.*
 
-![Lote de R$ 150 rejeitado por conflito](screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/02-conflito-sem-alteracao-financeira.png)
+[Captura histórica completa: Lote de R$ 150 rejeitado por conflito](screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/02-conflito-sem-alteracao-financeira.png)
 
 *Os R$ 150 pertencem ao arquivo candidato rejeitado. O banco e a consulta HTTP confirmaram que a carteira permaneceu em R$ 125. “Novo” nessa linha descreve a análise do arquivo; o título não foi inserido.*
 
-![Mesma tentativa e entrega simulada após reconciliação no destino](screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/03-mesma-tentativa-reconciliada.png)
+[Captura histórica completa: Mesma tentativa e entrega simulada após reconciliação no destino](screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/03-mesma-tentativa-reconciliada.png)
 
 *No destino restaurado, tentativa #1 concluída e entrega simulada #1 preservada. Nenhuma mensagem externa foi enviada.*
 
-![Título pago preserva baixa de R$ 50](screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/04-mesma-baixa-preservada.png)
+[Captura histórica completa: Título pago preserva baixa de R$ 50](screenshots/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/04-mesma-baixa-preservada.png)
 
 *A baixa de R$ 50 continuou associada ao título original. A verificação do banco, além da imagem, confirmou o mesmo pagamento #1.*
 

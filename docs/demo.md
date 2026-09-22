@@ -17,7 +17,9 @@ $DemoCredential = Get-Credential -UserName 'operador@example.com'
 6. **Conflito sem alteração parcial (40s).** Anote os indicadores atuais. Importe `data/samples/conflicting.csv`: mudança de R$ 1.250,09 para R$ 9.999,99 no `DEMO-001` deve bloquear o lote. `DEMO-004` não pode aparecer na carteira e os indicadores permanecem iguais. Mesmo que `DEMO-001` já esteja pago, a repetição não sobrescreve o estado.
 7. **Testes (30s).** Abra `backend/tests/` e `docs/verification.md`: importações concorrentes, dois workers, token antigo, resposta perdida e pagamento versus autorização.
 
-![Detalhe de um título fictício e sua linha do tempo](img/titulo.png)
+![Recorte atual do saldo, situação e ações de TIT-0001, no valor de R$ 1.217,39](screenshots/current-20260922/titulo.png)
+
+*Captura real de 22/09/2026, sem efetuar baixa ou cancelamento. [Outras telas atuais e reprodução](image-captures.md). A imagem anterior em `img/titulo.png` permanece somente como evidência histórica.*
 
 ## Cenários adicionais
 
