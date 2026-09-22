@@ -1,5 +1,7 @@
 # Verificação local
 
+O [candidato de qualidade do frontend](frontend-quality.md) tem uma matriz própria e distingue as verificações estáticas das jornadas bloqueadas. As capturas e execuções históricas abaixo não validam automaticamente esse candidato.
+
 Na raiz do projeto, com Docker Desktop em modo Linux e PowerShell:
 
 ```powershell

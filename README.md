@@ -6,7 +6,7 @@ A carteira reúne cliente, vencimento, valor e situação; o detalhe do título 
 
 ![Carteira de títulos com filtros e vencimentos](docs/img/carteira.png)
 
-*Dados fictícios da demonstração. Os filtros consultam toda a carteira; a tabela apresenta uma página por vez.*
+*Captura histórica com dados fictícios. Os filtros consultam toda a carteira; a tabela apresenta uma página por vez. O novo ajuste de composição ainda não tem capturas nem jornadas de navegador validadas; veja o [escopo da revisão de frontend](docs/frontend-quality.md).*
 
 ## Problemas que o projeto resolve
 

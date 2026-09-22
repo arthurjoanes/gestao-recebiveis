@@ -88,13 +88,9 @@ export function ReceivableDetailView({
             <div className="page-heading">
               <div>
                 <h1>{data.external_receivable_id}</h1>
-                <p>
-                  {data.customer_name} <span className="separator">/</span>{" "}
-                  {data.source_system}
-                </p>
+                <p className="title-customer">{data.customer_name}</p>
               </div>
               <div className="button-group">
-                <Badge status={data.overdue ? "overdue" : data.status} />
                 <button
                   className="button secondary"
                   onClick={() => setRevision((value) => value + 1)}
@@ -109,32 +105,54 @@ export function ReceivableDetailView({
                 className="panel detail-summary"
                 aria-label="Dados do título"
               >
-                <div className="invoice-caption">
-                  <span>REGISTRO FINANCEIRO</span>
-                  <span>{data.source_system}</span>
-                </div>
-                <div className="invoice-identity">
-                  <div>
-                    <span className="eyebrow">Cliente</span>
-                    <h2>{data.customer_name}</h2>
-                    <p>{data.customer_email}</p>
+                <div className="invoice-decision">
+                  <div className="invoice-balance">
+                    <h2>Valor do título</h2>
+                    <strong className="detail-amount">
+                      {money(data.amount_cents)}
+                    </strong>
+                    <div className="invoice-state">
+                      <Badge status={data.overdue ? "overdue" : data.status} />
+                      <span>Vencimento: {date(data.due_date)}</span>
+                    </div>
                   </div>
-                  <div>
-                    <span className="eyebrow">Título</span>
-                    <strong>{data.external_receivable_id}</strong>
-                    <p>Vence em {date(data.due_date)}</p>
-                  </div>
+                  {data.status === "open" &&
+                    session.user.role === "operator" && (
+                      <div className="invoice-actions">
+                        <button
+                          className="button"
+                          onClick={() => {
+                            setAction("pay");
+                            setPaymentKey(crypto.randomUUID());
+                            setError("");
+                          }}
+                        >
+                          Registrar pagamento
+                        </button>
+                        <button
+                          className="button danger-outline"
+                          onClick={() => {
+                            setAction("cancel");
+                            setError("");
+                          }}
+                        >
+                          Cancelar título
+                        </button>
+                      </div>
+                    )}
                 </div>
-                <div className="invoice-balance">
-                  <p className="eyebrow">Valor do título</p>
-                  <strong className="detail-amount">
-                    {money(data.amount_cents)}
-                  </strong>
-                </div>
+                <p className="footnote">
+                  A baixa quita o valor integral e cancela os lembretes
+                  pendentes. Uma tentativa de envio já autorizada pode terminar.
+                </p>
                 <dl>
                   <div>
-                    <dt>Vencimento</dt>
-                    <dd>{date(data.due_date)}</dd>
+                    <dt>E-mail do cliente</dt>
+                    <dd>{data.customer_email}</dd>
+                  </div>
+                  <div>
+                    <dt>Sistema de origem</dt>
+                    <dd>{data.source_system}</dd>
                   </div>
                   <div>
                     <dt>Descrição</dt>
@@ -157,33 +175,6 @@ export function ReceivableDetailView({
                     </>
                   )}
                 </dl>
-                {data.status === "open" && session.user.role === "operator" && (
-                  <div className="invoice-actions">
-                    <button
-                      className="button"
-                      onClick={() => {
-                        setAction("pay");
-                        setPaymentKey(crypto.randomUUID());
-                        setError("");
-                      }}
-                    >
-                      Registrar pagamento
-                    </button>
-                    <button
-                      className="button danger-outline"
-                      onClick={() => {
-                        setAction("cancel");
-                        setError("");
-                      }}
-                    >
-                      Cancelar título
-                    </button>
-                  </div>
-                )}
-                <p className="footnote">
-                  A baixa quita o valor integral e cancela os lembretes
-                  pendentes. Uma tentativa de envio já autorizada pode terminar.
-                </p>
               </section>
               <section className="panel">
                 <div className="section-heading">

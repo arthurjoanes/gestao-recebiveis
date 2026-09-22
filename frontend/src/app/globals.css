@@ -1,14 +1,14 @@
 @import "./financial-workspace.css";
 /* Application shell and financial workspace. */
 :root {
-  --ink: #182d36;
-  --muted: #596c73;
-  --canvas: #f3f4f1;
+  --ink: #172b49;
+  --muted: #526176;
+  --canvas: #f3f6fa;
   --paper: #ffffff;
-  --line: #d6deda;
-  --accent: #14685e;
-  --accent-dark: #0d4d46;
-  --accent-soft: #e8f3ee;
+  --line: #cdd7e3;
+  --accent: #1e57a4;
+  --accent-dark: #16427e;
+  --accent-soft: #edf3fc;
   --positive: #226b4b;
   --red: #a3323c;
   --red-soft: #fff0f0;
@@ -37,6 +37,7 @@ select,
 textarea,
 summary {
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 button {
   cursor: pointer;
@@ -49,7 +50,7 @@ a {
   color: var(--accent);
 }
 :where(button, a, input, select, textarea, summary, [tabindex]):focus-visible {
-  outline: 3px solid #218477;
+  outline: 3px solid #1e57a4;
   outline-offset: 3px;
 }
 input,
@@ -58,7 +59,7 @@ textarea {
   width: 100%;
   min-width: 0;
   min-height: 40px;
-  border: 1px solid #bdc8d7;
+  border: 1px solid #7a899e;
   background: var(--paper);
   border-radius: 4px;
   color: var(--ink);
@@ -173,7 +174,7 @@ legend {
 .button.secondary {
   background: var(--paper);
   color: var(--ink);
-  border-color: #bdc8d7;
+  border-color: #7a899e;
 }
 .button.secondary:hover:not(:disabled) {
   background: var(--accent-soft);
@@ -533,10 +534,6 @@ td small {
   line-height: 1.65;
   margin-top: 12px;
 }
-.separator {
-  margin: 0 8px;
-  color: #98a7bb;
-}
 .sr-only {
   position: absolute;
   width: 1px;
@@ -598,13 +595,6 @@ td small {
   flex-wrap: wrap;
   justify-content: flex-end;
 }
-.count-pill {
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  padding: 3px 8px;
-  font-size: 12px;
-  color: var(--muted);
-}
 .back-button {
   margin-bottom: 16px;
 }
@@ -656,6 +646,9 @@ td small {
   padding: 24px;
   color: var(--ink);
   box-shadow: 0 18px 80px #132a4730;
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .modal::backdrop {
   background: #17294180;
@@ -719,6 +712,7 @@ td small {
   color: var(--muted);
 }
 summary {
+  min-height: 28px;
   cursor: pointer;
   font-weight: 600;
 }

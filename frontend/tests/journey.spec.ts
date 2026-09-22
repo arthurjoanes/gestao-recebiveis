@@ -35,6 +35,15 @@ async function navigate(page: Page, name: string) {
     .click();
 }
 
+async function fillSearch(page: Page, value: string) {
+  const search = page.getByLabel("Cliente ou título");
+  if (!(await search.isVisible()))
+    await page
+      .getByRole("button", { name: "Filtrar carteira", exact: true })
+      .click();
+  await search.fill(value);
+}
+
 test("BRL conserva centavos pequenos e inteiros acima da precisão de Number", () => {
   expect(money("1")).toBe("R$ 0,01");
   expect(money("30")).toBe("R$ 0,30");
@@ -69,6 +78,13 @@ test("layout financeiro em cinco larguras, dados longos, diálogo e foco", async
         .first()
         .evaluate((element) => parseFloat(getComputedStyle(element).fontSize)),
     ).toBeGreaterThanOrEqual(12);
+    for (const metric of [
+      ".metric-open",
+      ".metric-overdue",
+      ".metric-current",
+      ".metric-accent",
+    ])
+      await expect(page.locator(metric)).toBeVisible();
     const firstAmount = await page
       .locator(".metric > strong")
       .first()
@@ -105,7 +121,7 @@ test("layout financeiro em cinco larguras, dados longos, diálogo e foco", async
     "Importação confirmada",
   );
   await navigate(page, "Títulos");
-  await page.getByLabel("Cliente ou título").fill(key);
+  await fillSearch(page, key);
   await page.getByRole("button", { name: "Filtrar títulos" }).click();
   await page.getByRole("button", { name: key, exact: true }).click();
   await expect(
@@ -180,7 +196,7 @@ test("filtros recolhidos preservam o recorte aplicado no resumo", async ({
   const filters = page.locator(".overview-filter-panel");
   await expect(filters).not.toHaveAttribute("open");
   await filters.locator("summary").click();
-  await page.getByLabel("Cliente ou título").fill("TIT-0001");
+  await fillSearch(page, "TIT-0001");
   await page.getByRole("button", { name: "Aplicar filtros" }).click();
   await expect(filters).not.toHaveAttribute("open");
   await expect(filters.locator("summary")).toContainText("Busca: TIT-0001");
@@ -254,7 +270,7 @@ test("importar, repetir, simular retry, pagar e conferir histórico real", async
     fullPage: true,
   });
   await navigate(page, "Títulos");
-  await page.getByLabel("Cliente ou título").fill(key);
+  await fillSearch(page, key);
   await page.getByRole("button", { name: "Filtrar títulos" }).click();
   await expect(
     page.getByRole("button", { name: key, exact: true }),
@@ -281,7 +297,7 @@ test("importar, repetir, simular retry, pagar e conferir histórico real", async
     page.getByRole("heading", { name: "Worker ativo" }),
   ).toBeVisible();
   await navigate(page, "Lembretes");
-  await page.getByLabel("Cliente ou título").fill(key);
+  await fillSearch(page, key);
   await page.getByRole("button", { name: "Filtrar lembretes" }).click();
   await expect(async () => {
     await page.getByRole("button", { name: "Atualizar", exact: true }).click();
@@ -306,7 +322,7 @@ test("importar, repetir, simular retry, pagar e conferir histórico real", async
     page.getByRole("heading", { name: "Worker pausado" }),
   ).toBeVisible();
   await navigate(page, "Títulos");
-  await page.getByLabel("Cliente ou título").fill(key);
+  await fillSearch(page, key);
   await page.getByRole("button", { name: "Filtrar títulos" }).click();
   await page.getByRole("button", { name: key, exact: true }).click();
   await page.getByRole("button", { name: "Registrar pagamento" }).click();
@@ -500,9 +516,7 @@ test("erro de rede permite tentar novamente e busca vazia explica resultado", as
     page.getByRole("heading", { name: "Nenhum título encontrado" }),
   ).toHaveCount(0);
   await page.unroute("**/api/v1/receivables?**");
-  await page
-    .getByLabel("Cliente ou título")
-    .fill(`SEM-RESULTADO-${Date.now()}`);
+  await fillSearch(page, `SEM-RESULTADO-${Date.now()}`);
   await page.getByRole("button", { name: "Filtrar títulos" }).click();
   await expect(
     page.getByRole("heading", { name: "Nenhum título encontrado" }),
@@ -685,7 +699,6 @@ test("intervalos inválidos mantêm saldo válido, formulário aberto e erro ass
   await page.locator('[name="received_to"]').fill("9999-12-31");
   await page.getByRole("button", { name: "Aplicar filtros" }).click();
   await expect(filters).not.toHaveAttribute("open");
-  await page.locator(".balance-details > summary").click();
   await expect(page.locator(".metric-accent")).toContainText("31/12/9999");
 });
 
@@ -698,16 +711,13 @@ test("saldo abre títulos com busca e vencimento preservados e retorno mantém r
   ).json();
   const title = overdue.items[0];
   await page.locator(".overview-filter-panel summary").click();
-  await page
-    .getByLabel("Cliente ou título")
-    .fill(`  ${title.external_receivable_id}  `);
+  await fillSearch(page, `  ${title.external_receivable_id}  `);
   await page.locator('[name="due_from"]').fill(title.due_date);
   await page.locator('[name="due_to"]').fill(title.due_date);
   await page.getByRole("button", { name: "Aplicar filtros" }).click();
   await expect(page.locator(".metric").first()).toContainText(
     "1 título em aberto",
   );
-  await page.locator(".balance-details > summary").click();
   await page
     .getByRole("button", { name: "Ver títulos vencidos", exact: true })
     .focus();
@@ -772,7 +782,6 @@ test("saldo abre títulos com busca e vencimento preservados e retorno mantém r
   await expect(page.locator("#title-period-error")).toBeVisible();
   await expect(page.locator('[name="due_from"]')).toBeFocused();
   await navigate(page, "Resumo");
-  await page.locator(".balance-details > summary").click();
   await page
     .getByRole("button", { name: "Ver títulos em dia", exact: true })
     .focus();
@@ -846,7 +855,7 @@ test("detalhe do lembrete preserva filtros, página, rolagem e foco na fila", as
 }) => {
   await login(page);
   await navigate(page, "Lembretes");
-  await page.getByLabel("Cliente ou título").fill("TIT-");
+  await fillSearch(page, "TIT-");
   await page
     .getByRole("button", { name: "Filtrar lembretes", exact: true })
     .click();
@@ -890,9 +899,7 @@ test("detalhe do lembrete preserva filtros, página, rolagem e foco na fila", as
   await expect(trigger).toBeFocused();
 
   await trigger.click();
-  await page
-    .getByLabel("Cliente ou título")
-    .fill("sem-correspondencia-na-fila");
+  await fillSearch(page, "sem-correspondencia-na-fila");
   await page
     .getByRole("button", { name: "Filtrar lembretes", exact: true })
     .click();
@@ -907,7 +914,7 @@ test("detalhe do lembrete preserva filtros, página, rolagem e foco na fila", as
   ).toBeFocused();
 
   await navigate(page, "Títulos");
-  await page.getByLabel("Cliente ou título").fill("TIT-0001");
+  await fillSearch(page, "TIT-0001");
   await page
     .getByRole("button", { name: "Filtrar títulos", exact: true })
     .click();
@@ -931,7 +938,7 @@ test("voltar do título preserva a página e o foco, com saída para página esv
   for (const width of [1440, 390]) {
     await page.setViewportSize({ width, height: 900 });
     await navigate(page, "Títulos");
-    await page.getByLabel("Cliente ou título").fill("TIT-");
+    await fillSearch(page, "TIT-");
     await page
       .getByRole("button", { name: "Filtrar títulos", exact: true })
       .click();
@@ -971,7 +978,7 @@ test("voltar do título preserva a página e o foco, com saída para página esv
       .getByRole("button", { name: "Voltar para títulos", exact: true })
       .click();
     await expect(page.locator(".loading")).toBeVisible();
-    await page.getByLabel("Cliente ou título").fill("TIT-00");
+    await fillSearch(page, "TIT-00");
   } finally {
     releaseReturn();
   }
@@ -1009,4 +1016,67 @@ test("voltar do título preserva a página e o foco, com saída para página esv
   await expect(
     page.getByRole("heading", { name: "Títulos", exact: true }),
   ).toBeFocused();
+});
+
+test("carteira compacta mantém recorte aplicado, validação e retorno ao controle", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 844 });
+  await login(page);
+  const overview = await (await page.request.get("/api/v1/overview")).json();
+  for (const [selector, field] of [
+    [".metric-open", "open_cents"],
+    [".metric-overdue", "overdue_cents"],
+    [".metric-current", "current_cents"],
+    [".metric-accent", "received_cents"],
+  ]) {
+    await expect(page.locator(`${selector} > strong`)).toHaveText(
+      money(overview[field]),
+    );
+    await expect(page.locator(selector)).toBeVisible();
+  }
+  await navigate(page, "Títulos");
+  const search = page.getByLabel("Cliente ou título");
+  const toggle = page.getByRole("button", {
+    name: "Filtrar carteira",
+    exact: true,
+  });
+  await expect(search).toBeHidden();
+  await expect(page.locator(".row-link").first()).toBeVisible();
+  await expect(page.locator(".filter-scope")).toContainText(
+    "Todas as situações",
+  );
+  await toggle.focus();
+  await page.keyboard.press("Enter");
+  await search.fill("TIT-0001");
+  // Digitar não altera o recorte nem os resultados antes de enviar o formulário.
+  await expect(page.locator(".filter-scope")).not.toContainText("TIT-0001");
+  await page
+    .getByRole("button", { name: "Filtrar títulos", exact: true })
+    .click();
+  await expect(toggle).toBeFocused();
+  await expect(search).toBeHidden();
+  await expect(page.locator(".filter-scope")).toContainText("Busca: TIT-0001");
+  await expect(page.locator("tbody tr")).toHaveCount(1);
+  await toggle.click();
+  await page.locator('[name="due_from"]').fill("2026-08-18");
+  await page.locator('[name="due_to"]').fill("2026-08-17");
+  await page
+    .getByRole("button", { name: "Filtrar títulos", exact: true })
+    .click();
+  await expect(page.locator("#title-period-error")).toBeVisible();
+  await expect(page.locator('[name="due_from"]')).toBeFocused();
+  await expect(page.locator(".filter-scope")).toContainText(
+    "Todos os vencimentos",
+  );
+  await page
+    .getByRole("button", { name: "Limpar filtros", exact: true })
+    .click();
+  await expect(page.locator("#title-period-error")).toHaveCount(0);
+  await expect(search).toHaveValue("");
+  await page
+    .getByRole("button", { name: "Fechar filtros", exact: true })
+    .click();
+  await expect(search).toBeHidden();
+  await expect(toggle).toBeFocused();
 });
