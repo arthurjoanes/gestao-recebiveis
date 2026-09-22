@@ -45,6 +45,14 @@ class LoginSession(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
+class LoginAdmission(Base):
+    __tablename__ = "login_admission"
+    key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    window_start: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    attempts: Mapped[int] = mapped_column(Integer)
+    __table_args__ = (Index("ix_login_admission_window_start", "window_start"),)
+
+
 class DemoState(Base):
     __tablename__ = "demo_state"
     id: Mapped[int] = mapped_column(primary_key=True, default=1)

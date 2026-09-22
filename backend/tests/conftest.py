@@ -1,9 +1,10 @@
+import os
 from collections.abc import Iterator
 from datetime import datetime
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import text
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from gestao_recebiveis.auth import password_hasher
@@ -17,8 +18,13 @@ def session_factory() -> Iterator[sessionmaker[Session]]:
     if not engine.url.database or not engine.url.database.endswith("_test"):
         raise RuntimeError("Testes destrutivos exigem banco com sufixo _test.")
     names = ", ".join('"' + table.name + '"' for table in Base.metadata.sorted_tables)
-    with engine.begin() as connection:
+    # Only test housekeeping receives the migration owner credential.
+    cleanup_engine = create_engine(
+        os.environ.get("MIGRATION_DATABASE_URL", engine.url.render_as_string(hide_password=False))
+    )
+    with cleanup_engine.begin() as connection:
         connection.execute(text(f"TRUNCATE {names} RESTART IDENTITY CASCADE"))
+    cleanup_engine.dispose()
     yield SessionLocal
 
 

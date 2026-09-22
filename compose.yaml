@@ -7,7 +7,7 @@ x-backend: &backend
     dockerfile: backend/Dockerfile
   init: true
   environment: &backend-env
-    DATABASE_URL: postgresql+psycopg://gestao_recebiveis:${DATABASE_PASSWORD:?Execute scripts/gestao-recebiveis.ps1 setup para criar .env}@db:5432/gestao_recebiveis
+    DATABASE_URL: postgresql+psycopg://gestao_app:${DATABASE_APP_PASSWORD:?Execute scripts/gestao-recebiveis.ps1 setup}@db:5432/gestao_recebiveis
     DEMO_MODE: ${DEMO_MODE:-true}
     SESSION_SECRET: ${SESSION_SECRET:?Execute scripts/gestao-recebiveis.ps1 setup para criar .env}
     FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:3101}
@@ -38,18 +38,32 @@ services:
     networks: [gestao_recebiveis]
     restart: unless-stopped
 
-  migrate:
+  db-init:
     <<: *backend
-    command: [alembic, upgrade, head]
+    environment:
+      DATABASE_ADMIN_URL: postgresql+psycopg://gestao_recebiveis:${DATABASE_PASSWORD:?Execute setup}@db:5432/gestao_recebiveis
+      DATABASE_OWNER_PASSWORD: ${DATABASE_OWNER_PASSWORD:?Execute setup}
+      DATABASE_APP_PASSWORD: ${DATABASE_APP_PASSWORD:?Execute setup}
+    command: [python, -m, gestao_recebiveis.provision_database]
     depends_on:
       db:
         condition: service_healthy
+
+  migrate:
+    <<: *backend
+    environment:
+      <<: *backend-env
+      DATABASE_URL: postgresql+psycopg://gestao_owner:${DATABASE_OWNER_PASSWORD:?Execute setup}@db:5432/gestao_recebiveis
+    command: [alembic, upgrade, head]
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
 
   api:
     <<: *backend
     ports:
       - "127.0.0.1:${API_PORT:-8101}:8101"
-    command: [uvicorn, "gestao_recebiveis.app:app", --host, "0.0.0.0", --port, "8101"]
+    command: [uvicorn, "gestao_recebiveis.app:app", --host, "0.0.0.0", --port, "8101", --no-proxy-headers]
     healthcheck:
       test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8101/health/ready', timeout=2)"]
       interval: 5s
@@ -120,17 +134,64 @@ services:
       retries: 20
     networks: [gestao_recebiveis]
 
+  db-test-init:
+    <<: *backend
+    profiles: [test]
+    environment:
+      DATABASE_ADMIN_URL: postgresql+psycopg://gestao_recebiveis:gestao_recebiveis_test_only@db-test:5432/gestao_recebiveis_test
+      DATABASE_OWNER_PASSWORD: test_owner_password_only_123456
+      DATABASE_APP_PASSWORD: test_runtime_password_only_123456
+    command: [python, -m, gestao_recebiveis.provision_database]
+    depends_on:
+      db-test:
+        condition: service_healthy
+
   test:
     <<: *backend
     profiles: [test]
     environment:
       <<: *backend-env
-      DATABASE_URL: postgresql+psycopg://gestao_recebiveis:gestao_recebiveis_test_only@db-test:5432/gestao_recebiveis_test
+      DATABASE_URL: postgresql+psycopg://gestao_app:test_runtime_password_only_123456@db-test:5432/gestao_recebiveis_test
+      MIGRATION_DATABASE_URL: postgresql+psycopg://gestao_owner:test_owner_password_only_123456@db-test:5432/gestao_recebiveis_test
       SESSION_SECRET: gestao_recebiveis_test_session_secret_not_for_production_123456
       DEMO_MODE: "true"
     command: [sh, /scripts/check-backend.sh]
     depends_on:
-      db-test:
+      db-test-init:
+        condition: service_completed_successfully
+
+  db-upgrade-test:
+    image: gestao-recebiveis-database:local
+    build:
+      context: ./database
+    profiles: [test]
+    environment:
+      POSTGRES_DB: gestao_recebiveis_upgrade_test
+      POSTGRES_USER: gestao_recebiveis
+      POSTGRES_PASSWORD: upgrade_admin_disposable_only
+    tmpfs:
+      - /var/lib/postgresql
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U gestao_recebiveis -d gestao_recebiveis_upgrade_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+    networks: [gestao_recebiveis]
+
+  upgrade-test:
+    <<: *backend
+    profiles: [test]
+    environment:
+      DATABASE_ADMIN_URL: postgresql+psycopg://gestao_recebiveis:upgrade_admin_disposable_only@db-upgrade-test:5432/gestao_recebiveis_upgrade_test
+      DATABASE_URL: postgresql+psycopg://gestao_app:upgrade_runtime_disposable_only@db-upgrade-test:5432/gestao_recebiveis_upgrade_test
+      MIGRATION_DATABASE_URL: postgresql+psycopg://gestao_owner:upgrade_owner_disposable_only@db-upgrade-test:5432/gestao_recebiveis_upgrade_test
+      DATABASE_OWNER_PASSWORD: upgrade_owner_disposable_only
+      DATABASE_APP_PASSWORD: upgrade_runtime_disposable_only
+      DEMO_MODE: "true"
+      SESSION_SECRET: upgrade_disposable_session_secret_1234567890
+    command: [python, tests/database_upgrade_probe.py]
+    depends_on:
+      db-upgrade-test:
         condition: service_healthy
 
   frontend-checks:

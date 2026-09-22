@@ -67,3 +67,9 @@ Backend usa `db-test` em `tmpfs`. E2E usa o projeto `pf-gestao-recebiveis-e2e`, 
 `scripts/prove.ps1` usa `compose.proof.yaml`, projeto `pf-gestao-recebiveis-proof`, banco `gestao_recebiveis_proof_test` e volume próprios, sem portas no host. `persistence_probe.py` exige alvo e modo exatos: grava uma aceitação, encerra abruptamente com código 86 antes de finalizar, e outro processo reconcilia após restart real desse PostgreSQL. O lease de três segundos usa tempo real; o token antigo é recusado. O script verifica prontidão, executa a jornada pelo proxy/Chromium e remove somente os recursos descartáveis. [Como rodar a verificação](verification.md).
 
 Referências: [SELECT e locks](https://www.postgresql.org/docs/current/sql-select.html), [unicidade](https://www.postgresql.org/docs/current/indexes-unique.html), [testes FastAPI](https://fastapi.tiangolo.com/tutorial/testing/) e [proxy Next.js](https://nextjs.org/docs/app/api-reference/config/next-config-js/rewrites).
+
+## Identidades do PostgreSQL e admissão de login
+
+O serviço descartável `db-init` usa o administrador somente para provisionar `gestao_owner` e `gestao_app`. As migrações usam o primeiro; API, worker e seed usam o segundo, com DML e uso de sequências, sem DDL ou criação de papéis. A tabela `alembic_version` permite somente leitura ao runtime.
+
+`login_admission` armazena contadores efêmeros identificados por HMAC. Reservas usam uma transação independente da autenticação e um advisory lock por origem; a falha de credenciais não desfaz a reserva. Uma autenticação bem-sucedida libera somente a própria reserva. O relógio da demonstração não interfere na expiração. Veja [segurança](security.md) para cotas, limitações de proxy e migração de instalações existentes.

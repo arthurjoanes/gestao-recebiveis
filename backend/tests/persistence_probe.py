@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from time import monotonic, sleep
 
-from sqlalchemy import func, select, text
+from sqlalchemy import create_engine, func, select, text
 from sqlalchemy.engine import make_url
 
 from gestao_recebiveis.config import get_settings
@@ -44,9 +44,12 @@ def main() -> None:
 
     evidence = Path("/evidence")
     if phase == "prepare":
-        with SessionLocal.begin() as session:
+        cleanup = create_engine(os.environ["MIGRATION_DATABASE_URL"])
+        with cleanup.begin() as connection:
             names = ", ".join('"' + table.name + '"' for table in Base.metadata.sorted_tables)
-            session.execute(text(f"TRUNCATE {names} RESTART IDENTITY CASCADE"))
+            connection.execute(text(f"TRUNCATE {names} RESTART IDENTITY CASCADE"))
+        cleanup.dispose()
+        with SessionLocal.begin() as session:
             session.add(
                 User(
                     email="probe@example.com",

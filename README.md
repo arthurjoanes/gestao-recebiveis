@@ -22,6 +22,7 @@ flowchart LR
 ## Decisões técnicas
 
 - Dinheiro é armazenado em centavos e enviado como string no JSON para conservar precisão; a interface faz a conversão explicitamente.
+- O login reserva cotas atômicas antes de verificar senhas. API e worker usam credenciais distintas das migrações e da administração do banco.
 - O CSV é revalidado na confirmação. Transações e chaves idempotentes permitem repetir baixas sem duplicar efeitos.
 - A fila usa PostgreSQL com `SKIP LOCKED`, lease e heartbeat. A coordenação permanece no banco, sem exigir um broker separado.
 - O provedor fictício persiste a aceitação antes de simular uma resposta perdida. Isso permite testar recuperação após reinício; a entrega por um serviço externo exige outra integração.
@@ -42,14 +43,14 @@ O setup gera a configuração local, constrói as imagens e carrega os dados fic
 
 Se você já executou a versão com PostgreSQL Debian, siga a [migração do banco](docs/verification.md#banco-de-versões-anteriores) antes de iniciar esta versão Alpine.
 
-Sem PowerShell, copie `.env.example` para `.env`, troque `SESSION_SECRET` e `DATABASE_PASSWORD` por valores aleatórios e rode o que o script faz:
+Sem PowerShell, copie `.env.example` para `.env`, troque `SESSION_SECRET`, `DATABASE_PASSWORD`, `DATABASE_OWNER_PASSWORD` e `DATABASE_APP_PASSWORD` por valores aleatórios independentes e rode o que o script faz:
 
 ```sh
 docker compose build db
 docker compose build api
 docker compose build frontend
 docker compose up -d --wait db
-docker compose run --rm --no-deps migrate
+docker compose run --rm migrate
 docker compose run --rm --no-deps seed
 docker compose up -d --wait --wait-timeout 180 db api worker frontend
 ```
@@ -61,7 +62,7 @@ docker compose up -d --wait --wait-timeout 180 db api worker frontend
 .\scripts\gestao-recebiveis.ps1 proof
 ```
 
-Passaram 145 testes de backend e 12 testes Playwright, além de lint, formatação e tipos. A suíte cobre importação, concorrência, permissões, pagamentos e navegação.
+Passaram 158 testes de backend e 12 testes Playwright, além de Ruff e mypy. A suíte cobre importação, concorrência, permissões, pagamentos e navegação. A revisão de segurança acrescenta testes de limitação de login, privilégios do banco e atualização do schema antigo preservando os dados. Resultados e escopo estão em [verificação](docs/verification.md).
 
 O `proof` é o teste de reinício do banco: interrompe o processamento após uma aceitação, reinicia seu banco descartável e verifica a recuperação sem duplicar a entrega simulada. Só existe em PowerShell (`scripts/prove.ps1`).
 
@@ -74,21 +75,23 @@ docker compose --profile test build frontend
 docker compose --profile test build frontend-checks
 docker compose --profile test build e2e
 docker compose run --rm test
+docker compose up -d --wait --force-recreate db-upgrade-test
+docker compose run --rm --no-deps upgrade-test
 docker compose run --rm --no-deps frontend-checks
 docker compose -f compose.yaml -f compose.e2e.yaml -p pf-gestao-recebiveis-e2e up -d --wait db
-docker compose -f compose.yaml -f compose.e2e.yaml -p pf-gestao-recebiveis-e2e run --rm --no-deps migrate
+docker compose -f compose.yaml -f compose.e2e.yaml -p pf-gestao-recebiveis-e2e run --rm migrate
 docker compose -f compose.yaml -f compose.e2e.yaml -p pf-gestao-recebiveis-e2e run --rm --no-deps seed
 docker compose -f compose.yaml -f compose.e2e.yaml -p pf-gestao-recebiveis-e2e up -d --wait --wait-timeout 180 api worker frontend
 docker compose -f compose.yaml -f compose.e2e.yaml -p pf-gestao-recebiveis-e2e run --rm --no-deps e2e
 docker compose -f compose.yaml -f compose.e2e.yaml -p pf-gestao-recebiveis-e2e --profile test --profile tools down --remove-orphans
-docker compose stop db-test
+docker compose stop db-test db-upgrade-test
 ```
 
 ## Limites
 
 O escopo é uma empresa, BRL e pagamento integral. Envio externo, Pix, boleto, juros e estorno não estão implementados. Integrar um provedor real exige validar seu contrato de idempotência e reconciliação. A demonstração ainda não foi avaliada com usuários reais.
 
-A configuração demonstrada publica os serviços em loopback. O login não limita tentativas de senha por conta ou origem; a aplicação precisa desse controle antes de atender usuários em uma rede não confiável.
+A configuração demonstrada publica os serviços em loopback. O login limita tentativas malsucedidas/em andamento no PostgreSQL; API e worker usam uma conta sem privilégios administrativos. O proxy local compartilha uma origem de rede: uma publicação para múltiplos usuários precisa de uma borda que identifique clientes com confiança. Consulte [segurança e atualização sem apagar dados](docs/security.md).
 
 
 Python 3.13, FastAPI, SQLAlchemy, PostgreSQL 18, Next.js 16, TypeScript e Docker. Licença MIT.

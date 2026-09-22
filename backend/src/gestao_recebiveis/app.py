@@ -67,7 +67,11 @@ async def response_headers(request: Request, call_next: RequestResponseEndpoint)
 
 @app.exception_handler(DomainError)
 async def domain_error(request: Request, exc: DomainError) -> JSONResponse:
-    return JSONResponse(status_code=exc.status, content={"code": exc.code, "message": exc.message})
+    return JSONResponse(
+        status_code=exc.status,
+        content={"code": exc.code, "message": exc.message},
+        headers=exc.headers,
+    )
 
 
 @app.exception_handler(RequestValidationError)

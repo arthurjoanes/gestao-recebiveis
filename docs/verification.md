@@ -13,6 +13,27 @@ O banco de testes usa `tmpfs`. A jornada tem banco e serviços próprios, no pro
 
 Na revisão de 21/09/2026, uma cópia contendo apenas os arquivos de publicação construiu as imagens e passou os 145 testes de backend, os 12 casos Chromium e as verificações de estilo e tipos. A jornada adicional pelo proxy confirmou 243 títulos após importar três registros, duas tentativas no retry e preservação dos saldos após conflito. A prova de interrupção e reinício manteve uma tentativa e uma entrega, recusando o token do worker antigo. As três imagens de execução tiveram zero achados no Trivy dessa data.
 
+## Correção de segurança — 21/09/2026
+
+A revisão posterior separou as identidades de administração, migração e execução e adicionou admissão persistente ao login. O backend foi reconstruído; os serviços usaram bancos descartáveis em `fix-gr-20260922` e `fix-gr-proof-20260922`, sem publicar portas. Os arquivos locais da execução ficam em `artifacts/security-fix/`, ignorados pelo Git.
+
+- Os 158 testes de backend passaram (13 regressões além dos 145 anteriores), sem skips, assim como Ruff, formatação e mypy. A suíte final verifica o runtime `gestao_app`; somente a limpeza das fixtures/migrações usa `gestao_owner`.
+- Os 12 testes Chromium passaram com a API corrigida e a imagem de frontend da revisão anterior, cujo código permaneceu inalterado.
+- `upgrade-test` passou: criou o schema anterior `8d2c11`, inseriu 2 usuários, 60 clientes e 240 títulos, e preservou essas contagens e o total pago após a migração. O provisionador foi executado três vezes. O probe também verificou propriedade das sequências e negação de UPDATE em `alembic_version` para o runtime.
+- A prova de interrupção/reinício passou novamente com o runtime restrito: uma tentativa, uma entrega e 31 centavos preservados, token antigo recusado, resultado recuperado como `sent`.
+
+Para repetir o teste de atualização isoladamente, depois de construir as imagens:
+
+```sh
+docker compose up -d --wait --force-recreate db-upgrade-test
+docker compose run --rm --no-deps upgrade-test
+docker compose stop db-upgrade-test
+```
+
+`db-upgrade-test` contém somente dados sintéticos em `tmpfs`; `--force-recreate` fornece um banco vazio para repetir o probe. Esse comando não é parte do procedimento de atualização de uma carteira real. O script `test` e o CI também executam o probe. O [procedimento de atualização sem remoção de dados](security.md) é separado.
+
+Dois avisos de depreciação do cliente de testes Starlette/httpx e do alias AnyIO permanecem visíveis; não foram suprimidos. Esta correção não repetiu a varredura de dependências nem demonstra proteção de uma implantação pública ou de um provedor de mensagens externo.
+
 ## Interrupção e recuperação
 
 ```powershell
