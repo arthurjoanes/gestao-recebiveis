@@ -88,5 +88,7 @@ docker compose stop db-test
 
 O escopo é uma empresa, BRL e pagamento integral. Envio externo, Pix, boleto, juros e estorno não estão implementados. Integrar um provedor real exige validar seu contrato de idempotência e reconciliação. A demonstração ainda não foi avaliada com usuários reais.
 
+A configuração demonstrada publica os serviços em loopback. O login não limita tentativas de senha por conta ou origem; a aplicação precisa desse controle antes de atender usuários em uma rede não confiável.
+
 
 Python 3.13, FastAPI, SQLAlchemy, PostgreSQL 18, Next.js 16, TypeScript e Docker. Licença MIT.
