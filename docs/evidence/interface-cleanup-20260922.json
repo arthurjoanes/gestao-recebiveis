@@ -1,0 +1,62 @@
+{
+  "reviewedAt": "2026-09-22T06:22:49.903824+00:00",
+  "baseCommit": "63b7031cd4d69e93e12012c32335a88e7d92f7ee",
+  "scope": "Remove only two unused CSS custom-property declarations. This is a static cleanup, not a new application, visual or operational validation.",
+  "file": "frontend/src/app/globals.css",
+  "before": {
+    "sha256NormalizedLF": "2c546b08f1606842906212252811376cd7fc17f1d6971e7a8276966b441358fa",
+    "lines": 1108,
+    "declarations": [
+      {
+        "name": "--amber",
+        "value": "#865509",
+        "line": 13
+      },
+      {
+        "name": "--amber-soft",
+        "value": "#fff6df",
+        "line": 14
+      }
+    ]
+  },
+  "after": {
+    "sha256NormalizedLF": "a922a3fba53745e246da5c462810111fcedd933deb691a1cfdb3a3d80c73975e",
+    "lines": 1106,
+    "remainingOccurrencesInFrontendSource": 0
+  },
+  "inspection": {
+    "frontendSourceFiles": 22,
+    "beforeOccurrencesInTrackedRepository": 2,
+    "beforeNonDeclarationOccurrences": 0,
+    "dynamicPropertyAccessMatchesInFrontendSource": 0,
+    "framework": "Next.js imports globals.css directly from layout.tsx; package.json and configuration have no theme utility framework or plugin that consumes these names."
+  },
+  "checks": {
+    "exactChange": "The resulting CSS equals the base blob after deleting exactly the two declaration lines.",
+    "format": "Prettier 3.9.8 --check passed for globals.css. Line endings match the Git base (LF).",
+    "diff": "git diff --check passed.",
+    "historicalVerificationTextPreserved": true,
+    "applicationTestsRun": false,
+    "buildRun": false,
+    "browserRun": false,
+    "dockerRun": false
+  },
+  "preservedArtifacts": [
+    {
+      "file": "docs/img/carteira.png",
+      "sha256": "459708dc634f5e2c4c7ec206151f5053bb5abb0ebaf036bb72fe7b42672813fb",
+      "unchangedFromBase": true
+    },
+    {
+      "file": "docs/img/resumo.png",
+      "sha256": "2a96d3f5ab351a4a1524380b4e4c72d0e898f5014aa132fdd2aaffc3f8e84faa",
+      "unchangedFromBase": true
+    },
+    {
+      "file": "docs/img/titulo.png",
+      "sha256": "ac1152d87ce49fd3466f9a2749ca93da05e2d08fd6c40e658f39c491f9d8906f",
+      "unchangedFromBase": true
+    }
+  ],
+  "limits": "No fresh screenshot or runtime proof is claimed. Existing captures and test results remain attributed to their original revision."
+}
