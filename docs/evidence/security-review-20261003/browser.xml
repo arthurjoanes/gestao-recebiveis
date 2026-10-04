@@ -1,0 +1,34 @@
+<testsuites id="" name="" tests="15" failures="0" skipped="0" errors="0" time="26.972141000000004">
+<testsuite name="journey.spec.ts" timestamp="2026-10-03T23:47:09.572Z" hostname="edge" tests="15" failures="0" skipped="0" time="25.342" errors="0">
+<testcase name="BRL conserva centavos pequenos e inteiros acima da precisão de Number" classname="journey.spec.ts" time="0.734">
+</testcase>
+<testcase name="layout financeiro em cinco larguras, dados longos, diálogo e foco" classname="journey.spec.ts" time="3.117">
+</testcase>
+<testcase name="filtros recolhidos preservam o recorte aplicado no resumo" classname="journey.spec.ts" time="0.801">
+</testcase>
+<testcase name="importar, repetir, simular retry, pagar e conferir histórico real" classname="journey.spec.ts" time="7.585">
+</testcase>
+<testcase name="leitor consulta sem controles de mutação e navega com teclado" classname="journey.spec.ts" time="1.759">
+</testcase>
+<testcase name="sessão expirada volta ao login e mostra a recuperação" classname="journey.spec.ts" time="0.612">
+</testcase>
+<testcase name="CSV inválido e conflito bloqueiam lote sem alterar totais" classname="journey.spec.ts" time="1.058">
+</testcase>
+<testcase name="erro de rede permite tentar novamente e busca vazia explica resultado" classname="journey.spec.ts" time="0.869">
+</testcase>
+<testcase name="menu móvel tem cinco destinos, prende foco e devolve foco ao fechar" classname="journey.spec.ts" time="0.912">
+</testcase>
+<testcase name="intervalos inválidos mantêm saldo válido, formulário aberto e erro associado" classname="journey.spec.ts" time="0.935">
+</testcase>
+<testcase name="saldo abre títulos com busca e vencimento preservados e retorno mantém recorte" classname="journey.spec.ts" time="1.089">
+</testcase>
+<testcase name="prévia pagina 51 registros sem gravar títulos e trata arquivo vazio e grande" classname="journey.spec.ts" time="1.138">
+</testcase>
+<testcase name="detalhe do lembrete preserva filtros, página, rolagem e foco na fila" classname="journey.spec.ts" time="1.553">
+</testcase>
+<testcase name="voltar do título preserva a página e o foco, com saída para página esvaziada" classname="journey.spec.ts" time="1.486">
+</testcase>
+<testcase name="carteira compacta mantém recorte aplicado, validação e retorno ao controle" classname="journey.spec.ts" time="1.694">
+</testcase>
+</testsuite>
+</testsuites>

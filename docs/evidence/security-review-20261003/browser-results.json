@@ -1,0 +1,228 @@
+{
+  "raw_report_sha256": "22723311e7243c245421eb7858705a127b647569fa76120aa9d160d7c63655e8",
+  "redaction": "Only stats, test file/title/status/attempt counts and durations; config, attachments and logs omitted.",
+  "playwright": "1.63.0",
+  "browser": "Edge 154.0.4258.53 headless on Windows",
+  "workers": 1,
+  "retries": 0,
+  "stats": {
+    "startTime": "2026-10-03T23:47:09.532Z",
+    "duration": 26972.141000000003,
+    "expected": 15,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "tests": [
+    {
+      "file": "journey.spec.ts",
+      "line": 47,
+      "title": "BRL conserva centavos pequenos e inteiros acima da precisão de Number",
+      "project": "edge",
+      "status": "expected",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 734,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "file": "journey.spec.ts",
+      "line": 53,
+      "title": "layout financeiro em cinco larguras, dados longos, diálogo e foco",
+      "project": "edge",
+      "status": "expected",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 3117,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "file": "journey.spec.ts",
+      "line": 191,
+      "title": "filtros recolhidos preservam o recorte aplicado no resumo",
+      "project": "edge",
+      "status": "expected",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 801,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "file": "journey.spec.ts",
+      "line": 213,
+      "title": "importar, repetir, simular retry, pagar e conferir histórico real",
+      "project": "edge",
+      "status": "expected",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 7585,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "file": "journey.spec.ts",
+      "line": 373,
+      "title": "leitor consulta sem controles de mutação e navega com teclado",
+      "project": "edge",
+      "status": "expected",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1759,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "file": "journey.spec.ts",
+      "line": 412,
+      "title": "sessão expirada volta ao login e mostra a recuperação",
+      "project": "edge",
+      "status": "expected",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 612,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "file": "journey.spec.ts",
+      "line": 433,
+      "title": "CSV inválido e conflito bloqueiam lote sem alterar totais",
+      "project": "edge",
+      "status": "expected",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1058,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "file": "journey.spec.ts",
+      "line": 504,
+      "title": "erro de rede permite tentar novamente e busca vazia explica resultado",
+      "project": "edge",
+      "status": "expected",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 869,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "file": "journey.spec.ts",
+      "line": 564,
+      "title": "menu móvel tem cinco destinos, prende foco e devolve foco ao fechar",
+      "project": "edge",
+      "status": "expected",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 912,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "file": "journey.spec.ts",
+      "line": 636,
+      "title": "intervalos inválidos mantêm saldo válido, formulário aberto e erro associado",
+      "project": "edge",
+      "status": "expected",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 935,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "file": "journey.spec.ts",
+      "line": 705,
+      "title": "saldo abre títulos com busca e vencimento preservados e retorno mantém recorte",
+      "project": "edge",
+      "status": "expected",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1089,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "file": "journey.spec.ts",
+      "line": 796,
+      "title": "prévia pagina 51 registros sem gravar títulos e trata arquivo vazio e grande",
+      "project": "edge",
+      "status": "expected",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1138,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "file": "journey.spec.ts",
+      "line": 853,
+      "title": "detalhe do lembrete preserva filtros, página, rolagem e foco na fila",
+      "project": "edge",
+      "status": "expected",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1553,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "file": "journey.spec.ts",
+      "line": 934,
+      "title": "voltar do título preserva a página e o foco, com saída para página esvaziada",
+      "project": "edge",
+      "status": "expected",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1486,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "file": "journey.spec.ts",
+      "line": 1021,
+      "title": "carteira compacta mantém recorte aplicado, validação e retorno ao controle",
+      "project": "edge",
+      "status": "expected",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1694,
+          "retry": 0
+        }
+      ]
+    }
+  ]
+}

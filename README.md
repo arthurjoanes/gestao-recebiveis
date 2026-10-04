@@ -1,6 +1,6 @@
 # Gestão de recebíveis
 
-Aplicação de demonstração para importar contas a receber, registrar pagamentos integrais e acompanhar lembretes simulados. Desenvolvi a carteira, as regras financeiras e os fluxos de recuperação com dados de uma empresa fictícia em reais (BRL).
+Aplicação para demonstrar a importação de contas a receber, o registro de pagamentos integrais e o acompanhamento de lembretes simulados. Desenvolvi a carteira e suas regras financeiras com dados de uma empresa fictícia em reais (BRL), incluindo os fluxos de recuperação.
 
 <!-- Navegação do README -->
 <p>
@@ -13,7 +13,7 @@ Aplicação de demonstração para importar contas a receber, registrar pagament
 
 ## Visão geral
 
-Um **título** registra quanto um cliente deve e o vencimento; dar **baixa** é registrar o pagamento integral. O operador altera a carteira e o leitor apenas consulta. O problema central é preservar a mesma dívida e o mesmo pagamento quando um arquivo ou uma requisição se repete.
+Um título registra quanto um cliente deve e o vencimento; dar baixa é registrar o pagamento integral. O operador altera a carteira e o leitor apenas consulta. Repetir um arquivo ou uma requisição deve conservar a mesma dívida e o mesmo pagamento.
 
 | Situação                           | Comportamento implementado                                 |
 | ---------------------------------- | ---------------------------------------------------------- |
@@ -135,7 +135,7 @@ O [recibo do CI de 22/09/2026](docs/evidence/frontend-ci-20260922.json), sobre `
 - O Compose publica serviços em loopback. Uso público exige identidade, HTTPS e configuração operacional próprios.
 - Produtividade com usuários, carga de produção, leitor de tela, zoom nativo e conformidade AA integral não foram demonstrados.
 
-Os guias de [segurança](docs/security.md) e [qualidade da interface](docs/frontend-quality.md) detalham o alcance das verificações. O [plano de provedor real](docs/provider-integration-plan.md) é trabalho proposto.
+Os guias de [segurança](docs/security.md) e [qualidade da interface](docs/frontend-quality.md) detalham o alcance das verificações. A [revisão de 03/10/2026](docs/SECURITY-REVIEW-2026-10-03.md) registra os 18 itens do checklist, a atualização de dependências e a pendência na ferramenta de desenvolvimento. O [plano de provedor real](docs/provider-integration-plan.md) é trabalho proposto.
 
 ## Documentação
 

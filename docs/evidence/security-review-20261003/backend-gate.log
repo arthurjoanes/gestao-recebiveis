@@ -1,0 +1,31 @@
+All checks passed!
+40 files already formatted
+Success: no issues found in 28 source files
+============================= test session starts ==============================
+platform linux -- Python 3.13.15, pytest-9.1.1, pluggy-1.6.0
+rootdir: /app
+configfile: pyproject.toml
+testpaths: tests
+plugins: anyio-4.15.1
+collected 158 items
+
+tests/test_api.py ...............                                        [  9%]
+tests/test_database_roles.py ......                                      [ 13%]
+tests/test_field_matrix.py ............................................. [ 41%]
+...................                                                      [ 53%]
+tests/test_financial.py ............................                     [ 71%]
+tests/test_login_admission.py .......                                    [ 75%]
+tests/test_reminders.py ......................................           [100%]
+
+=============================== warnings summary ===============================
+.venv/lib/python3.13/site-packages/fastapi/testclient.py:1
+  /app/.venv/lib/python3.13/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+.venv/lib/python3.13/site-packages/starlette/testclient.py:53
+  /app/.venv/lib/python3.13/site-packages/starlette/testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+-------------- generated xml file: /proof/gestao-pytest-linux.xml --------------
+======================= 158 passed, 2 warnings in 40.10s =======================

@@ -2,6 +2,7 @@
 
 import os
 import subprocess
+import sys
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import make_url
@@ -19,8 +20,10 @@ def main() -> None:
         if conn.scalar(text("SELECT to_regclass('public.users')")):
             raise SystemExit("Upgrade probe requires an empty database; existing data left intact.")
     legacy_env = {**os.environ, "DATABASE_URL": admin_url, "MIGRATION_DATABASE_URL": admin_url}
-    subprocess.run(["alembic", "upgrade", "8d2c11"], env=legacy_env, check=True)
-    subprocess.run(["python", "-m", "gestao_recebiveis.seed"], env=legacy_env, check=True)
+    subprocess.run(
+        [sys.executable, "-m", "alembic", "upgrade", "8d2c11"], env=legacy_env, check=True
+    )
+    subprocess.run([sys.executable, "-m", "gestao_recebiveis.seed"], env=legacy_env, check=True)
     with admin.connect() as conn:
         before = conn.execute(
             text(
@@ -30,7 +33,7 @@ def main() -> None:
         ).one()
     provision()
     provision()  # Existing roles and transferred objects: idempotent repeat.
-    subprocess.run(["alembic", "upgrade", "head"], check=True)
+    subprocess.run([sys.executable, "-m", "alembic", "upgrade", "head"], check=True)
     provision()  # Post-migration repeat must preserve the restricted version table.
     runtime = create_engine(os.environ["DATABASE_URL"])
     with runtime.connect() as conn:
@@ -64,7 +67,7 @@ def main() -> None:
             == 0
         )
     # Reusing the runtime identity for the seed validates sequence and write grants.
-    subprocess.run(["python", "-m", "gestao_recebiveis.seed"], check=True)
+    subprocess.run([sys.executable, "-m", "gestao_recebiveis.seed"], check=True)
     print(
         "Upgrade passed: legacy 2 users, 60 customers, 240 receivables and payment totals preserved; roles idempotent."
     )

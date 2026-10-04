@@ -293,7 +293,9 @@ def test_extreme_received_dates_do_not_overflow(db: Session) -> None:
 def test_manual_fixture_independent_total(db: Session) -> None:
     from pathlib import Path
 
-    fixture = Path("/data/fixtures/manual.csv").read_text(encoding="utf-8")
+    fixture = (Path(__file__).resolve().parents[2] / "data/fixtures/manual.csv").read_text(
+        encoding="utf-8"
+    )
     load(db, fixture)
     assert db.scalar(select(func.sum(Receivable.amount_cents))) == 123486
     assert db.scalar(select(func.count(Receivable.id))) == 3

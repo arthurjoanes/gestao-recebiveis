@@ -1,0 +1,492 @@
+{
+  "review_date": "2026-10-03",
+  "project": "gestao-recebiveis",
+  "baseline_commit": "315e1e1cab2b085895652930c6acbc9cf9d7d201",
+  "scope": "Código atual e demonstração local; sem validação de implantação pública.",
+  "backend": {
+    "command": "sh /scripts/check-backend.sh",
+    "python_version": "3.13.15",
+    "postgresql_version": "18.6",
+    "tests": 158,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds_junit": 40.098,
+    "started_at": "2026-10-03T23:52:35.005484+00:00",
+    "database_runtime_role": "gestao_app",
+    "database_owner_separate": true,
+    "database_test_suffix_enforced": true,
+    "database_storage": "tmpfs",
+    "database_container_removed_after_tests": true,
+    "platform": "Linux Docker amd64"
+  },
+  "static_checks": {
+    "ruff_check": "passed",
+    "ruff_format_check": "passed",
+    "mypy": "passed",
+    "eslint": "passed",
+    "prettier_check": "passed",
+    "typescript": "passed",
+    "next_production_build": "passed",
+    "docker_backend_build": "passed",
+    "docker_frontend_build": "passed"
+  },
+  "python_audit": {
+    "tool": "pip-audit 2.10.1",
+    "export": "uv export --frozen --no-hashes --no-emit-project",
+    "command": "pip-audit --disable-pip --no-deps -r <export congelado>",
+    "known_vulnerabilities": 0,
+    "uv_lock_modified": false
+  },
+  "node_audit": {
+    "next": "16.3.8",
+    "eslint_config_next": "16.3.8",
+    "runtime_findings": 0,
+    "full_flagged_nodes": 5,
+    "full_high_nodes": 5,
+    "full_critical_nodes": 0,
+    "distinct_remaining_advisories": [
+      "GHSA-vfj7-8cjw-p6xm"
+    ],
+    "remaining_dependency": "braces@3.0.3 (somente desenvolvimento)",
+    "remaining_advisory_patch_available": false,
+    "incompatible_tinyglobby_override_removed": true
+  },
+  "image_audit": {
+    "tool": "Trivy 0.74.0",
+    "scanner_image_digest": "sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969",
+    "database": {
+      "Version": 2,
+      "NextUpdate": "2026-10-04T19:02:38.737369504Z",
+      "UpdatedAt": "2026-10-03T19:02:38.737369755Z",
+      "DownloadedAt": "2026-10-03T22:33:41.370315008Z"
+    },
+    "all_severities_scanned": true,
+    "images": [
+      {
+        "tag": "security-gestao-backend:gates-final-20261003",
+        "id": "sha256:f1a7e78af016766e871c51adb1444c3527491c66946438e0e8a1d4913dd3882e",
+        "scan_created_at": "2026-10-03T23:52:52.906976837Z",
+        "findings": 0,
+        "severities": {},
+        "targets": [
+          {
+            "target": "/scan/gestao-backend-gates-final.tar (alpine 3.24.2)",
+            "type": "alpine",
+            "vulnerabilities": 0
+          },
+          {
+            "target": "Python",
+            "type": "python-pkg",
+            "vulnerabilities": 0
+          }
+        ],
+        "raw_report_sha256": "189f11a95330539e348502175dce853b549c5514275e44b68088c88e2349ce04",
+        "redacted_report_file": "trivy-backend.json",
+        "redacted_report_sha256": "7a55d5f063fe6e8d698345b2ed53d0b24a72733a946c893a7aa7865c3c8c0e6e",
+        "packages_in_redacted_report": 79
+      },
+      {
+        "tag": "security-gestao-frontend:20261003",
+        "id": "sha256:e8e19a2dc3847cc45109bd1357edaf8c8ba1b4305636522d41a2518f5d83fc81",
+        "scan_created_at": "2026-10-03T22:43:55.844165362Z",
+        "findings": 0,
+        "severities": {},
+        "targets": [
+          {
+            "target": "/scan/gestao-frontend.tar (alpine 3.24.1)",
+            "type": "alpine",
+            "vulnerabilities": 0
+          },
+          {
+            "target": "Node.js",
+            "type": "node-pkg",
+            "vulnerabilities": 0
+          }
+        ],
+        "raw_report_sha256": "fc434a822c2acdc0c1d72f5c8a7163684c3af31df1363df1774a7defca09cdba",
+        "redacted_report_file": "trivy-frontend.json",
+        "redacted_report_sha256": "2960d7678392ba7e29a4fe7121cac018e1d361e1998ace739746ca1378f382ff",
+        "packages_in_redacted_report": 40
+      }
+    ],
+    "warning": "Alpine 3.24 não consta da lista EOL do scanner; não comprova duração de suporte.",
+    "redaction": {
+      "policy": "allowlist",
+      "metadata_fields": [
+        "ImageID",
+        "OS"
+      ],
+      "package_fields": [
+        "Name",
+        "Version"
+      ],
+      "excluded": [
+        "Config.Env",
+        "image configuration",
+        "history",
+        "SecretMatches"
+      ],
+      "raw_report_location": "Somente fora do repositório; os hashes raw_report_sha256 identificam os arquivos originais.",
+      "committed_report_location": "Relatórios Trivy curados nesta pasta. artifacts_sha256 identifica os blobs Git; redacted_report_sha256 identifica os bytes curados antes da normalização Git, e raw_report_sha256 os originais mantidos fora do repositório."
+    },
+    "initial_backend_image": {
+      "tag": "security-gestao-backend:20261003",
+      "id": "sha256:74e23680960e138225595f0c5be82a6a7b9e56d3e6f6560545ed787f76385634",
+      "scan_created_at": "2026-10-03T22:45:17.959913939Z",
+      "findings": 0,
+      "severities": {},
+      "targets": [
+        {
+          "target": "/scan/gestao-backend.tar (alpine 3.24.2)",
+          "type": "alpine",
+          "vulnerabilities": 0
+        },
+        {
+          "target": "Python",
+          "type": "python-pkg",
+          "vulnerabilities": 0
+        }
+      ],
+      "raw_report_sha256": "8aae927f8f8bcd8f3843b30bfaaad0809d5c274d35a6fccb49644531d19db0ca",
+      "redacted_report_file": "trivy-backend-initial.json",
+      "redacted_report_sha256": "82d234321a6f736099d172e921da333b4a62e170dcda83b42c8976867fedb4b6",
+      "packages_in_redacted_report": 79
+    },
+    "complementary_database_image": {
+      "scope": "Imagem do banco adicionada pelo gate complementar; não integra a contagem inicial de imagens de aplicação.",
+      "before_patch": {
+        "tag": "security-gestao-database:20261003",
+        "id": "sha256:1bece5bdffc35a426cebcf641dda7fdd8655840abf5699d14b6a116422f689fb",
+        "scan_created_at": "2026-10-03T23:33:12.624175035Z",
+        "findings": 1,
+        "severities": {
+          "MEDIUM": 1
+        },
+        "targets": [
+          {
+            "target": "/scan/gestao-database-gates.tar (alpine 3.24.2)",
+            "type": "alpine",
+            "vulnerabilities": 1
+          }
+        ],
+        "raw_report_sha256": "7e9f60b845241a43ec74e516ab402056dd8b7e6d91009575d069a62fd89a982e",
+        "redacted_report_file": "trivy-database-before.json",
+        "redacted_report_sha256": "bb9b88f323dc109feae9ef2388d6f02d8411ae8f4246b692c536cd2c7b597eeb",
+        "packages_in_redacted_report": 54
+      },
+      "after_patch": {
+        "tag": "security-gestao-database:gates-20261003",
+        "id": "sha256:697152680db16a486c982199067ec80acc4c032a815654c85e7d10ab9764eb0d",
+        "scan_created_at": "2026-10-03T23:44:23.776798255Z",
+        "findings": 0,
+        "severities": {},
+        "targets": [
+          {
+            "target": "/scan/gestao-database-final.tar (alpine 3.24.2)",
+            "type": "alpine",
+            "vulnerabilities": 0
+          }
+        ],
+        "raw_report_sha256": "295971bc83463f4603b5e890fd69514ef0b08afde1bfe5cd2f11b62fc1ca3231",
+        "redacted_report_file": "trivy-database.json",
+        "redacted_report_sha256": "93f0d6ca83b4403bd60bac7cf3fdcd06e2bed33ed2832fa3a0608b1d9232ee12",
+        "packages_in_redacted_report": 54
+      }
+    }
+  },
+  "secrets": {
+    "tool": "Gitleaks 8.30.1",
+    "git_history_findings": 0,
+    "publicable_files_findings": 0,
+    "existing_config_unchanged": true,
+    "ignored_private_files_not_published": true,
+    "final_snapshot_command": "gitleaks dir --config .gitleaks.toml --redact . (cwd: snapshot com caminhos relativos, mesmas exceções existentes)",
+    "final_snapshot_findings": 0
+  },
+  "humanizer": {
+    "skill_version": "3.1.0",
+    "mode": "file",
+    "workflow": "leitura, identificação, rascunho, conferência de fatos e padrões, versão final",
+    "files": [
+      "README.md",
+      "docs/security.md",
+      "docs/api-contract.md",
+      "docs/demo.md",
+      "docs/SECURITY-REVIEW-2026-10-03.md"
+    ],
+    "existing_fenced_code_identical": true,
+    "existing_link_targets_preserved": true,
+    "existing_inline_code_preserved": true,
+    "historical_evidence_changed": false,
+    "complementary_sections_reviewed": true,
+    "final_file_sha256": [
+      {
+        "file": "README.md",
+        "sha256": "348bbf59ebec7564c2b9b088b4a991ce58212eb3f8797431028081f618b0a63c"
+      },
+      {
+        "file": "docs/security.md",
+        "sha256": "eb64e028b244eab4b47aa8dbb4d2836f233f0a1f309a9ceabc60707d6efbf8d3"
+      },
+      {
+        "file": "docs/api-contract.md",
+        "sha256": "13bd1853a746a8319bee73dd361f1e28d7d15d10e42709b4e937ec79f2885265"
+      },
+      {
+        "file": "docs/demo.md",
+        "sha256": "150ac57ef3e881b5ae47a3ae2d6b9a4398f7316c0673bff05e480b11c4a18e2b"
+      },
+      {
+        "file": "docs/SECURITY-REVIEW-2026-10-03.md",
+        "sha256": "078e82f44c195db9b2f14ba83e3fd32675ad70aebfeafeadce6f6ee8a1e6912a"
+      }
+    ],
+    "reviewed_worktree_file_sha256": [
+      {
+        "file": "README.md",
+        "sha256": "348bbf59ebec7564c2b9b088b4a991ce58212eb3f8797431028081f618b0a63c"
+      },
+      {
+        "file": "docs/security.md",
+        "sha256": "eb64e028b244eab4b47aa8dbb4d2836f233f0a1f309a9ceabc60707d6efbf8d3"
+      },
+      {
+        "file": "docs/api-contract.md",
+        "sha256": "64a7bcc4777603fbd4af9b3ec1f550ed625a85f7ad0a9b765f728c42550d1da7"
+      },
+      {
+        "file": "docs/demo.md",
+        "sha256": "555c30b65fa05fc2c7e4a268295d8cb772412e5214fe05c2ad419f6b64d945b1"
+      },
+      {
+        "file": "docs/SECURITY-REVIEW-2026-10-03.md",
+        "sha256": "7ee24b64331bda9921600fec15fa66557431b0555e29a11c3a47351978bdfc78"
+      }
+    ],
+    "hash_representation": "final_file_sha256 identifica os blobs Git publicados; reviewed_worktree_file_sha256 conserva os bytes do worktree revisto."
+  },
+  "reviewed_source_sha256": [
+    {
+      "file": "README.md",
+      "sha256": "348bbf59ebec7564c2b9b088b4a991ce58212eb3f8797431028081f618b0a63c"
+    },
+    {
+      "file": "backend/tests/database_upgrade_probe.py",
+      "sha256": "e8c745adf25d081c89c9f380d5b39905cabc09240ecd929ef37ae2dc6032c7af"
+    },
+    {
+      "file": "backend/tests/test_field_matrix.py",
+      "sha256": "1c5fcbf3763f6bda0e1f51c0cf34908019a2a65d6a26402ab87cd794917b8a04"
+    },
+    {
+      "file": "backend/tests/test_financial.py",
+      "sha256": "ca26956d9fac7b0483b16ba8dad9497c4789e105a45f18d4ca5603c1c64a27fd"
+    },
+    {
+      "file": "database/Dockerfile",
+      "sha256": "e8acd49a5ede486f616ddd2a759a348756f58fb68055cd82a4ac3af424e416df"
+    },
+    {
+      "file": "docs/SECURITY-REVIEW-2026-10-03.md",
+      "sha256": "7ee24b64331bda9921600fec15fa66557431b0555e29a11c3a47351978bdfc78"
+    },
+    {
+      "file": "docs/api-contract.md",
+      "sha256": "64a7bcc4777603fbd4af9b3ec1f550ed625a85f7ad0a9b765f728c42550d1da7"
+    },
+    {
+      "file": "docs/demo.md",
+      "sha256": "555c30b65fa05fc2c7e4a268295d8cb772412e5214fe05c2ad419f6b64d945b1"
+    },
+    {
+      "file": "docs/security.md",
+      "sha256": "eb64e028b244eab4b47aa8dbb4d2836f233f0a1f309a9ceabc60707d6efbf8d3"
+    },
+    {
+      "file": "frontend/Dockerfile",
+      "sha256": "511da3c5369ad2d603df2cddf6aae90da6b5866f0954844d73e4701891682b34"
+    },
+    {
+      "file": "frontend/package-lock.json",
+      "sha256": "08ba638cc95c9935619d25c100ffc847556b5d6d5733d2d07b94042d70a18b18"
+    },
+    {
+      "file": "frontend/package.json",
+      "sha256": "64dbdb41926b63aafbac2e3529cb19fd88094cfdafaa7aaf38b522068d827a79"
+    }
+  ],
+  "artifacts_sha256": {
+    "backend-gate.log": "545902229e4a294497da2cd368a209d31c9c263ba733af6ca83c2f32e567b716",
+    "browser-results.json": "06eb570fd5a8aa334ee381c2b92e3e15f1769d67dfedb78e4ad4c2d40ec454c0",
+    "browser.xml": "a9df636da8f1431ecfd7f38526a8c5752f57991444f08036ec4a7f775330f30b",
+    "cleanup.log": "a06562a5a207e900dc143809eb5d3494b0a3926776aeaa695ecb476eb10e6d0d",
+    "database-upgrade.log": "5f944051dd9c4676b7c6b03e35bc88bc164dd677f1a362a6ecb33d22c3b4fa18",
+    "gitleaks-publicable.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "npm-audit-full.json": "87ddffd8e581e382854b85b7e28ebf9c65d45b6ef63ea924cb4e59beb6a65e1e",
+    "npm-audit-runtime.json": "5fc9619785417a7712409c65bfaa4f0df6c3e2c2fc3f5f4119643a473aec37bc",
+    "pytest-initial-windows.xml": "7cc715421f7797552a7dc54da435f34b3ac33f458f2fa56097ba1f9bead9df83",
+    "pytest.xml": "16b4e350e8de1586404ec53f390a788c781904dd27125a23ef39d897549e2f64",
+    "trivy-backend-initial.json": "972240470ce2213ab422e26cf971f88834e274615bb06fca47ec7d45b8715725",
+    "trivy-backend.json": "bf5e1f0a0a58d3783e820ef953a242bd9c7adecfecf99590884cc80b5e2455ea",
+    "trivy-database-before.json": "eb0acd7c1761ff33befa5f714e8b274c14e0c9563935bea9512499eb149ecf3b",
+    "trivy-database.json": "0236c3ef48f5b47d1555ceeda9640af720d889c98bcd67571ebf29b4476b082b",
+    "trivy-frontend.json": "417078d4f75c309e8d23344a1fba40588b329a07c034089ea346838a20b36dae"
+  },
+  "frontend_tests": {
+    "browser_journeys_executed": false,
+    "complete_suite_reexecuted": false,
+    "scope": "Initial validation before the complementary CI checks; these values describe the earlier run, not the final browser coverage.",
+    "complementary_results_path": "ci_gates.browser"
+  },
+  "initial_backend_validation": {
+    "command": "uv run --frozen pytest --junitxml=<arquivo temporário>",
+    "python_version": "3.13.15",
+    "postgresql_version": "17.11",
+    "tests": 158,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds_junit": 49.258,
+    "started_at": "2026-10-03T19:35:21.457380-03:00",
+    "database_runtime_role": "gestao_app",
+    "database_owner_separate": true,
+    "database_test_suffix_enforced": true,
+    "database_storage": "tmpfs",
+    "database_container_removed_after_tests": true
+  },
+  "ci_gates": {
+    "scope": "Complemento dos gates já exigidos pelo workflow; sem implantação pública.",
+    "backend_exact_gate": "passed",
+    "upgrade_probe": "passed",
+    "database_storage": "tmpfs",
+    "cleanup": {
+      "own_gate_network_removed": true,
+      "own_database_containers_removed": true,
+      "demos_untouched": true
+    },
+    "provider_calls": 0,
+    "scripts_unittest": {
+      "command": "python -m unittest discover -s scripts/tests -v",
+      "passed": 16,
+      "failed": 0,
+      "skipped": 0
+    },
+    "upgrade": {
+      "postgresql": "18.6",
+      "users_preserved": 2,
+      "customers_preserved": 60,
+      "receivables_preserved": 240,
+      "seed_payments_preserved": 48,
+      "payment_totals_preserved": true,
+      "roles_idempotent": true,
+      "ownership_privileges_checked": true
+    },
+    "documented_http_demo": "No separate workflow gate; HTTP application exercised by migration, seed and browser journeys.",
+    "browser": {
+      "command": "node frontend/node_modules/@playwright/test/cli.js test --config TEMP/playwright.audit.cjs --retries=0",
+      "passed": 15,
+      "skipped": 0,
+      "retried": 0,
+      "flaky": 0,
+      "seconds": 26.972141000000004,
+      "workers": 1,
+      "playwright": "1.63.0",
+      "browser": "154.0.4258.53",
+      "channel": "msedge",
+      "platform": "Windows headless Edge; CI bundled Linux Chromium not rerun",
+      "frozen_images": {
+        "frontend_image": "sha256:146cb2fffe957e2f2302e696030836a18eb08f1b21802fc3c06c00b589819eda",
+        "backend_image": "sha256:1f262bb596a8d90dc32e5aa767b2bdb71f6997b877fb79d6b763579557f5b60f",
+        "database_image": "sha256:9dfde9b09d106728dbc3974e4d00abe71706d6f275a446f4d34a5da4d15fa10f"
+      },
+      "runtime_bytes_unchanged_after_browser": true,
+      "post_browser_format_change": "Only backend/tests/database_upgrade_probe.py, not runtime.",
+      "cleanup_complete": true
+    }
+  },
+  "reviewed_source_hash_representation": "SHA-256 dos bytes do worktree usados na revisão, antes da normalização de fim de linha do Git.",
+  "published_source_sha256": [
+    {
+      "file": "README.md",
+      "sha256": "348bbf59ebec7564c2b9b088b4a991ce58212eb3f8797431028081f618b0a63c"
+    },
+    {
+      "file": "backend/tests/database_upgrade_probe.py",
+      "sha256": "e8c745adf25d081c89c9f380d5b39905cabc09240ecd929ef37ae2dc6032c7af"
+    },
+    {
+      "file": "backend/tests/test_field_matrix.py",
+      "sha256": "1c5fcbf3763f6bda0e1f51c0cf34908019a2a65d6a26402ab87cd794917b8a04"
+    },
+    {
+      "file": "backend/tests/test_financial.py",
+      "sha256": "ca26956d9fac7b0483b16ba8dad9497c4789e105a45f18d4ca5603c1c64a27fd"
+    },
+    {
+      "file": "database/Dockerfile",
+      "sha256": "e8acd49a5ede486f616ddd2a759a348756f58fb68055cd82a4ac3af424e416df"
+    },
+    {
+      "file": "docs/SECURITY-REVIEW-2026-10-03.md",
+      "sha256": "078e82f44c195db9b2f14ba83e3fd32675ad70aebfeafeadce6f6ee8a1e6912a"
+    },
+    {
+      "file": "docs/api-contract.md",
+      "sha256": "13bd1853a746a8319bee73dd361f1e28d7d15d10e42709b4e937ec79f2885265"
+    },
+    {
+      "file": "docs/demo.md",
+      "sha256": "150ac57ef3e881b5ae47a3ae2d6b9a4398f7316c0673bff05e480b11c4a18e2b"
+    },
+    {
+      "file": "docs/security.md",
+      "sha256": "eb64e028b244eab4b47aa8dbb4d2836f233f0a1f309a9ceabc60707d6efbf8d3"
+    },
+    {
+      "file": "frontend/Dockerfile",
+      "sha256": "511da3c5369ad2d603df2cddf6aae90da6b5866f0954844d73e4701891682b34"
+    },
+    {
+      "file": "frontend/package-lock.json",
+      "sha256": "08ba638cc95c9935619d25c100ffc847556b5d6d5733d2d07b94042d70a18b18"
+    },
+    {
+      "file": "frontend/package.json",
+      "sha256": "64dbdb41926b63aafbac2e3529cb19fd88094cfdafaa7aaf38b522068d827a79"
+    }
+  ],
+  "reviewed_worktree_artifacts_sha256": {
+    "backend-gate.log": "545902229e4a294497da2cd368a209d31c9c263ba733af6ca83c2f32e567b716",
+    "browser-results.json": "893cecbde4c9ead974bebdbfe81a342ec7fd97da98ccc3195bee5a0a4082020f",
+    "browser.xml": "a9df636da8f1431ecfd7f38526a8c5752f57991444f08036ec4a7f775330f30b",
+    "cleanup.log": "09b123a6e136538def5da1fd0fa9942773b0ce4490143658458fc475cffa0623",
+    "database-upgrade.log": "5f944051dd9c4676b7c6b03e35bc88bc164dd677f1a362a6ecb33d22c3b4fa18",
+    "gitleaks-publicable.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "npm-audit-full.json": "e9c5e24d91d759f80a28c667a21022d09664d83498a814a0faf226d884854765",
+    "npm-audit-runtime.json": "328fe475a0512bcf68a08c00cc44806f156cfde4c14aa5db5c1c58dbf31018e2",
+    "pytest-initial-windows.xml": "7cc715421f7797552a7dc54da435f34b3ac33f458f2fa56097ba1f9bead9df83",
+    "pytest.xml": "16b4e350e8de1586404ec53f390a788c781904dd27125a23ef39d897549e2f64",
+    "trivy-backend-initial.json": "82d234321a6f736099d172e921da333b4a62e170dcda83b42c8976867fedb4b6",
+    "trivy-backend.json": "7a55d5f063fe6e8d698345b2ed53d0b24a72733a946c893a7aa7865c3c8c0e6e",
+    "trivy-database-before.json": "bb9b88f323dc109feae9ef2388d6f02d8411ae8f4246b692c536cd2c7b597eeb",
+    "trivy-database.json": "93f0d6ca83b4403bd60bac7cf3fdcd06e2bed33ed2832fa3a0608b1d9232ee12",
+    "trivy-frontend.json": "2960d7678392ba7e29a4fe7121cac018e1d361e1998ace739746ca1378f382ff"
+  },
+  "artifacts_hash_representation": "artifacts_sha256 identifica os blobs Git; reviewed_worktree_artifacts_sha256 conserva os bytes da conferência local anterior à publicação.",
+  "publication_preparation": {
+    "branch": "main",
+    "baseline_commit": "315e1e1cab2b085895652930c6acbc9cf9d7d201",
+    "reviewed_receipt_sha256_before_publication": "961a75a3e5dab79ca25d1b920f59623853e3cf53fba60c39477ac73abc74c0b4",
+    "original_receipt_kept_outside_git": true,
+    "curated_logs": [
+      "backend-gate.log",
+      "cleanup.log",
+      "database-upgrade.log"
+    ],
+    "cleanup_log_curation": "Removidos somente espaços e tabulações finais; linhas e nomes de recursos preservados.",
+    "cleanup_original_sha256": "09b123a6e136538def5da1fd0fa9942773b0ce4490143658458fc475cffa0623",
+    "private_environment_and_raw_trivy_reports_excluded": true,
+    "historical_evidence_outside_this_review_changed": false
+  }
+}

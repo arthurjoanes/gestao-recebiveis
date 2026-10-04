@@ -1,6 +1,6 @@
 # Segurança e atualização do banco
 
-Esta aplicação demonstra uma empresa fictícia em uma máquina local. O controle de segurança foi revisto em 21/09/2026; isso não equivale a uma certificação para publicação na internet.
+Esta aplicação demonstra uma empresa fictícia em uma máquina local. A revisão do controle de segurança de 21/09/2026 cobre os procedimentos descritos neste guia e não certifica a aplicação para publicação na internet. A [revisão de 03/10/2026](SECURITY-REVIEW-2026-10-03.md) conferiu os 18 itens do checklist, atualizou dependências e registrou a pendência na ferramenta de desenvolvimento.
 
 ## Login
 
@@ -38,7 +38,7 @@ Nenhum passo remove volumes ou trunca dados. `down --volumes` e `reset` não faz
 
 Os testes de banco usam o runtime restrito para executar a lógica e o owner somente para limpar fixtures/migrar. As regressões verificam negação de DDL, alteração de versão, criação de papel e `SET ROLE`, além de persistência de 401, concorrência e isolamento de cotas. O probe `backend/tests/database_upgrade_probe.py` inicia no schema anterior, sem apagar um banco preexistente, repete o provisionamento e verifica usuários, clientes, títulos, total pago e propriedade de sequências. Ele exige banco vazio com sufixo `_test`.
 
-O controle não contém autenticação federada, MFA, recuperação de senha nem proteção distribuída de borda. O papel runtime ainda pode alterar dados da aplicação, como necessário ao produto; uma execução arbitrária dentro da API continuaria sendo grave. Uma configuração local e testes finitos não demonstram resistência contra todos os ataques.
+O controle não contém autenticação federada, MFA, recuperação de senha nem proteção distribuída de borda. O papel runtime pode alterar os dados de que a aplicação precisa; uma execução arbitrária dentro da API continuaria sendo grave. Os testes cobrem casos definidos neste ambiente local e não demonstram resistência contra todos os ataques.
 
 ## Integridade e isolamento da prova de recuperação
 

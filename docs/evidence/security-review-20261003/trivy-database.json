@@ -1,0 +1,236 @@
+{
+  "SchemaVersion": 2,
+  "Metadata": {
+    "ImageID": "sha256:697152680db16a486c982199067ec80acc4c032a815654c85e7d10ab9764eb0d",
+    "OS": {
+      "Family": "alpine",
+      "Name": "3.24.2"
+    }
+  },
+  "Results": [
+    {
+      "Target": "/scan/gestao-database-final.tar (alpine 3.24.2)",
+      "Class": "os-pkgs",
+      "Type": "alpine",
+      "Packages": [
+        {
+          "Name": ".postgresql-rundeps",
+          "Version": "20260917.212948"
+        },
+        {
+          "Name": "alpine-baselayout",
+          "Version": "3.7.2-r1"
+        },
+        {
+          "Name": "alpine-baselayout-data",
+          "Version": "3.7.2-r1"
+        },
+        {
+          "Name": "alpine-keys",
+          "Version": "2.6-r0"
+        },
+        {
+          "Name": "alpine-release",
+          "Version": "3.24.2-r0"
+        },
+        {
+          "Name": "apk-tools",
+          "Version": "3.0.8-r0"
+        },
+        {
+          "Name": "bash",
+          "Version": "5.3.9-r1"
+        },
+        {
+          "Name": "brotli-libs",
+          "Version": "1.2.0-r1"
+        },
+        {
+          "Name": "busybox",
+          "Version": "1.37.0-r31"
+        },
+        {
+          "Name": "busybox-binsh",
+          "Version": "1.37.0-r31"
+        },
+        {
+          "Name": "c-ares",
+          "Version": "1.34.8-r0"
+        },
+        {
+          "Name": "ca-certificates-bundle",
+          "Version": "20260909-r0"
+        },
+        {
+          "Name": "gdbm",
+          "Version": "1.26-r0"
+        },
+        {
+          "Name": "icu-data-full",
+          "Version": "78.1-r0"
+        },
+        {
+          "Name": "icu-libs",
+          "Version": "78.1-r0"
+        },
+        {
+          "Name": "keyutils-libs",
+          "Version": "1.6.3-r4"
+        },
+        {
+          "Name": "krb5-conf",
+          "Version": "1.0-r2"
+        },
+        {
+          "Name": "krb5-libs",
+          "Version": "1.22.2-r1"
+        },
+        {
+          "Name": "libapk",
+          "Version": "3.0.8-r0"
+        },
+        {
+          "Name": "libcom_err",
+          "Version": "1.47.4-r0"
+        },
+        {
+          "Name": "libcrypto3",
+          "Version": "3.5.8-r0"
+        },
+        {
+          "Name": "libcurl",
+          "Version": "8.22.0-r0"
+        },
+        {
+          "Name": "libedit",
+          "Version": "20260508.3.1-r1"
+        },
+        {
+          "Name": "libffi",
+          "Version": "3.5.2-r1"
+        },
+        {
+          "Name": "libgcc",
+          "Version": "15.2.0-r5"
+        },
+        {
+          "Name": "libidn2",
+          "Version": "2.3.8-r0"
+        },
+        {
+          "Name": "libldap",
+          "Version": "2.6.14-r0"
+        },
+        {
+          "Name": "libncursesw",
+          "Version": "6.6_p20260516-r0"
+        },
+        {
+          "Name": "libpsl",
+          "Version": "0.21.5-r3"
+        },
+        {
+          "Name": "libsasl",
+          "Version": "2.1.28-r9"
+        },
+        {
+          "Name": "libssl3",
+          "Version": "3.5.8-r0"
+        },
+        {
+          "Name": "libstdc++",
+          "Version": "15.2.0-r5"
+        },
+        {
+          "Name": "libunistring",
+          "Version": "1.4.2-r0"
+        },
+        {
+          "Name": "liburing",
+          "Version": "2.14-r0"
+        },
+        {
+          "Name": "libuuid",
+          "Version": "2.42.3-r1"
+        },
+        {
+          "Name": "libverto",
+          "Version": "0.3.2-r2"
+        },
+        {
+          "Name": "libxml2",
+          "Version": "2.13.9-r2"
+        },
+        {
+          "Name": "libxslt",
+          "Version": "1.1.43-r3"
+        },
+        {
+          "Name": "llvm21-libs",
+          "Version": "21.1.8-r1"
+        },
+        {
+          "Name": "lz4-libs",
+          "Version": "1.10.0-r1"
+        },
+        {
+          "Name": "musl",
+          "Version": "1.2.6-r2"
+        },
+        {
+          "Name": "musl-utils",
+          "Version": "1.2.6-r2"
+        },
+        {
+          "Name": "ncurses-terminfo-base",
+          "Version": "6.6_p20260516-r0"
+        },
+        {
+          "Name": "nghttp2-libs",
+          "Version": "1.70.0-r0"
+        },
+        {
+          "Name": "nss_wrapper",
+          "Version": "1.1.12-r1"
+        },
+        {
+          "Name": "readline",
+          "Version": "8.3.3-r1"
+        },
+        {
+          "Name": "scanelf",
+          "Version": "1.3.9-r1"
+        },
+        {
+          "Name": "ssl_client",
+          "Version": "1.37.0-r31"
+        },
+        {
+          "Name": "su-exec",
+          "Version": "0.3-r0"
+        },
+        {
+          "Name": "tzdata",
+          "Version": "2026d-r0"
+        },
+        {
+          "Name": "xz-libs",
+          "Version": "5.8.4-r0"
+        },
+        {
+          "Name": "zlib",
+          "Version": "1.3.2-r0"
+        },
+        {
+          "Name": "zstd",
+          "Version": "1.5.7-r2"
+        },
+        {
+          "Name": "zstd-libs",
+          "Version": "1.5.7-r2"
+        }
+      ],
+      "Vulnerabilities": []
+    }
+  ]
+}
