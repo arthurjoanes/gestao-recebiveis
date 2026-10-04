@@ -114,7 +114,11 @@ def test_csv_dates_are_calendar_dates(db: Session, value: str, valid: bool) -> N
     assert db.scalar(select(func.count(Receivable.id))) == int(valid)
 
 
-@pytest.mark.parametrize("content", [b"", b"\xff", b"\x00", b"a,b\n1,2", b"x" * (MAX_BYTES + 1)])
+@pytest.mark.parametrize(
+    "content",
+    [b"", b"\xff", b"\x00", b"a,b\n1,2", b"x" * (MAX_BYTES + 1)],
+    ids=["empty", "invalid-utf8", "nul", "wrong-header", "oversize"],
+)
 def test_invalid_file_envelope_never_yields_a_valid_record(content: bytes) -> None:
     rows, errors = parse(content)
     assert errors and not rows

@@ -1,0 +1,6 @@
+{"customers": 60, "receivables": 240, "seed_payments": 48, "batch_id": 1}
+Database roles ready; existing application data preserved.
+Database roles ready; existing application data preserved.
+Database roles ready; existing application data preserved.
+{"customers": 60, "receivables": 240, "seed_payments": 48, "batch_id": 1}
+Upgrade passed: legacy 2 users, 60 customers, 240 receivables and payment totals preserved; roles idempotent.

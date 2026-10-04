@@ -1,0 +1,21 @@
+ Container security-loja-browser-gates-20261003-e2e-1 Stopping
+ Container security-loja-browser-gates-20261003-e2e-1 Stopped
+ Container security-loja-browser-gates-20261003-e2e-1 Removing
+ Container security-loja-browser-gates-20261003-e2e-1 Removed
+ Container security-loja-browser-gates-20261003-frontend-1 Stopping
+ Container security-loja-browser-gates-20261003-frontend-1 Stopped
+ Container security-loja-browser-gates-20261003-frontend-1 Removing
+ Container security-loja-browser-gates-20261003-frontend-1 Removed
+ Container security-loja-browser-gates-20261003-backend-1 Stopping
+ Container security-loja-browser-gates-20261003-backend-1 Stopped
+ Container security-loja-browser-gates-20261003-backend-1 Removing
+ Container security-loja-browser-gates-20261003-backend-1 Removed
+ Container security-loja-browser-gates-20261003-db-1 Stopping
+ Container security-loja-browser-gates-20261003-db-1 Stopped
+ Container security-loja-browser-gates-20261003-db-1 Removing
+ Container security-loja-browser-gates-20261003-db-1 Removed
+ Network security-loja-browser-gates-20261003 Removing
+ Network security-loja-browser-gates-20261003 Removed
+security-loja-gates-db-20261003
+security-gestao-gates-db-20261003
+security-business-gates-20261003

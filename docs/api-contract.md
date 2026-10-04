@@ -22,7 +22,7 @@ Os caminhos abaixo são relativos a `/api/v1`; saúde e Swagger aparecem separad
 | `POST /auth/login`                | `email`, `password`                                       | `user` com `id`, `email`, `name`, `role`; `csrf_token`                 |
 | `GET /auth/session`               | Sessão atual                                              | Mesmo objeto do login                                                  |
 | `POST /auth/logout`               | Sessão e CSRF                                             | `ok: true`                                                             |
-| `GET /demo`                       | —                                                         | `enabled`, `business_now`, `business_date`, `worker_enabled`, `policy` |
+| `GET /demo`                       | Sem entrada                                                         | `enabled`, `business_now`, `business_date`, `worker_enabled`, `policy` |
 | `POST /demo/clock`                | `business_now`                                            | Estado da demo                                                         |
 | `POST /demo/worker`               | `enabled`                                                 | Estado da demo                                                         |
 | `POST /demo/scenario`             | `receivable_id`, `scenario`                               | Detalhe do título                                                      |
@@ -44,7 +44,7 @@ Fora do prefixo: `/health`, `/health/ready` e Swagger `/docs`, com assets locais
 
 ## Objetos de resposta
 
-As listas de campos abaixo resumem os modelos; não são exemplos de JSON executável. Tipos e nulabilidade completos estão em [responses.py](../backend/src/gestao_recebiveis/responses.py).
+Os campos apresentados resumem os modelos. Consulte os tipos e a nulabilidade completos em [responses.py](../backend/src/gestao_recebiveis/responses.py); as listas servem como referência, sem a sintaxe de objetos JSON executáveis.
 
 | Objeto            | Campos                                                                                                                                                                                                            |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -64,7 +64,7 @@ A lista de importações não transfere bytes, linhas ou relatório completo. O 
 
 ## Limites HTTP
 
-Página 1–10.000, padrão 1; tamanho 1–100, padrão 20; busca `q` até 200 caracteres. Estados de lembrete: `pending`, `processing`, `retry_scheduled`, `sent`, `failed`, `canceled` ou `superseded`. Outros valores retornam 422.
+Página 1 a 10.000, padrão 1; tamanho 1 a 100, padrão 20; busca `q` até 200 caracteres. Estados de lembrete: `pending`, `processing`, `retry_scheduled`, `sent`, `failed`, `canceled` ou `superseded`. Outros valores retornam 422.
 
 CSV: 2 MiB e 5.000 registros. Multipart: mais 64 KiB de envelope. Outras mutações: até 8 KiB. O limite é aplicado antes do parser, inclusive sem `Content-Length`; excesso retorna 413.
 
@@ -78,7 +78,7 @@ O e-mail é normalizado; senha é conferida exatamente como recebida, incluindo 
 
 `due_from`/`due_to` afetam apenas a carteira. `received_from`/`received_to` afetam apenas pagamentos pela data comercial da baixa, calculada em São Paulo. A busca `q` é comum aos dois. O intervalo de recebimento padrão vai do primeiro dia do mês comercial à data comercial atual; limites são inclusivos. Espaços externos da busca são removidos; `%`, `_` e barra invertida são tratados literalmente. Intervalos invertidos retornam 422.
 
-Pagamento é sempre **integral**: o valor vem do título bloqueado, não do corpo da requisição. `amount_cents`, `amount_brl` ou qualquer campo adicional são rejeitados com 422 e identificação do campo; nenhuma baixa parcial é gravada. `idempotency_key` aceita 8–100 caracteres e `note` até 500, após remoção de espaços externos. Mesmo título/chave/conteúdo retorna o mesmo pagamento; mesma chave com outro conteúdo retorna 409. `reason` de cancelamento exige 3–500 caracteres após trim.
+Pagamento é sempre **integral**: o valor vem do título bloqueado, não do corpo da requisição. `amount_cents`, `amount_brl` ou qualquer campo adicional são rejeitados com 422 e identificação do campo; nenhuma baixa parcial é gravada. `idempotency_key` aceita 8 a 100 caracteres e `note` até 500, após remoção de espaços externos. Mesmo título/chave/conteúdo retorna o mesmo pagamento; mesma chave com outro conteúdo retorna 409. `reason` de cancelamento exige 3 a 500 caracteres após trim.
 
 `enabled` no controle de worker exige booleano JSON real (`true`/`false`), sem aceitar string ou inteiro. `receivable_id` no cenário exige inteiro JSON positivo dentro da faixa dos IDs. Valores fora da faixa são rejeitados antes da consulta ao PostgreSQL.
 
