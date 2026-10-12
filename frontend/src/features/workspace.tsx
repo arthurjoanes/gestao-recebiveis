@@ -15,6 +15,22 @@ import { ReceivableDetailView } from "@/features/receivable-detail";
 import { ImportsView } from "@/features/imports";
 import { RemindersView } from "@/features/reminders";
 import { DemoView } from "@/features/demo";
+import {
+  AgingView,
+  CustomerStatementView,
+  emptyAgingFilters,
+  emptyStatementFilters,
+  type StatementFilters,
+} from "@/features/reports";
+import {
+  activatePaymentAccount,
+  clearAccountIntents,
+} from "@/lib/payment-intent";
+
+type TitleOrigin =
+  | { kind: "portfolio" }
+  | { kind: "aging" }
+  | { kind: "statement"; customerId: number };
 
 export function Workspace({
   session,
@@ -25,6 +41,18 @@ export function Workspace({
 }) {
   const [area, setArea] = useState<Area>("overview");
   const [titleId, setTitleId] = useState<number | null>(null);
+  const [customerId, setCustomerId] = useState<number | null>(null);
+  const [statementOrigin, setStatementOrigin] = useState<{
+    id: number;
+    origin: TitleOrigin;
+  } | null>(null);
+  const [titleOrigin, setTitleOrigin] = useState<TitleOrigin>({
+    kind: "portfolio",
+  });
+  const [agingFilters, setAgingFilters] = useState(emptyAgingFilters);
+  const [statementFilters, setStatementFilters] = useState<
+    Record<number, StatementFilters>
+  >({});
   const [returnToTitle, setReturnToTitle] = useState<number | null>(null);
   const [titleFilters, setTitleFilters] = useState<PortfolioFilters>({
     q: "",
@@ -35,23 +63,29 @@ export function Workspace({
   const [reminderId, setReminderId] = useState<number | null>(null);
   const [demoRevision, setDemoRevision] = useState(0);
   useEffect(() => {
+    activatePaymentAccount(session.user.id);
+  }, [session.user.id]);
+  useEffect(() => {
     const destination =
       (area === "reminders" && document.getElementById("reminder-heading")) ||
       document.getElementById("main-content");
     destination?.focus({ preventScroll: true });
-  }, [area, titleId]);
+  }, [area, titleId, customerId]);
   const demo = useResource<Demo>("/demo", demoRevision);
   const [logoutError, setLogoutError] = useState("");
   const [loggingOut, setLoggingOut] = useState(false);
   function navigate(next: Area) {
     setArea(next);
     setTitleId(null);
+    setTitleOrigin({ kind: "portfolio" });
+    setCustomerId(null);
     setReturnToTitle(null);
     setTitleFilters({ q: "", status: "", due_from: "", due_to: "" });
     setReminderId(null);
     window.scrollTo({ top: 0 });
   }
   function openTitle(id: number, filters?: PortfolioFilters) {
+    setTitleOrigin({ kind: "portfolio" });
     if (filters) setTitleFilters(filters);
     setArea("titles");
     setTitleId(id);
@@ -67,6 +101,7 @@ export function Workspace({
     setLogoutError("");
     try {
       await api("/auth/logout", { method: "POST" }, session.csrf_token);
+      clearAccountIntents(session.user.id);
       onLogout();
     } catch (failure) {
       setLogoutError(errorMessage(failure));
@@ -127,10 +162,79 @@ export function Workspace({
                 id={titleId}
                 session={session}
                 onBack={() => {
-                  setReturnToTitle(titleId);
+                  if (titleOrigin.kind === "aging") {
+                    setArea("reports");
+                    setCustomerId(null);
+                  } else if (titleOrigin.kind === "statement") {
+                    setArea("reports");
+                    setCustomerId(titleOrigin.customerId);
+                  } else setReturnToTitle(titleId);
                   setTitleId(null);
                 }}
+                backLabel={
+                  titleOrigin.kind === "statement"
+                    ? "Voltar para o extrato"
+                    : titleOrigin.kind === "aging"
+                      ? "Voltar para o aging"
+                      : "Voltar para títulos"
+                }
                 onReminder={openReminder}
+                onStatement={(id) => {
+                  if (
+                    titleOrigin.kind !== "statement" ||
+                    titleOrigin.customerId !== id
+                  )
+                    setStatementOrigin({ id: titleId, origin: titleOrigin });
+                  setCustomerId(id);
+                  setArea("reports");
+                }}
+              />
+            ))}
+          {area === "reports" &&
+            (customerId === null ? (
+              <AgingView
+                filters={agingFilters}
+                onFiltersChange={setAgingFilters}
+                onTitles={(filters) => {
+                  navigate("titles");
+                  setTitleFilters(filters);
+                }}
+                onOpen={(id) => {
+                  setTitleOrigin({ kind: "aging" });
+                  setArea("titles");
+                  setTitleId(id);
+                  window.scrollTo({ top: 0 });
+                }}
+                onStatement={(id) => {
+                  setStatementOrigin(null);
+                  setCustomerId(id);
+                }}
+              />
+            ) : (
+              <CustomerStatementView
+                key={customerId}
+                customerId={customerId}
+                filters={statementFilters[customerId] ?? emptyStatementFilters}
+                onFiltersChange={(filters) =>
+                  setStatementFilters((value) => ({
+                    ...value,
+                    [customerId]: filters,
+                  }))
+                }
+                onOpen={(id) => {
+                  setTitleOrigin({ kind: "statement", customerId });
+                  setArea("titles");
+                  setTitleId(id);
+                  window.scrollTo({ top: 0 });
+                }}
+                onBack={() => {
+                  if (statementOrigin !== null) {
+                    setArea("titles");
+                    setTitleId(statementOrigin.id);
+                    setTitleOrigin(statementOrigin.origin);
+                  }
+                  setCustomerId(null);
+                }}
               />
             ))}
           {area === "imports" && <ImportsView session={session} />}

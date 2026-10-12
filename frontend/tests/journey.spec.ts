@@ -98,6 +98,19 @@ test("layout financeiro em cinco larguras, dados longos, diálogo e foco", async
       ),
       `overflow em ${viewport.width}px`,
     ).toBe(true);
+    if (await page.locator(".desktop-header").isVisible()) {
+      expect(
+        await page
+          .locator(".desktop-header nav button")
+          .evaluateAll((buttons) =>
+            buttons.every((button) => {
+              const rect = button.getBoundingClientRect();
+              return rect.left >= 0 && rect.right <= window.innerWidth;
+            }),
+          ),
+        `seis destinos visíveis em ${viewport.width}px`,
+      ).toBe(true);
+    }
     await page.screenshot({
       path: info.outputPath(`overview-${viewport.width}.png`),
       fullPage: true,
@@ -125,7 +138,7 @@ test("layout financeiro em cinco larguras, dados longos, diálogo e foco", async
   await page.getByRole("button", { name: "Filtrar títulos" }).click();
   await page.getByRole("button", { name: key, exact: true }).click();
   await expect(
-    page.getByText("R$ 90.071.992.547.409,93", { exact: true }),
+    page.getByText("R$ 90.071.992.547.409,93", { exact: true }).first(),
   ).toBeVisible();
   for (const viewport of viewports) {
     await page.setViewportSize(viewport);
@@ -561,7 +574,7 @@ test("erro de rede permite tentar novamente e busca vazia explica resultado", as
   ).toHaveCount(1);
 });
 
-test("menu móvel tem cinco destinos, prende foco e devolve foco ao fechar", async ({
+test("menu móvel tem seis destinos, prende foco e devolve foco ao fechar", async ({
   page,
 }, info) => {
   await page.setViewportSize({ width: 320, height: 844 });
@@ -572,11 +585,12 @@ test("menu móvel tem cinco destinos, prende foco e devolve foco ao fechar", asy
   const dialog = page.getByRole("dialog", { name: "Menu" });
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole("navigation").getByRole("button")).toHaveCount(
-    5,
+    6,
   );
   for (const name of [
     "Resumo",
     "Títulos",
+    "Aging",
     "Importações",
     "Lembretes",
     "Demonstração",
@@ -845,9 +859,8 @@ test("prévia pagina 51 registros sem gravar títulos e trata arquivo vazio e gr
   await expect(preview).toContainText(`${key}-50`);
   await preview.getByRole("button", { name: "Anterior", exact: true }).click();
   await expect(preview.locator("tbody tr")).toHaveCount(50);
-  expect(await (await page.request.get("/api/v1/overview")).json()).toEqual(
-    before,
-  );
+  const after = await (await page.request.get("/api/v1/overview")).json();
+  expect(after).toEqual({ ...before, generated_at: after.generated_at });
 });
 
 test("detalhe do lembrete preserva filtros, página, rolagem e foco na fila", async ({

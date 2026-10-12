@@ -5,6 +5,8 @@ import type { ReactNode } from "react";
 const labels: Record<string, string> = {
   open: "Em aberto",
   paid: "Pago",
+  partial: "Parcial",
+  unpaid: "Sem recebimentos",
   canceled: "Cancelado",
   overdue: "Vencido",
   pending: "Pendente",
@@ -190,6 +192,7 @@ export function Icon({
 }: {
   name:
     | "overview"
+    | "reports"
     | "titles"
     | "imports"
     | "reminders"
@@ -204,6 +207,11 @@ export function Icon({
     | "account";
 }) {
   const paths = {
+    reports: (
+      <>
+        <path d="M4 21h16M6 17V9m6 8V3m6 14v-6" />
+      </>
+    ),
     menu: <path d="M4 6h16M4 12h16M4 18h16" />,
     account: (
       <>

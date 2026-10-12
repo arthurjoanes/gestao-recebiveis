@@ -20,6 +20,8 @@ export interface PortfolioFilters {
   status: string;
   due_from: string;
   due_to: string;
+  customer_id?: string;
+  aging_bucket?: string;
   page?: number;
 }
 const emptyFilters: PortfolioFilters = {
@@ -27,6 +29,8 @@ const emptyFilters: PortfolioFilters = {
   status: "",
   due_from: "",
   due_to: "",
+  customer_id: "",
+  aging_bucket: "",
 };
 const situationLabels: Record<string, string> = {
   open: "Em aberto",
@@ -104,6 +108,8 @@ export function ReceivablesView({
             scope={[
               filters.q ? `Busca: ${filters.q}` : "Todos os clientes e títulos",
               situationLabels[filters.status] ?? "Todas as situações",
+              filters.customer_id ? `Cliente ID ${filters.customer_id}` : "",
+              filters.aging_bucket ? `Aging: ${filters.aging_bucket}` : "",
               portfolioScope(filters),
             ].join(" · ")}
           >
@@ -112,7 +118,14 @@ export function ReceivablesView({
                 className="filters portfolio-filters"
                 onReset={(event) => {
                   event.preventDefault();
-                  for (const name of ["q", "status", "due_from", "due_to"]) {
+                  for (const name of [
+                    "q",
+                    "status",
+                    "due_from",
+                    "due_to",
+                    "customer_id",
+                    "aging_bucket",
+                  ]) {
                     (
                       event.currentTarget.elements.namedItem(
                         name,
@@ -144,6 +157,8 @@ export function ReceivablesView({
                     status: String(form.get("status") ?? ""),
                     due_from: String(form.get("due_from") ?? ""),
                     due_to: String(form.get("due_to") ?? ""),
+                    customer_id: String(form.get("customer_id") ?? "").trim(),
+                    aging_bucket: String(form.get("aging_bucket") ?? ""),
                     page: 1,
                   });
                   onApplied();
@@ -158,6 +173,30 @@ export function ReceivablesView({
                     maxLength={200}
                     placeholder="Nome ou código"
                   />
+                </label>
+                <label>
+                  ID do cliente
+                  <input
+                    name="customer_id"
+                    inputMode="numeric"
+                    pattern="[1-9][0-9]*"
+                    defaultValue={initialFilters.customer_id ?? ""}
+                    placeholder="Todos"
+                  />
+                </label>
+                <label>
+                  Faixa de aging
+                  <select
+                    name="aging_bucket"
+                    defaultValue={initialFilters.aging_bucket ?? ""}
+                  >
+                    <option value="">Todas</option>
+                    <option value="current">Em dia (inclui hoje)</option>
+                    <option value="1_30">1–30 dias</option>
+                    <option value="31_60">31–60 dias</option>
+                    <option value="61_90">61–90 dias</option>
+                    <option value="over_90">Acima de 90 dias</option>
+                  </select>
                 </label>
                 <label>
                   Situação
@@ -264,7 +303,7 @@ export function ReceivablesView({
                         <th>Título / sistema</th>
                         <th>Cliente</th>
                         <th>Vencimento</th>
-                        <th className="numeric">Valor</th>
+                        <th className="numeric">Saldo / recebido / original</th>
                         <th>Situação</th>
                         <th>
                           <span className="sr-only">Ação</span>
@@ -292,12 +331,17 @@ export function ReceivablesView({
                           </td>
                           <td>{date(item.due_date)}</td>
                           <td className="numeric money">
-                            {money(item.amount_cents)}
+                            {money(item.remaining_cents)}
+                            <small>Recebido {money(item.paid_cents)}</small>
+                            <small>Original {money(item.amount_cents)}</small>
                           </td>
                           <td>
                             <Badge
                               status={item.overdue ? "overdue" : item.status}
                             />
+                            {item.payment_state === "partial" && (
+                              <Badge status="partial" />
+                            )}
                           </td>
                           <td>
                             <button
