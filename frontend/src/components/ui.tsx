@@ -89,15 +89,17 @@ export function Pagination({
   total,
   pageSize,
   onChange,
+  label = "Paginação",
 }: {
   page: number;
   total: number;
   pageSize: number;
   onChange: (page: number) => void;
+  label?: string;
 }) {
   const pages = Math.max(1, Math.ceil(total / pageSize));
   return (
-    <div className="pagination">
+    <nav className="pagination" aria-label={label}>
       <span>
         {total} registro{total === 1 ? "" : "s"} · Página {page} de {pages}
       </span>
@@ -117,7 +119,7 @@ export function Pagination({
           Próxima
         </button>
       </div>
-    </div>
+    </nav>
   );
 }
 export function Modal({

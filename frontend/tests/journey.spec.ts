@@ -545,10 +545,16 @@ test("erro de rede permite tentar novamente e busca vazia explica resultado", as
   const delayed = new Promise<void>((resolve) => {
     release = resolve;
   });
+  let started!: () => void;
+  const staleRequestStarted = new Promise<void>((resolve) => {
+    started = resolve;
+  });
   const staleQuery = `ATRASADA-${Date.now()}`;
   await page.route("**/api/v1/receivables?**", async (route) => {
-    if (new URL(route.request().url()).searchParams.get("q") === staleQuery)
+    if (new URL(route.request().url()).searchParams.get("q") === staleQuery) {
+      started();
       await delayed;
+    }
     await route.continue();
   });
   await page.getByLabel("Buscar título em aberto").fill(staleQuery);
@@ -557,6 +563,12 @@ test("erro de rede permite tentar novamente e busca vazia explica resultado", as
     .click();
   await expect(selector).toBeDisabled();
   await expect(selector.locator("option")).toHaveCount(1);
+  await staleRequestStarted;
+  // Trocar a busca cancela o GET anterior; a resposta antiga não deve chegar.
+  const staleRequestCanceled = page.waitForEvent("requestfailed", {
+    predicate: (request) =>
+      new URL(request.url()).searchParams.get("q") === staleQuery,
+  });
   await page.getByLabel("Buscar título em aberto").fill("TIT-0001");
   await page
     .getByRole("button", { name: "Buscar título", exact: true })
@@ -564,11 +576,12 @@ test("erro de rede permite tentar novamente e busca vazia explica resultado", as
   await expect(
     selector.locator("option").filter({ hasText: "TIT-0001" }),
   ).toHaveCount(1);
-  const lateResponse = page.waitForResponse(
-    (response) => new URL(response.url()).searchParams.get("q") === staleQuery,
-  );
   release();
-  await lateResponse;
+  const canceled = await staleRequestCanceled;
+  expect(canceled.failure()?.errorText).toMatch(/abort|cancel/i);
+  await expect(selector.locator('option[value]:not([value=""])')).toHaveCount(
+    1,
+  );
   await expect(
     selector.locator("option").filter({ hasText: "TIT-0001" }),
   ).toHaveCount(1);

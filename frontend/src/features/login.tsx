@@ -65,8 +65,8 @@ export function Login({
               <div>
                 <strong>Registre o pagamento</strong>
                 <p>
-                  A baixa integral preserva o registro e encerra lembretes
-                  pendentes.
+                  Uma parcela reduz o saldo. A quitação encerra os lembretes
+                  pendentes e conserva o histórico.
                 </p>
               </div>
             </li>

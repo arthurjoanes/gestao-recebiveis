@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api, ApiError, errorMessage } from "@/lib/api";
 import {
   brlInput,
@@ -58,7 +58,29 @@ export function ReceivableDetailView({
   const [amountError, setAmountError] = useState("");
   const [noteError, setNoteError] = useState("");
   const [historyChecked, setHistoryChecked] = useState(false);
+  const [amountDraft, setAmountDraft] = useState("");
+  const [noteDraft, setNoteDraft] = useState("");
   const data = result.data;
+  useEffect(() => {
+    if (amountError && action === "pay" && !busy && !local.intent)
+      document.getElementById("payment-amount")?.focus();
+  }, [amountError, action, busy, local.intent]);
+  let draftAmount: string | null = null;
+  if (data && !local.intent && !local.error) {
+    try {
+      draftAmount =
+        paymentMode === "remaining"
+          ? data.remaining_cents
+          : parseBrl(amountDraft);
+      if (
+        BigInt(draftAmount) <= 0n ||
+        BigInt(draftAmount) > BigInt(data.remaining_cents)
+      )
+        draftAmount = null;
+    } catch {
+      draftAmount = null;
+    }
+  }
   function openPayment() {
     setAction("pay");
     setError("");
@@ -97,17 +119,23 @@ export function ReceivableDetailView({
           (form.elements.namedItem("note") as HTMLTextAreaElement)?.focus();
           return;
         }
-        let amount: string | undefined;
-        if (paymentMode === "partial") {
-          try {
-            amount = parseBrl(String(values.get("amount") ?? ""));
-            if (data && BigInt(amount) > BigInt(data.remaining_cents))
-              throw new Error("O pagamento não pode exceder o saldo atual.");
-          } catch (failure) {
-            setAmountError(errorMessage(failure));
-            (form.elements.namedItem("amount") as HTMLInputElement)?.focus();
-            return;
-          }
+        let amount: string;
+        try {
+          amount =
+            paymentMode === "partial"
+              ? parseBrl(amountDraft)
+              : data!.remaining_cents;
+          if (BigInt(amount) <= 0n)
+            throw new Error(
+              "Não há saldo para este recebimento. Atualize o título.",
+            );
+          if (data && BigInt(amount) > BigInt(data.remaining_cents))
+            throw new Error("O pagamento não pode exceder o saldo atual.");
+        } catch (failure) {
+          if (paymentMode === "partial") setAmountError(errorMessage(failure));
+          else setError(errorMessage(failure));
+          (form.elements.namedItem("amount") as HTMLInputElement)?.focus();
+          return;
         }
         intent = {
           version: 1,
@@ -116,8 +144,14 @@ export function ReceivableDetailView({
           created_at: Date.now(),
           payload: {
             idempotency_key: crypto.randomUUID(),
-            note: String(values.get("note") ?? ""),
-            ...(amount === undefined ? {} : { amount_cents: amount }),
+            note: noteDraft,
+            amount_cents: amount,
+          },
+          preview: {
+            remaining_before_cents: data!.remaining_cents,
+            remaining_after_cents: (
+              BigInt(data!.remaining_cents) - BigInt(amount)
+            ).toString(),
           },
         };
         try {
@@ -155,6 +189,12 @@ export function ReceivableDetailView({
           );
         clearPaymentIntent(session.user.id, id);
         setLocal({ intent: null, expired: false, error: "" });
+        setAmountDraft("");
+        setNoteDraft("");
+        setPaymentMode("remaining");
+        setSuccess(
+          `Pagamento registrado: ${money(payment.amount_cents)}. Confira o saldo atualizado abaixo.`,
+        );
       } else
         await api(
           `/receivables/${id}/cancel`,
@@ -166,9 +206,7 @@ export function ReceivableDetailView({
           },
           session.csrf_token,
         );
-      setSuccess(
-        action === "pay" ? "Pagamento registrado." : "Título cancelado.",
-      );
+      if (action === "cancel") setSuccess("Título cancelado.");
       setAction(null);
       setRevision((value) => value + 1);
     } catch (failure) {
@@ -186,7 +224,20 @@ export function ReceivableDetailView({
           ].includes(failure.code))
       ) {
         clearPaymentIntent(session.user.id, id);
+        if (intent) {
+          setPaymentMode(intent.payload.amount_cents ? "partial" : "remaining");
+          setAmountDraft(
+            intent.payload.amount_cents
+              ? brlInput(intent.payload.amount_cents)
+              : amountDraft,
+          );
+          setNoteDraft(intent.payload.note);
+        }
         setLocal({ intent: null, expired: false, error: "" });
+        if (failure.code === "invalid_payment_amount")
+          setAmountError(
+            "O saldo mudou. Confira o saldo atualizado e informe um valor até esse saldo.",
+          );
         if (resolvingPending)
           setError(
             `${errorMessage(failure)} A intenção anterior foi rejeitada sem registrar pagamento. Você pode informar uma nova intenção.`,
@@ -450,6 +501,79 @@ export function ReceivableDetailView({
           <p className="modal-amount">
             Saldo atual: {money(data.remaining_cents)}
           </p>
+          {action === "pay" &&
+            !local.error &&
+            (local.intent ? (
+              <section
+                className="pending-intent-preview"
+                aria-label="Recebimento anterior a conferir"
+              >
+                <h3>Recebimento anterior a conferir</h3>
+                <dl>
+                  <div>
+                    <dt>Valor da solicitação anterior</dt>
+                    <dd>
+                      {local.intent.payload.amount_cents
+                        ? money(local.intent.payload.amount_cents)
+                        : "Quitação solicitada sem valor explícito"}
+                    </dd>
+                  </div>
+                  {local.intent.preview && (
+                    <div>
+                      <dt>Saldo previsto na posição consultada</dt>
+                      <dd>
+                        {money(local.intent.preview.remaining_after_cents)}
+                      </dd>
+                    </div>
+                  )}
+                </dl>
+                <p>
+                  A nova tentativa confere o recebimento anterior com a mesma
+                  chave. O valor e o saldo confirmados serão apresentados após a
+                  resposta.
+                  {!local.intent.payload.amount_cents &&
+                    " A posição atual não permite reconstruir o valor daquela solicitação."}
+                </p>
+              </section>
+            ) : (
+              <section
+                className="payment-preview"
+                aria-label="Conferência do pagamento"
+              >
+                <h3>Conferência do pagamento</h3>
+                <dl aria-live="polite" aria-atomic="true">
+                  <div>
+                    <dt>Valor a registrar</dt>
+                    <dd>
+                      {draftAmount
+                        ? money(draftAmount)
+                        : "Informe um valor válido"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Saldo previsto na posição consultada</dt>
+                    <dd>
+                      {draftAmount
+                        ? money(
+                            (
+                              BigInt(data.remaining_cents) - BigInt(draftAmount)
+                            ).toString(),
+                          )
+                        : "A calcular"}
+                    </dd>
+                  </div>
+                </dl>
+                <p>
+                  {!draftAmount
+                    ? "Informe um valor válido para conferir o recebimento e o saldo previsto."
+                    : draftAmount === data.remaining_cents
+                      ? "Este recebimento quita o saldo consultado e cancela os lembretes pendentes."
+                      : "Este recebimento mantém o título aberto e reduz o saldo."}{" "}
+                  Se outra pessoa registrar um recebimento, o saldo pode mudar.
+                  Confira o saldo atualizado após confirmar.
+                </p>
+              </section>
+            ))}
           <p>
             {action === "pay"
               ? "Registre uma parcela ou quite o saldo restante. O recebimento usa a data comercial atual."
@@ -511,14 +635,20 @@ export function ReceivableDetailView({
                     Valor recebido (R$)
                     <input
                       name="amount"
+                      id="payment-amount"
                       type="text"
                       inputMode="decimal"
                       maxLength={24}
-                      defaultValue={
+                      value={
                         local.intent?.payload.amount_cents
                           ? brlInput(local.intent.payload.amount_cents)
-                          : ""
+                          : amountDraft
                       }
+                      onChange={(event) => {
+                        setAmountDraft(event.target.value);
+                        setAmountError("");
+                      }}
+                      autoComplete="off"
                       disabled={busy || !!local.intent}
                       aria-invalid={!!amountError}
                       aria-describedby={
@@ -546,7 +676,12 @@ export function ReceivableDetailView({
                   <textarea
                     name="note"
                     disabled={busy || !!local.intent || !!local.error}
-                    defaultValue={local.intent?.payload.note ?? ""}
+                    value={local.intent?.payload.note ?? noteDraft}
+                    onChange={(event) => {
+                      setNoteDraft(event.target.value);
+                      setNoteError("");
+                    }}
+                    autoComplete="off"
                     aria-invalid={!!noteError}
                     aria-describedby={
                       noteError ? "payment-note-error" : undefined
