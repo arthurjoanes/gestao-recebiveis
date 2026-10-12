@@ -251,8 +251,8 @@ function ReminderDetails({
                   {job.external_receivable_id}
                 </button>
                 <p>
-                  {job.customer_name} · {money(job.amount_cents)} ·{" "}
-                  {reminderStage(job.stage)}
+                  {job.customer_name} · saldo atual {money(job.remaining_cents)}{" "}
+                  · {reminderStage(job.stage)}
                 </p>
               </div>
               <Badge status={job.status} />
@@ -265,6 +265,14 @@ function ReminderDetails({
               </div>
             )}
             <dl className="inline-facts">
+              <div>
+                <dt>Valor original</dt>
+                <dd>{money(job.amount_cents)}</dd>
+              </div>
+              <div>
+                <dt>Recebido</dt>
+                <dd>{money(job.paid_cents)}</dd>
+              </div>
               <div>
                 <dt>Chave idempotente</dt>
                 <dd>
@@ -292,6 +300,7 @@ function ReminderDetails({
                     <tr>
                       <th>Tentativa</th>
                       <th>Autorizada em</th>
+                      <th>Saldo autorizado</th>
                       <th>Finalizada em</th>
                       <th>Resultado</th>
                       <th>Detalhe</th>
@@ -302,6 +311,9 @@ function ReminderDetails({
                       <tr key={attempt.id}>
                         <td>#{attempt.number}</td>
                         <td>{instant(attempt.authorized_at)}</td>
+                        <td className="money">
+                          {money(attempt.authorized_remaining_cents)}
+                        </td>
                         <td>{instant(attempt.finished_at)}</td>
                         <td>
                           <Badge status={attempt.outcome} />
@@ -315,6 +327,11 @@ function ReminderDetails({
             ) : (
               <p className="padded muted">Nenhuma tentativa autorizada.</p>
             )}
+            <p className="padded footnote">
+              O saldo autorizado é o valor congelado na data de cada tentativa.
+              A conciliação de uma entrega sem resposta conserva esse valor,
+              mesmo após um recebimento ou quitação.
+            </p>
             {job.delivery ? (
               <div className="delivery-box">
                 <p className="eyebrow">Entrega simulada #{job.delivery.id}</p>

@@ -4,10 +4,12 @@ import type { Session } from "@/lib/types";
 import { Brand } from "./brand";
 import { Alert, Icon, Modal } from "./ui";
 
-export type Area = "overview" | "titles" | "imports" | "reminders" | "demo";
+export type Area =
+  "overview" | "titles" | "reports" | "imports" | "reminders" | "demo";
 const areas: { id: Area; label: string }[] = [
   { id: "overview", label: "Resumo" },
   { id: "titles", label: "Títulos" },
+  { id: "reports", label: "Aging" },
   { id: "imports", label: "Importações" },
   { id: "reminders", label: "Lembretes" },
   { id: "demo", label: "Demonstração" },

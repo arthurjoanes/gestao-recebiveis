@@ -45,10 +45,12 @@ export async function api<T>(
   return body as T;
 }
 
-export function query(params: Record<string, string | number>): string {
+export function query(
+  params: Record<string, string | number | undefined>,
+): string {
   const values = new URLSearchParams();
   for (const [key, value] of Object.entries(params))
-    if (value !== "") values.set(key, String(value));
+    if (value !== "" && value !== undefined) values.set(key, String(value));
   return values.toString();
 }
 

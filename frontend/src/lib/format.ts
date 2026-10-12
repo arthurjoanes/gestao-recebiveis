@@ -6,6 +6,24 @@ export function money(cents: string): string {
   const absolute = value < 0n ? -value : value;
   return `${value < 0n ? "−" : ""}R$ ${(absolute / 100n).toLocaleString("pt-BR")},${(absolute % 100n).toString().padStart(2, "0")}`;
 }
+// Aceita decimal brasileiro sem separadores de milhar; toda a conta é inteira.
+export function parseBrl(value: string): string {
+  const match = /^(\d+)(?:,(\d{1,2}))?$/.exec(value.trim());
+  if (!match)
+    throw new Error(
+      "Use reais com vírgula e até duas casas, sem pontos. Ex.: 10,50.",
+    );
+  const cents =
+    BigInt(match[1]) * 100n + BigInt((match[2] ?? "").padEnd(2, "0") || "0");
+  if (cents <= 0n) throw new Error("Informe um valor maior que zero.");
+  if (cents > 9223372036854775807n)
+    throw new Error("O valor excede o limite permitido.");
+  return cents.toString();
+}
+export function brlInput(cents: string): string {
+  const value = BigInt(cents);
+  return `${value / 100n},${(value % 100n).toString().padStart(2, "0")}`;
+}
 export function date(value: string | null | undefined): string {
   if (!value) return "—";
   const [year, month, day] = value.slice(0, 10).split("-");

@@ -122,9 +122,7 @@ export function OverviewView({
                   <strong>{money(data.received_cents)}</strong>
                   <p>
                     {data.paid_count}{" "}
-                    {data.paid_count === 1
-                      ? "pagamento integral"
-                      : "pagamentos integrais"}
+                    {data.paid_count === 1 ? "recebimento" : "recebimentos"}
                   </p>
                   <small>
                     Filtrado pela data do pagamento ·{" "}
@@ -172,7 +170,7 @@ export function OverviewView({
                       <tr>
                         <th>Cliente / título</th>
                         <th>Vencimento</th>
-                        <th className="numeric">Valor</th>
+                        <th className="numeric">Saldo</th>
                         <th>Situação</th>
                       </tr>
                     </thead>
@@ -190,10 +188,13 @@ export function OverviewView({
                           </td>
                           <td>{date(item.due_date)}</td>
                           <td className="numeric money">
-                            {money(item.amount_cents)}
+                            {money(item.remaining_cents)}
                           </td>
                           <td>
                             <Badge status="overdue" />
+                            {item.payment_state === "partial" && (
+                              <Badge status="partial" />
+                            )}
                           </td>
                         </tr>
                       ))}

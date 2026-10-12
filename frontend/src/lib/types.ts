@@ -19,6 +19,7 @@ export interface Payment {
   amount_cents: string;
   paid_at: string;
   recorded_at: string;
+  note: string;
 }
 export interface AuditEvent {
   id: number;
@@ -37,6 +38,10 @@ export interface Receivable {
   customer_email: string;
   description: string;
   amount_cents: string;
+  paid_cents: string;
+  remaining_cents: string;
+  payment_state: "unpaid" | "partial" | "paid";
+  payments: Payment[];
   due_date: string;
   status: string;
   overdue: boolean;
@@ -53,6 +58,8 @@ export interface Reminder {
   external_receivable_id: string;
   customer_name: string;
   amount_cents: string;
+  paid_cents: string;
+  remaining_cents: string;
   stage: number;
   status: string;
   attempts_count: number;
@@ -69,6 +76,7 @@ export interface ReminderDetail extends Reminder {
     outcome: string;
     error: string | null;
     authorized_at: string;
+    authorized_remaining_cents: string;
     finished_at: string | null;
   }[];
   delivery: { id: number; accepted_at: string; message: string } | null;
@@ -120,4 +128,54 @@ export interface Demo {
   business_date: string;
   worker_enabled: boolean;
   policy: string | string[];
+}
+
+export type AgingBucket = "current" | "1_30" | "31_60" | "61_90" | "over_90";
+export interface Aging extends Page<
+  Receivable & { aging_bucket: AgingBucket; days_overdue: number }
+> {
+  generated_at: string;
+  business_now: string;
+  business_date: string;
+  open_cents: string;
+  title_count: number;
+  bucket: AgingBucket | null;
+  buckets: {
+    key: AgingBucket;
+    label: string;
+    title_count: number;
+    remaining_cents: string;
+  }[];
+}
+export interface CustomerStatement {
+  customer: {
+    id: number;
+    source_system: string;
+    external_customer_id: string;
+    name: string;
+    email: string;
+  };
+  generated_at: string;
+  business_now: string;
+  business_date: string;
+  titles: Page<Receivable>;
+  payments: Page<
+    Payment & {
+      receivable_id: number;
+      source_system: string;
+      external_receivable_id: string;
+    }
+  >;
+  totals: {
+    amount_cents: string;
+    paid_cents: string;
+    remaining_cents: string;
+    open_cents: string;
+    canceled_remaining_cents: string;
+    title_count: number;
+    received_cents: string;
+    paid_count: number;
+  };
+  received_from: string | null;
+  received_to: string | null;
 }

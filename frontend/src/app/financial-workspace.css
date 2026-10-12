@@ -1,6 +1,112 @@
 .workspace {
   min-height: 100dvh;
 }
+.badge-partial {
+  background: #f7edda;
+  color: #805519;
+}
+.aging-buckets {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+.aging-buckets .metric + .metric {
+  border-left: 1px solid var(--line);
+}
+.aging-buckets h3 {
+  font-size: 14px;
+}
+.aging-buckets .metric > strong {
+  font-size: clamp(18px, 1.5vw, 26px);
+}
+.statement-totals {
+  padding: 20px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+.statement-totals dt {
+  color: var(--muted);
+  font-size: 13px;
+}
+.statement-totals dd {
+  font-size: 18px;
+  margin-top: 5px;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.report-scope {
+  margin-bottom: 20px;
+}
+.check-field {
+  display: flex;
+  align-items: start;
+  gap: 10px;
+}
+.check-field input {
+  width: 24px;
+  min-height: 24px;
+  flex-shrink: 0;
+}
+@media (max-width: 900px) {
+  .aging-buckets {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .aging-buckets .metric + .metric {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+  .statement-totals {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 480px) {
+  .aging-buckets,
+  .statement-totals {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media print {
+  .desktop-header,
+  .mobile-header,
+  .topbar,
+  .skip-link,
+  .no-print {
+    display: none !important;
+  }
+  .main-content {
+    max-width: none;
+    padding: 0;
+  }
+  .customer-statement {
+    font-size: 10pt;
+    color: #000;
+  }
+  .customer-statement .panel {
+    break-inside: auto;
+    margin-bottom: 14pt;
+  }
+  .customer-statement .table-scroll {
+    overflow: visible;
+    max-height: none;
+  }
+  .customer-statement table {
+    white-space: normal;
+    font-size: 9pt;
+  }
+  .customer-statement th,
+  .customer-statement td {
+    padding: 6pt;
+  }
+  .customer-statement tr {
+    break-inside: avoid;
+  }
+  .customer-statement .text-button {
+    color: #000;
+  }
+  .customer-statement .table-scroll::after {
+    display: none;
+  }
+}
 .desktop-header :focus-visible,
 .mobile-header :focus-visible {
   outline-color: var(--focus-inverse);
@@ -67,6 +173,7 @@
 }
 .desktop-header nav {
   display: flex;
+  flex-wrap: wrap;
   max-width: 1440px;
   margin: auto;
   padding: 0 36px;
@@ -158,6 +265,17 @@
 }
 .page-heading {
   min-width: 0;
+}
+.page-heading > div:first-child {
+  min-width: 0;
+}
+.page-heading p {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 680px) {
+  .page-heading {
+    flex-wrap: wrap;
+  }
 }
 .button,
 .text-button,
