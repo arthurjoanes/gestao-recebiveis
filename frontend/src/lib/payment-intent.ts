@@ -7,6 +7,7 @@ export interface PaymentIntent {
   receivable_id: number;
   created_at: number;
   payload: { idempotency_key: string; note: string; amount_cents?: string };
+  preview?: { remaining_before_cents: string; remaining_after_cents: string };
 }
 function key(userId: number, titleId: number): string {
   return `${PAYMENT_INTENT_PREFIX}${userId}:${titleId}`;
@@ -34,6 +35,19 @@ export function readPaymentIntent(
           BigInt(value.payload.amount_cents) > 9223372036854775807n))
     )
       throw new Error("Formato local inválido.");
+    if (
+      value.preview &&
+      (!value.payload.amount_cents ||
+        typeof value.preview.remaining_before_cents !== "string" ||
+        typeof value.preview.remaining_after_cents !== "string" ||
+        !/^(0|[1-9][0-9]*)$/.test(value.preview.remaining_before_cents) ||
+        !/^(0|[1-9][0-9]*)$/.test(value.preview.remaining_after_cents) ||
+        BigInt(value.preview.remaining_before_cents) > 9223372036854775807n ||
+        BigInt(value.preview.remaining_before_cents) -
+          BigInt(value.payload.amount_cents) !==
+          BigInt(value.preview.remaining_after_cents))
+    )
+      throw new Error("Resumo local inválido.");
     return value;
   } catch {
     // Registro ilegível também é ambíguo: não o substitua silenciosamente.

@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import { api, errorMessage } from "@/lib/api";
 import { instant } from "@/lib/format";
 import { useResource } from "@/lib/use-resource";
 import type { Demo, Session } from "@/lib/types";
@@ -22,10 +21,7 @@ import {
   emptyStatementFilters,
   type StatementFilters,
 } from "@/features/reports";
-import {
-  activatePaymentAccount,
-  clearAccountIntents,
-} from "@/lib/payment-intent";
+import { activatePaymentAccount } from "@/lib/payment-intent";
 
 type TitleOrigin =
   | { kind: "portfolio" }
@@ -54,6 +50,9 @@ export function Workspace({
     Record<number, StatementFilters>
   >({});
   const [returnToTitle, setReturnToTitle] = useState<number | null>(null);
+  const [reportReturnToTitle, setReportReturnToTitle] = useState<number | null>(
+    null,
+  );
   const [titleFilters, setTitleFilters] = useState<PortfolioFilters>({
     q: "",
     status: "",
@@ -72,19 +71,19 @@ export function Workspace({
     destination?.focus({ preventScroll: true });
   }, [area, titleId, customerId]);
   const demo = useResource<Demo>("/demo", demoRevision);
-  const [logoutError, setLogoutError] = useState("");
-  const [loggingOut, setLoggingOut] = useState(false);
   function navigate(next: Area) {
     setArea(next);
     setTitleId(null);
     setTitleOrigin({ kind: "portfolio" });
     setCustomerId(null);
     setReturnToTitle(null);
+    setReportReturnToTitle(null);
     setTitleFilters({ q: "", status: "", due_from: "", due_to: "" });
     setReminderId(null);
     window.scrollTo({ top: 0 });
   }
   function openTitle(id: number, filters?: PortfolioFilters) {
+    setReportReturnToTitle(null);
     setTitleOrigin({ kind: "portfolio" });
     if (filters) setTitleFilters(filters);
     setArea("titles");
@@ -96,19 +95,6 @@ export function Workspace({
     setReminderId(id);
     window.scrollTo({ top: 0 });
   }
-  async function logout() {
-    setLoggingOut(true);
-    setLogoutError("");
-    try {
-      await api("/auth/logout", { method: "POST" }, session.csrf_token);
-      clearAccountIntents(session.user.id);
-      onLogout();
-    } catch (failure) {
-      setLogoutError(errorMessage(failure));
-    } finally {
-      setLoggingOut(false);
-    }
-  }
   return (
     <div className={`workspace area-${area}`}>
       <a className="skip-link" href="#main-content">
@@ -118,9 +104,9 @@ export function Workspace({
         area={area}
         session={session}
         onNavigate={navigate}
-        onLogout={() => void logout()}
-        loggingOut={loggingOut}
-        logoutError={logoutError}
+        onLogout={onLogout}
+        loggingOut={false}
+        logoutError=""
       />
       <div className="workspace-body">
         <header className="topbar">
@@ -137,7 +123,6 @@ export function Workspace({
           </div>
         </header>
         <main id="main-content" tabIndex={-1} className="main-content">
-          {logoutError && <Alert>{logoutError}</Alert>}
           {demo.error && <Alert>{demo.error}</Alert>}
           {area === "overview" && (
             <OverviewView
@@ -163,9 +148,11 @@ export function Workspace({
                 session={session}
                 onBack={() => {
                   if (titleOrigin.kind === "aging") {
+                    setReportReturnToTitle(titleId);
                     setArea("reports");
                     setCustomerId(null);
                   } else if (titleOrigin.kind === "statement") {
+                    setReportReturnToTitle(titleId);
                     setArea("reports");
                     setCustomerId(titleOrigin.customerId);
                   } else setReturnToTitle(titleId);
@@ -180,6 +167,7 @@ export function Workspace({
                 }
                 onReminder={openReminder}
                 onStatement={(id) => {
+                  setReportReturnToTitle(null);
                   if (
                     titleOrigin.kind !== "statement" ||
                     titleOrigin.customerId !== id
@@ -193,6 +181,7 @@ export function Workspace({
           {area === "reports" &&
             (customerId === null ? (
               <AgingView
+                returnToTitle={reportReturnToTitle}
                 filters={agingFilters}
                 onFiltersChange={setAgingFilters}
                 onTitles={(filters) => {
@@ -200,18 +189,21 @@ export function Workspace({
                   setTitleFilters(filters);
                 }}
                 onOpen={(id) => {
+                  setReportReturnToTitle(null);
                   setTitleOrigin({ kind: "aging" });
                   setArea("titles");
                   setTitleId(id);
                   window.scrollTo({ top: 0 });
                 }}
                 onStatement={(id) => {
+                  setReportReturnToTitle(null);
                   setStatementOrigin(null);
                   setCustomerId(id);
                 }}
               />
             ) : (
               <CustomerStatementView
+                returnToTitle={reportReturnToTitle}
                 key={customerId}
                 customerId={customerId}
                 filters={statementFilters[customerId] ?? emptyStatementFilters}
@@ -222,12 +214,14 @@ export function Workspace({
                   }))
                 }
                 onOpen={(id) => {
+                  setReportReturnToTitle(null);
                   setTitleOrigin({ kind: "statement", customerId });
                   setArea("titles");
                   setTitleId(id);
                   window.scrollTo({ top: 0 });
                 }}
                 onBack={() => {
+                  setReportReturnToTitle(null);
                   if (statementOrigin !== null) {
                     setArea("titles");
                     setTitleId(statementOrigin.id);

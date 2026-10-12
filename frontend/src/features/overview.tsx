@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { query } from "@/lib/api";
-import { date, money } from "@/lib/format";
+import { date, instant, money } from "@/lib/format";
 import { useResource } from "@/lib/use-resource";
 import {
   OverviewFilterForm,
@@ -64,7 +64,7 @@ export function OverviewView({
         ) : (
           data && (
             <>
-              <div
+              <section
                 className="metrics"
                 aria-label="Posição da carteira e recebimentos"
               >
@@ -134,7 +134,12 @@ export function OverviewView({
                     Recebimentos não compõem o saldo em aberto.
                   </p>
                 </article>
-              </div>
+              </section>
+              <p className="footnote position-caption">
+                Posição consultada em {instant(data.generated_at)}. A carteira
+                usa a data comercial {date(data.business_date)}; os recebimentos
+                respeitam seu próprio período.
+              </p>
             </>
           )
         )}

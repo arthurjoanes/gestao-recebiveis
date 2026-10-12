@@ -109,6 +109,8 @@ export type ImportBatchSummary = Pick<
   "id" | "filename" | "status" | "created_at"
 > & { row_count: number };
 export interface Overview {
+  generated_at: string;
+  business_now: string;
   current_cents: string;
   current_count: number;
   open_cents: string;

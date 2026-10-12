@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { query } from "@/lib/api";
 import { date, instant, money } from "@/lib/format";
 import { useResource } from "@/lib/use-resource";
@@ -30,19 +30,49 @@ export const emptyAgingFilters = {
   page: 1,
 };
 export type AgingFilters = typeof emptyAgingFilters;
+type PeriodError = { period: "due" | "received"; message: string } | null;
+const situationLabels: Record<string, string> = {
+  open: "Em aberto",
+  paid: "Pagos",
+  canceled: "Cancelados",
+  overdue: "Vencidos",
+  current: "Em dia",
+};
+function useReportReturnFocus(
+  returnToTitle: number | null | undefined,
+  loading: boolean,
+  headingId: string,
+) {
+  const restored = useRef(false);
+  useEffect(() => {
+    if (returnToTitle == null || restored.current || loading) return;
+    restored.current = true;
+    const active = document.activeElement;
+    if (active && active !== document.body && active.id !== "main-content")
+      return;
+    const destination =
+      document.getElementById(`report-title-open-${returnToTitle}`) ??
+      document.getElementById(headingId);
+    destination?.focus({ preventScroll: true });
+    destination?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [returnToTitle, loading, headingId]);
+}
 function validPeriod(
   form: HTMLFormElement,
   names: [string, string],
   label: string,
-): string {
+): PeriodError {
   const values = new FormData(form);
   const start = String(values.get(names[0]) ?? "");
   const end = String(values.get(names[1]) ?? "");
   if (start && end && start > end) {
     (form.elements.namedItem(names[0]) as HTMLInputElement)?.focus();
-    return `${label}: a data inicial deve ser anterior ou igual à final.`;
+    return {
+      period: names[0].startsWith("due") ? "due" : "received",
+      message: `${label}: a data inicial deve ser anterior ou igual à final.`,
+    };
   }
-  return "";
+  return null;
 }
 function ReportDates({
   name,
@@ -50,20 +80,26 @@ function ReportDates({
   error,
   from,
   to,
+  onEdit,
 }: {
   name: "due" | "received";
   label: string;
   error: boolean;
   from: string;
   to: string;
+  onEdit: () => void;
 }) {
   return (
-    <>
+    <fieldset className="report-filter-group">
+      <legend>
+        {name === "due" ? "Vencimento dos títulos" : "Período dos recebimentos"}
+      </legend>
       <label>
         {label} de
         <input
           name={`${name}_from`}
           defaultValue={from}
+          onChange={onEdit}
           type="date"
           min="0001-01-01"
           max="9999-12-31"
@@ -76,6 +112,7 @@ function ReportDates({
         <input
           name={`${name}_to`}
           defaultValue={to}
+          onChange={onEdit}
           type="date"
           min="0001-01-01"
           max="9999-12-31"
@@ -83,7 +120,7 @@ function ReportDates({
           aria-describedby={error ? "report-period-error" : undefined}
         />
       </label>
-    </>
+    </fieldset>
   );
 }
 function PositionCaption({
@@ -117,7 +154,7 @@ function ReportTitleRows({
       aria-label="Títulos do relatório"
       tabIndex={0}
     >
-      <table>
+      <table className="report-titles-table">
         <thead>
           <tr>
             <th>Título / origem</th>
@@ -132,16 +169,19 @@ function ReportTitleRows({
         <tbody>
           {items.map((item) => (
             <tr key={item.id}>
-              <td>
+              <td data-label="Título / origem">
                 <button
                   className="text-button row-link"
+                  id={`report-title-open-${item.id}`}
                   onClick={() => onOpen(item.id)}
                 >
                   {item.external_receivable_id}
                 </button>
-                <small>{item.source_system}</small>
+                <small data-label="Sistema de origem">
+                  {item.source_system}
+                </small>
               </td>
-              <td>
+              <td data-label="Cliente">
                 {item.customer_name}
                 {onStatement && (
                   <small>
@@ -155,11 +195,17 @@ function ReportTitleRows({
                   </small>
                 )}
               </td>
-              <td>{date(item.due_date)}</td>
-              <td className="numeric money">{money(item.amount_cents)}</td>
-              <td className="numeric money">{money(item.paid_cents)}</td>
-              <td className="numeric money">{money(item.remaining_cents)}</td>
-              <td>
+              <td data-label="Vencimento">{date(item.due_date)}</td>
+              <td data-label="Original" className="numeric money">
+                {money(item.amount_cents)}
+              </td>
+              <td data-label="Recebido" className="numeric money">
+                {money(item.paid_cents)}
+              </td>
+              <td data-label="Saldo" className="numeric money">
+                {money(item.remaining_cents)}
+              </td>
+              <td data-label="Situação">
                 <Badge status={item.overdue ? "overdue" : item.status} />
                 {item.payment_state === "partial" && <Badge status="partial" />}
               </td>
@@ -176,20 +222,23 @@ export function AgingView({
   onTitles,
   onOpen,
   onStatement,
+  returnToTitle,
 }: {
   filters: AgingFilters;
   onFiltersChange: (filters: AgingFilters) => void;
   onTitles: (filters: PortfolioFilters) => void;
   onOpen: (id: number) => void;
   onStatement: (id: number) => void;
+  returnToTitle?: number | null;
 }) {
-  const [error, setError] = useState("");
+  const [error, setError] = useState<PeriodError>(null);
   const [revision, setRevision] = useState(0);
   const result = useResource<Aging>(
     `/reports/aging?${query(filters)}`,
     revision,
   );
   const data = result.data;
+  useReportReturnFocus(returnToTitle, result.loading, "aging-heading");
   function drilldown(bucket: string) {
     onTitles({
       q: filters.q,
@@ -205,7 +254,9 @@ export function AgingView({
     <>
       <div className="page-heading">
         <div>
-          <h1>Aging da carteira</h1>
+          <h1 id="aging-heading" tabIndex={-1}>
+            Aging da carteira
+          </h1>
           <p>Saldo residual dos títulos em aberto, por dias de atraso.</p>
         </div>
         <button
@@ -216,7 +267,7 @@ export function AgingView({
         </button>
       </div>
       <form
-        className="panel filters"
+        className="panel filters report-filters"
         onReset={(event) => {
           event.preventDefault();
           for (const name of [
@@ -230,7 +281,7 @@ export function AgingView({
               event.currentTarget.elements.namedItem(name) as HTMLInputElement
             ).value = "";
           onFiltersChange(emptyAgingFilters);
-          setError("");
+          setError(null);
         }}
         onSubmit={(event) => {
           event.preventDefault();
@@ -289,6 +340,7 @@ export function AgingView({
           error={!!error}
           from={filters.due_from}
           to={filters.due_to}
+          onEdit={() => setError(null)}
         />
         <button className="button" type="submit">
           Filtrar aging
@@ -298,7 +350,7 @@ export function AgingView({
         </button>
         {error && (
           <p className="field-error" id="report-period-error" role="alert">
-            {error}
+            {error.message}
           </p>
         )}
       </form>
@@ -355,6 +407,7 @@ export function AgingView({
                 <Empty title="Nenhum título nesta faixa" />
               )}
               <Pagination
+                label="Paginação dos títulos do aging"
                 page={data.page}
                 total={data.total}
                 pageSize={data.page_size}
@@ -385,20 +438,23 @@ export function CustomerStatementView({
   customerId,
   onOpen,
   onBack,
+  returnToTitle,
 }: {
   filters: StatementFilters;
   onFiltersChange: (filters: StatementFilters) => void;
   customerId: number;
   onOpen: (id: number) => void;
   onBack: () => void;
+  returnToTitle?: number | null;
 }) {
-  const [error, setError] = useState("");
+  const [error, setError] = useState<PeriodError>(null);
   const [revision, setRevision] = useState(0);
   const result = useResource<CustomerStatement>(
     `/customers/${customerId}/statement?${query(filters)}`,
     revision,
   );
   const data = result.data;
+  useReportReturnFocus(returnToTitle, result.loading, "statement-heading");
   return (
     <div className="customer-statement">
       <button className="text-button back-button no-print" onClick={onBack}>
@@ -406,7 +462,9 @@ export function CustomerStatementView({
       </button>
       <div className="page-heading">
         <div>
-          <h1>Extrato operacional</h1>
+          <h1 id="statement-heading" tabIndex={-1}>
+            Extrato operacional
+          </h1>
           <p>
             {data
               ? `${data.customer.name} · ${data.customer.source_system} / ${data.customer.external_customer_id} · ID ${data.customer.id}`
@@ -430,7 +488,7 @@ export function CustomerStatementView({
         </div>
       </div>
       <form
-        className="panel filters no-print"
+        className="panel filters report-filters no-print"
         onReset={(event) => {
           event.preventDefault();
           for (const name of [
@@ -445,7 +503,7 @@ export function CustomerStatementView({
               event.currentTarget.elements.namedItem(name) as HTMLInputElement
             ).value = "";
           onFiltersChange(emptyStatementFilters);
-          setError("");
+          setError(null);
         }}
         onSubmit={(event) => {
           event.preventDefault();
@@ -498,16 +556,18 @@ export function CustomerStatementView({
         <ReportDates
           name="due"
           label="Vencimento"
-          error={!!error}
+          error={error?.period === "due"}
           from={filters.due_from}
           to={filters.due_to}
+          onEdit={() => setError(null)}
         />
         <ReportDates
           name="received"
           label="Recebimento"
-          error={!!error}
+          error={error?.period === "received"}
           from={filters.received_from}
           to={filters.received_to}
+          onEdit={() => setError(null)}
         />
         <button className="button" type="submit">
           Filtrar extrato
@@ -517,7 +577,7 @@ export function CustomerStatementView({
         </button>
         {error && (
           <p id="report-period-error" className="field-error" role="alert">
-            {error}
+            {error.message}
           </p>
         )}
       </form>
@@ -533,7 +593,8 @@ export function CustomerStatementView({
               businessDate={data.business_date}
             />
             <p className="footnote report-scope">
-              Recorte de títulos: {filters.status || "todas as situações"} ·
+              Recorte de títulos:{" "}
+              {situationLabels[filters.status] ?? "todas as situações"} ·
               vencimento{" "}
               {date(filters.due_from) === "—"
                 ? "início"
@@ -596,6 +657,7 @@ export function CustomerStatementView({
               )}
               <div className="no-print">
                 <Pagination
+                  label="Paginação dos títulos do cliente"
                   page={data.titles.page}
                   total={data.titles.total}
                   pageSize={data.titles.page_size}
@@ -657,6 +719,7 @@ export function CustomerStatementView({
               )}
               <div className="no-print">
                 <Pagination
+                  label="Paginação dos recebimentos do cliente"
                   page={data.payments.page}
                   total={data.payments.total}
                   pageSize={data.payments.page_size}
