@@ -1,11 +1,13 @@
 FROM ghcr.io/astral-sh/uv:0.9.18@sha256:5713fa8217f92b80223bc83aac7db36ec80a84437dbc0d04bbc659cae030d8c9 AS uv
 FROM python:3.13.15-alpine3.24@sha256:79e7a9b9ff1cbceff819f856fb374477792a5967759d94df266de7b7b4120e6f AS dependencies
+RUN apk add --no-cache --upgrade zlib=1.3.2-r1
 COPY --from=uv /uv /bin/uv
 WORKDIR /app
 COPY backend/pyproject.toml backend/uv.lock ./
 RUN --mount=type=cache,target=/root/.cache/uv UV_LINK_MODE=copy uv sync --frozen --no-install-project --no-build
 
 FROM python:3.13.15-alpine3.24@sha256:79e7a9b9ff1cbceff819f856fb374477792a5967759d94df266de7b7b4120e6f
+RUN apk add --no-cache --upgrade zlib=1.3.2-r1
 ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 \
     UV_LINK_MODE=copy UV_COMPILE_BYTECODE=1 \
     PATH="/app/.venv/bin:$PATH" PYTHONPATH=/app/src \
