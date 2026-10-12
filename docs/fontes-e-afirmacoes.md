@@ -86,3 +86,19 @@ Registros históricos, licenças e material ligado por hash conservam seus arqui
 | [PostgreSQL 18 — isolamento](https://www.postgresql.org/docs/18/transaction-iso.html) | Snapshot de leitura por transação REPEATABLE READ antes da primeira consulta; escritas financeiras mantêm locks explícitos e o isolamento anterior |
 
 Os dois arquivos Python upstream foram conferidos também por raw.githubusercontent.com. As diferenças acima delimitam a adaptação: o projeto consulta a posição atual e registra recebimentos por título, sem implementar o ledger contábil do ERPNext. Resultados locais desta versão estão em [verificação](verification.md).
+
+## Referências da revisão de UI/UX de 12/10/2026
+
+| Fonte primária reconsultada | Mecanismo e adaptação local | Limite |
+| --- | --- | --- |
+| [WCAG 2.2](https://www.w3.org/TR/WCAG22/) | Contraste, reflow, foco, alvos e prevenção de erro financeiro orientam leitura e confirmação | Scanner e inspeção parcial não certificam AA integral; zoom nativo e leitor de tela precisam de verificação própria |
+| [APG: diálogo modal](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/) | Sequência de teclado, Escape, foco inicial e retorno ao acionador na confirmação | Comportamento em curso e recuperação financeira precisam preservar a intenção do produto |
+| [Vercel Web Interface Guidelines](https://raw.githubusercontent.com/vercel-labs/web-interface-guidelines/main/command.md) | Semântica, foco visível, nomes de campos e erros próximos da entrada | Heurísticas de interface não são estudo de usabilidade nem medição de desempenho |
+| [Playwright: acessibilidade](https://playwright.dev/docs/accessibility-testing) | Executar axe com o estado carregado, conservar resultados inconclusivos e complementar com revisão manual | Zero violações automáticas não cobre todos os critérios WCAG |
+| [ERPNext: contas a receber](https://docs.frappe.io/erpnext/accounts-receivable-and-payable) e [Payment Entry](https://docs.frappe.io/erpnext/payment-entry) | Conferir identidade, vencimento e saldo juntos; distinguir título de recebimento | O projeto usa posição atual e vínculo direto por título, sem ledger, adiantamento, multimoeda ou alocação entre títulos |
+| [Stripe: gestão de faturas](https://docs.stripe.com/invoicing/dashboard) | Revisar objeto e consequência antes de concluir; consultar o recebimento no detalhe | Sem integração, envio, cobrança externa ou cópia de assets |
+| [Carbon: tabela de dados](https://www.carbondesignsystem.com/building-blocks/core/components/data-table/guidelines) | Controles próximos da tabela, densidade coerente e ações disponíveis no toque | Nenhum componente, pacote, marca ou imagem incorporado |
+
+As referências orientam a [direção e os critérios de aceite](uiux-20261012.md). As propostas ASCII são comparações de organização com os mesmos dados; as [capturas da aplicação](image-captures.md) têm sua própria revisão da fonte e fixture. A fonte não sustenta alegações de produtividade, satisfação ou conversão, que não foram medidas.
+
+O [registro final de UI/UX](evidence/uiux-20261012/review.json) liga 46 capturas antes e 46 depois à mesma fixture e identifica os 37 casos de navegador aprovados em `63687d0b0d53`. Build, capturas e scans de imagem pertencem a `02eca5b7cf23`, reutilizado por ID imutável depois de uma alteração somente no teste de filtros. Backend/upgrade mantêm as fontes de C17 e reaproveitam seus resultados com comparação de hashes. Zero violações do axe e os 15 pares de contraste medidos não certificam AA integral; os três inconclusivos finais permanecem registrados. Zoom nativo e leitor de tela não foram verificados.

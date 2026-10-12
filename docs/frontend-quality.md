@@ -1,6 +1,8 @@
 # Qualidade da interface financeira
 
-As [capturas locais atuais de 22/09/2026](image-captures.md) documentam seis vistas da aplicação sobre `deade1369`, com navegação sem alteração financeira. As provas de CI, restauração e design abaixo continuam vinculadas às respectivas fontes históricas.
+A [revisão de UI/UX de 12/10/2026](uiux-20261012.md) usa a aplicação de produção, uma fixture sintética e fontes congeladas para comparar as tarefas antes/depois. A baseline `1776b97bf13b`, sobre `61c1c7b`, e o runtime `02eca5b7cf23` têm 46 capturas cada. Os testes finais de `63687d0b0d53` aprovaram 37 casos de navegador, sem skip/retry; seus resultados são separados dos do CI histórico.
+
+Os inventários, propostas e matriz abaixo descrevem a direção de 22/09/2026. As [capturas dessa data](image-captures.md) documentam seis vistas sobre `deade1369`, com navegação sem alteração financeira. As provas de CI, restauração e design conservam as fontes e datas que identificam.
 
 Direção visual de 22/09/2026 sobre o commit `bd5aeb1c11d3fa2e98a4e401aa3e86b22e2945f4`. O baseline já tinha carteira, detalhe, filtros compactos e os quatro saldos visíveis. A nova composição separa **posição da carteira**, **movimentação recebida** e **conferência de títulos**, com marca e tipografia próprias.
 
@@ -109,3 +111,11 @@ Antes de alterar telas, confira o inventário, os contratos e os limites das pro
 ## Código e evidências relacionados
 
 [workspace](../frontend/src/features/workspace.tsx) · [jornadas](../frontend/tests/journey.spec.ts).
+
+## Revisão por tarefa em 12/10/2026
+
+A revisão atual conserva IBM Plex Sans, marca R/coluna e a separação entre saldo da carteira e recebido no período. A [paleta de marca](uiux-20261012.md#tipografia-espaço-e-cores) associa rubi a vencidos/erros e âmbar a alerta/risco, junto aos azuis e verde existentes. A confirmação reúne título, valor a registrar e saldo resultante. Um replay pendente conserva sua intenção original, inclusive nos registros locais antigos sem valor explícito. Filtros, paginação e retorno orientam a passagem entre título, aging e extrato.
+
+A coleta `before-4` reúne 46 capturas, com nove estados em cinco larguras, de 320 a 1440 CSS px, e vazio em 390 px. A baseline teve zero violações automáticas, com inconclusivos de ARIA/contraste. O scanner axe-core 4.13.0 analisou 46 estados finais, também sem violações; três inconclusivos de contraste de `.payment-preview > p`, em 1440, 1024 e 768 px, permanecem registrados. Quinze pares da paleta passaram os mínimos definidos para texto/controles. Esses resultados não certificam WCAG 2.2 AA. O [diagnóstico e aceite](uiux-20261012.md#diagnóstico-e-aceite) e a [verificação](verification.md) descrevem o escopo. Zoom nativo e leitor de tela continuam não verificados; a ampliação por CSS é um cenário distinto.
+
+A inspeção de 16 imagens originais comprovou o achado P2 da carteira: saldo e situação ficavam fora da área visível em 768 e 1024 px. A intervenção reorganiza linhas da carteira e dos relatórios até 1100 px, mantendo o menu móvel até 900 px. Na primeira rodada C17, 31 dos 37 casos E2E passaram; uma falha real de reflow com entrada de data e texto ampliado foi corrigida junto às asserções que falharam. A [rodada final](uiux-20261012.md#rodada-final) aprovou os 37 casos, e 16 originais finais foram inspecionados sem bloqueio visual nos recortes financeiros.
