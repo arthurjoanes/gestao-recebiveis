@@ -29,9 +29,29 @@ O [guia de casos e testes](docs/problem-solution.md) liga esses comportamentos �
 
 ## Demonstração
 
-![Página principal do Gestão de recebíveis](docs/readme/home.png)
+![Resumo do Gestão de Recebíveis na revisão de UI/UX de 12/10/2026](docs/screenshots/uiux-20261012/after/resumo-1440.png)
 
-_Página principal já versionada. Os [recortes com data, versão e hashes](docs/image-captures.md) permitem conferir estados específicos sem imagens de página inteira._
+_O [registro da revisão de UI/UX](docs/uiux-20261012.md) identifica fixture, fontes e comparação antes/depois. Os [registros de captura](docs/image-captures.md) conservam a procedência das imagens. A [imagem anterior](docs/readme/home.png) permanece como referência histórica._
+
+### Paleta da marca
+
+![Paleta: azul profundo, azul ação, verde caixa, âmbar atenção, rubi vencido, névoa e branco](docs/readme/brand-palette.svg)
+
+As cores mantêm funções fixas na interface. Situação e ação continuam identificadas por texto, além da cor.
+
+| Cor | Hex | Uso |
+| --- | --- | --- |
+| Azul profundo | `#152C49` | Navegação e marca |
+| Azul ação | `#1E57A4` | Ação principal, links e foco |
+| Verde caixa | `#226B4B` | Recebimentos e sucesso |
+| Âmbar atenção | `#8A5900`, fundo `#FFF5DE` | Alerta e risco |
+| Rubi vencido | `#A3323C` | Vencidos e erros |
+| Névoa | `#F0F2F5` | Fundo da aplicação |
+| Branco | `#FFFFFF` | Superfícies de conferência |
+| Texto principal | `#172B49` | Conteúdo e valores |
+| Texto secundário | `#526176` | Metadados e instruções |
+
+Tipografia, espaço e uso dos tokens estão na [direção da interface](docs/uiux-20261012.md#tipografia-espaço-e-cores).
 
 <a id="reproduzir-um-lote-pequeno"></a>
 
@@ -147,6 +167,7 @@ Os guias de [segurança](docs/security.md) e [qualidade da interface](docs/front
 | Reproduzir e recuperar                 | [Demo](docs/demo.md) · [Verificação](docs/verification.md) · [Restauração](docs/restore-proof.md) |
 | Conferir afirmações e datas            | [Fontes e afirmações](docs/fontes-e-afirmacoes.md)                                                |
 | Manter a apresentação                  | [Capturas](docs/image-captures.md) · [Padrão documental](docs/padrao-documentacao.md)             |
+| Conferir a revisão da interface | [UI/UX de 12/10/2026](docs/uiux-20261012.md) · [Qualidade da interface](docs/frontend-quality.md) |
 
 Relate problemas nas [issues](https://github.com/arthurjoanes/gestao-recebiveis/issues), com passos e versão, sem credenciais ou dados reais.
 
@@ -168,3 +189,5 @@ Código sob [licença MIT](LICENSE). IBM Plex Sans mantém a [licença OFL 1.1](
 A carteira mostra valor original, recebido e saldo. Uma parcela mantém o título aberto; quitar o saldo encerra o título e cancela as pendências de lembrete. Aging distribui o saldo aberto entre em dia, 1–30, 31–60, 61–90 e acima de 90 dias. O extrato identifica o cliente pelo ID e código externo, lista títulos e recebimentos e permite impressão pelo navegador.
 
 O [contrato da evolução](docs/evolucao-20261012.md) descreve migração, filtros, repetição após resposta perdida e limites dos relatórios. Resultados desta versão estão em [verificação](docs/verification.md); recibos e imagens de 2026 anteriores continuam históricos.
+
+A [revisão de UI/UX](docs/uiux-20261012.md) aproxima valor a registrar e saldo resultante na confirmação, mantém saldo/situação visíveis na carteira e preserva contexto ao abrir extrato e aging. A rodada final aprovou 37 casos de navegador, com [capturas antes/depois](docs/image-captures.md#comparação-de-uiux-em-12102026) da mesma fixture. Zoom nativo e leitor de tela não foram verificados; a validação não certifica WCAG integral.

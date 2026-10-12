@@ -227,3 +227,29 @@ As cinco [capturas da execução final](image-captures.md#evolução-de-12102026
 A conferência adicional de Ruff nos dois scripts Python, sem indicar configuração, encontrou seis apontamentos e diferenças de formatação sob regras fora do gate versionado. Com `--config backend/pyproject.toml`, lint e formato passaram nos dois arquivos, sem alteração de código para essa conferência.
 
 Gitleaks 8.30.1 verificou os arquivos publicáveis com as regras padrão e a configuração do repositório. Os achados novos eram os SHA-256 de `auth.py` e `test_api.py` nos comandos de verificação de fontes dos dois manifestos de outubro. Os valores foram recalculados e conferidos contra as cópias congeladas. A exceção mantém `AND` entre caminhos exatos e fingerprints exatos; um controle com chave sintética no mesmo manifesto continuou sendo detectado. O [registro dos fingerprints](evidence/evolution-20261012/ec3bf363168b/secret-fingerprint-review.json) contém versões, hashes e resultados redigidos. A [varredura final de 254 arquivos](evidence/evolution-20261012/ec3bf363168b/secret-final-scan.json), incluindo os 21 logs públicos sanitizados, retornou zero achados. Esses logs conservam espaços e linhas produzidos pelos comandos; a conferência de whitespace do diff de fontes/documentação os exclui. O workflow de histórico completo permanece habilitado.
+
+## Interface, paleta e recuperação — 12/10/2026
+
+A [revisão de UI/UX](uiux-20261012.md) implementa conferência de parcela/quitação, recuperação da intenção, proteção contra respostas de outra sessão, datas agrupadas e valores completos em telas menores. A [paleta da marca](../README.md#paleta-da-marca) define cores por função, acompanhadas de texto.
+
+O [registro agregado](evidence/uiux-20261012/review.json) identifica 127 fontes da baseline `1776b97bf13b` e 131 do candidato `63687d0b0d53`, ambos sobre `61c1c7b`. O build e as capturas finais usam o runtime `02eca5b7cf23`. A última mudança foi exclusivamente no teste de acessibilidade, para reabrir o filtro móvel que a aplicação recolhe após aplicar a busca. Fontes de runtime e locks permaneceram byte a byte iguais; as três imagens foram reutilizadas por ID imutável na execução final dos testes.
+
+| Verificação | Execução e resultado |
+| --- | --- |
+| Build de produção | `02eca5b7cf23`, Next.js, saída 0 |
+| ESLint, Prettier e TypeScript | `63687d0b0d53`, saída 0 |
+| Backend | `c17b690ae553`, 218 testes em 77,48 s; duas advertências de depreciação |
+| Migração | `c17b690ae553`, 48 recebimentos legados preservados e replayados, saída 0 |
+| Playwright | `63687d0b0d53`, 37/37 casos em cerca de 1,7 min, um worker, zero skip/retry |
+| Outro motor | Firefox 155.0: leitor entra, consulta aging, abre título e extrato; Chromium 153.0.8010.12 na suíte |
+| Trivy 0.74.0 | Três imagens de runtime `02eca5b7cf23`, zero vulnerabilidades, sem filtro de severidade ou exceções |
+| Comparação visual | 46 PNGs antes e 46 depois, Edge 155.0.4283.45, viewports de 320/390/768/1024/1440×900 |
+| Axe-core 4.13.0 | 46 estados finais, zero violações; três inconclusivos de contraste examinados manualmente |
+
+Backend, migrações, banco, dados de entrada e seus locks não mudaram desde a execução `c17b690ae553`. Esses dois gates foram reaproveitados por identidade de fontes; não foram executados novamente no último namespace. As provas anteriores de restore mantêm suas datas e hashes.
+
+O scanner deixou inconclusivo `.payment-preview > p` em 768, 1024 e 1440 px. A inspeção visual e a leitura de geometria/estilos confirmaram o parágrafo dentro da superfície, sem sobreposição com título ou valores: texto `#172B49`, fundo `#EDF3FC`, contraste 12,736:1. Quinze pares selecionados atendem aos mínimos usados de 4,5:1 para texto e 3:1 para componentes/foco. Teclado, retorno de foco, reflow, texto ampliado por CSS e movimento reduzido foram exercitados. Zoom nativo e leitor de tela não foram verificados; o resultado não certifica WCAG integral.
+
+O projeto `gr-uiux-20261012-02eca5b7cf23` permanece para revisão: [frontend em loopback](http://127.0.0.1:55834), API na porta 55833 e PostgreSQL interno. Somente `db`, `api` e `frontend` estão em execução; o worker não foi iniciado nesse ambiente de captura. Baseline, preparações substituídas e namespace E2E final foram removidos após conferir labels de propriedade. Os demais projetos não foram alterados.
+
+Gitleaks 8.30.1 retornou zero achados nos 355 arquivos publicáveis, incluindo as 92 capturas. A configuração existente permaneceu intacta. O [registro sanitizado](evidence/uiux-20261012/secret-scan.json) descreve esse inventário anterior à criação do próprio registro; snapshots, relatórios completos e traces ficam no runtime privado. Antes do push, a conferência é repetida com o registro incluído.

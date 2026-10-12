@@ -108,3 +108,9 @@ Cancelamento de título com qualquer recebimento retorna 409. Cancelamento já c
 | `/customers/{id}/statement` | `q`, `status`, vencimento, recebimento, `page`, `page_size`, `payment_page`, `payment_page_size` | `customer`, `totals`, páginas `titles` e `payments`, metadados e filtros |
 
 As chaves de faixa são `current`, `1_30`, `31_60`, `61_90`, `over_90`. A lista `/receivables` aceita `customer_id` e `aging_bucket` para preservar o drill-down. Reader pode consultar os dois relatórios. IDs, datas, busca e paginação conservam os limites HTTP; filtros inválidos retornam 422. Não existe `as_of` histórico. Fronteiras, totais e independência dos períodos estão no [contrato detalhado](evolucao-20261012.md).
+
+### Conferência e recuperação na interface
+
+Novas quitações pela interface congelam `amount_cents` com o valor mostrado na confirmação. Se outro recebimento reduzir o saldo antes do commit, o servidor rejeita o valor maior que o residual; a interface atualiza a posição e permite revisar a intenção. Pedidos locais v1 antigos com valor omitido conservam corpo e chave originais. A prévia local não participa do payload HTTP nem do hash idempotente.
+
+Timeout de 30 segundos, resposta inválida ou perda de conexão conservam a intenção para recuperação. Logout retira conteúdo protegido imediatamente e limpa intenções locais; respostas de uma sessão anterior são descartadas. Um 403 revalida a sessão e suas permissões. Esses comportamentos e limites estão na [revisão da interface](uiux-20261012.md).
