@@ -29,29 +29,9 @@ O [guia de casos e testes](docs/problem-solution.md) liga esses comportamentos �
 
 ## Demonstração
 
-![Resumo do Gestão de Recebíveis na revisão de UI/UX de 12/10/2026](docs/screenshots/uiux-20261012/after/resumo-1440.png)
+![Resumo da carteira no Gestão de Recebíveis](docs/readme/overview.png)
 
-_O [registro da revisão de UI/UX](docs/uiux-20261012.md) identifica fixture, fontes e comparação antes/depois. Os [registros de captura](docs/image-captures.md) conservam a procedência das imagens. A [imagem anterior](docs/readme/home.png) permanece como referência histórica._
-
-### Paleta da marca
-
-![Paleta: azul profundo, azul ação, verde caixa, âmbar atenção, rubi vencido, névoa e branco](docs/readme/brand-palette.svg)
-
-As cores mantêm funções fixas na interface. Situação e ação continuam identificadas por texto, além da cor.
-
-| Cor | Hex | Uso |
-| --- | --- | --- |
-| Azul profundo | `#152C49` | Navegação e marca |
-| Azul ação | `#1E57A4` | Ação principal, links e foco |
-| Verde caixa | `#226B4B` | Recebimentos e sucesso |
-| Âmbar atenção | `#8A5900`, fundo `#FFF5DE` | Alerta e risco |
-| Rubi vencido | `#A3323C` | Vencidos e erros |
-| Névoa | `#F0F2F5` | Fundo da aplicação |
-| Branco | `#FFFFFF` | Superfícies de conferência |
-| Texto principal | `#172B49` | Conteúdo e valores |
-| Texto secundário | `#526176` | Metadados e instruções |
-
-Tipografia, espaço e uso dos tokens estão na [direção da interface](docs/uiux-20261012.md#tipografia-espaço-e-cores).
+_Carteira fictícia em reais. [Procedência das capturas](docs/image-captures.md)._
 
 <a id="reproduzir-um-lote-pequeno"></a>
 
@@ -142,7 +122,7 @@ Se já usou a versão PostgreSQL Debian, leia a [migração do banco](docs/verif
 
 No [script principal](scripts/gestao-recebiveis.ps1), `test` verifica backend e navegador em ambientes descartáveis, incluindo o [Compose E2E](compose.e2e.yaml). `proof` executa a [prova de interrupção e reinício](scripts/prove.ps1) do banco de teste; a restauração em volume novo tem [executor separado](scripts/prove_restore.py).
 
-O [recibo do CI de 22/09/2026](docs/evidence/frontend-ci-20260922.json), sobre `5718cdad`, registra **15 casos Playwright**; o [recibo da revisão local](docs/evidence/portfolio-review-20260922.json) registra **158 testes backend** na versão que identifica. A [verificação](docs/verification.md) separa essa execução das revisões locais e dos resultados posteriores. Contagens e capturas são históricas; editar a documentação não reexecuta as suítes.
+A validação local de 12/10/2026 aprovou **218 testes backend** e **37 casos Playwright**, além de build, lint e tipos. Os resultados têm datas e escopos próprios em [verificação](docs/verification.md). O [recibo do CI de 22/09/2026](docs/evidence/frontend-ci-20260922.json), sobre `5718cdad`, conserva os **15 casos Playwright** daquela versão.
 
 <a id="limites-e-manutenção"></a>
 <a id="decisões-e-limites"></a>
@@ -167,7 +147,7 @@ Os guias de [segurança](docs/security.md) e [qualidade da interface](docs/front
 | Reproduzir e recuperar                 | [Demo](docs/demo.md) · [Verificação](docs/verification.md) · [Restauração](docs/restore-proof.md) |
 | Conferir afirmações e datas            | [Fontes e afirmações](docs/fontes-e-afirmacoes.md)                                                |
 | Manter a apresentação                  | [Capturas](docs/image-captures.md) · [Padrão documental](docs/padrao-documentacao.md)             |
-| Conferir a revisão da interface | [UI/UX de 12/10/2026](docs/uiux-20261012.md) · [Qualidade da interface](docs/frontend-quality.md) |
+| Manter acessibilidade e navegação      | [Qualidade da interface](docs/frontend-quality.md)                                              |
 
 Relate problemas nas [issues](https://github.com/arthurjoanes/gestao-recebiveis/issues), com passos e versão, sem credenciais ou dados reais.
 
@@ -190,4 +170,4 @@ A carteira mostra valor original, recebido e saldo. Uma parcela mantém o títul
 
 O [contrato da evolução](docs/evolucao-20261012.md) descreve migração, filtros, repetição após resposta perdida e limites dos relatórios. Resultados desta versão estão em [verificação](docs/verification.md); recibos e imagens de 2026 anteriores continuam históricos.
 
-A [revisão de UI/UX](docs/uiux-20261012.md) aproxima valor a registrar e saldo resultante na confirmação, mantém saldo/situação visíveis na carteira e preserva contexto ao abrir extrato e aging. A rodada final aprovou 37 casos de navegador, com [capturas antes/depois](docs/image-captures.md#comparação-de-uiux-em-12102026) da mesma fixture. Zoom nativo e leitor de tela não foram verificados; a validação não certifica WCAG integral.
+A confirmação mostra valor a registrar e saldo resultante. Pagamentos com resposta perdida conservam a mesma intenção para recuperação; logout limpa o contexto local, e respostas de outra sessão são descartadas. Carteira, aging e extrato mantêm valores completos e contexto de navegação. Os [critérios de interface](docs/frontend-quality.md) descrevem acessibilidade, estados e testes.

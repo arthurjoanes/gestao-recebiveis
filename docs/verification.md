@@ -1,28 +1,10 @@
 # Verificação local
 
-## Auditoria final — 22/09/2026
+Os resultados pertencem às versões e aos ambientes indicados em cada execução. Alterações na documentação não reexecutam as suítes. Testes de cálculo, identidade, concorrência e recuperação complementam os percursos HTTP e de navegador.
 
-Base examinada: [`4bb9b57edc1b298cada00bdf9045efb861ed0faa`](https://github.com/arthurjoanes/gestao-recebiveis/tree/4bb9b57edc1b298cada00bdf9045efb861ed0faa), branch `main`, remote `https://github.com/arthurjoanes/gestao-recebiveis.git`, árvore inicialmente limpa. Inventário: 167 arquivos rastreados e nenhum novo; `.env`, dependências, caches e resultados ignorados foram distinguidos dos arquivos publicáveis. Nenhum histórico, imagem ou manifesto foi removido ou atualizado para representar outra versão.
+## Builds e testes locais — 22/09/2026
 
-Os testes verificam estados financeiros, identidade de efeitos e concorrência, além de respostas HTTP. A fila no mesmo PostgreSQL tem benefício demonstrado: compartilhar a transação entre título, pagamento e cancelamento. O custo é uma máquina de estados que exige manter a ordem dos locks e a reconciliação.
-
-Foram inspecionados os contratos, rotas, parser/importação, pagamento, totais e fusos, sessões/admissão, fila/worker, migrações, Dockerfiles, workflows e scripts de prova; asserções de concorrência e falhas foram lidas por amostragem. No frontend, foram revistos consulta/erros, navegação, filtros, detalhe, diálogos e seus testes. Isso não equivale a revisão linha a linha de todos os arquivos.
-
-| Requisito e evidência atual                                      | Situação                               | Correção ou limite                                                                                                                                                                                                                                                                      |
-| ---------------------------------------------------------------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Instalação Windows a partir de fontes publicáveis                | Conforme após correção P1              | Exportação com `core.autocrlf=true` falhou em 30 arquivos do Prettier; `.gitattributes` agora fixa LF no frontend, preservando fontes binárias/licença. Nova exportação passou lint, tipos e build                                                                                      |
-| Regras, dinheiro, datas, permissões e concorrência               | Conforme no escopo demo                | 158 testes PostgreSQL passaram; valor em centavos, recortes distintos e papéis continuam no servidor. Uma empresa, sem isolamento multiempresa contratado                                                                                                                               |
-| Regressões das guardas de restauração                            | Conforme após correção P2              | Os 16 testes host passavam localmente, mas não entravam no CI; o workflow agora os executa explicitamente                                                                                                                                                                               |
-| Diagnósticos de navegador preservados                            | Conforme após correção P2              | Traces/PNGs já usavam volume e upload; relatório HTML era perdido no container removido. Compose normal e de prova agora têm volume próprio para o relatório, incluído no upload do CI                                                                                                  |
-| Público, problema, entrada, exemplo, decisões, autoria e limites | Conforme na leitura simulada do README | Define título e baixa; distingue a prova de R$ 125 da fixture de R$ 2.000 e da massa visual; remove repetição de CI e justificativa processual; indica manutenção e ajuda. Não houve estudo com leitores                                                                                |
-| Referências, identidade, hierarquia, densidade, foco e estados   | Parcial                                | Fontes primárias e direção existente preservadas; 15 casos Chromium passaram, incluindo cinco larguras e teclado. Quatro capturas atuais foram inspecionadas: Resumo 1440/320, detalhe longo e diálogo 320. Não se certifica AA integral                                                |
-| Contexto real e fronteira da simulação                           | Conforme                               | [Stripe documenta repetição idempotente](https://docs.stripe.com/api/idempotent_requests); o [caso de baixa](problem-solution.md#uma-resposta-perdida-não-pode-duplicar-o-pagamento) explicita mecanismo próprio e diferenças. Nenhuma integração ou benefício com usuários é presumido |
-| Arquivos públicos, dependências e provas históricas              | Conforme no escopo do scan             | Gitleaks e Trivy descritos abaixo; propostas visuais, capturas antigas, manifestos de falha, migrations e locks mantidos com sua função                                                                                                                                                 |
-| Restauração integral, produção e acessibilidade assistiva        | Não verificado nesta rodada            | Guardas e plano executados; não foi repetido o ensaio completo de restore/restart. Provedor externo, perda de host, leitor de tela, zoom nativo e medição de desempenho permanecem fora desta validação                                                                                 |
-
-O achado histórico do README em `5718cdad` já estava corrigido por `1198efd` e `4bb9b57`: a execução remota de 15 casos estava documentada, com limites visuais separados. Não foi tratado como falha atual.
-
-### Execuções desta auditoria
+Base examinada: [`4bb9b57`](https://github.com/arthurjoanes/gestao-recebiveis/tree/4bb9b57edc1b298cada00bdf9045efb861ed0faa), com as alterações candidatas descritas abaixo.
 
 Uma exportação `git archive` recebeu somente o diff candidato, sem `.env`, `node_modules` ou build pessoais. Credenciais temporárias foram geradas fora do repositório. Os serviços usaram os projetos Compose `gr-final-audit-20260922` e `gr-final-report-audit-20260922`, com o override E2E sem portas no host e bancos em `tmpfs`. As dependências foram instaladas pelos locks; o Docker reutilizou camadas/cache disponíveis. Não houve medição de capacidade durante as outras auditorias no mesmo host.
 
@@ -37,14 +19,6 @@ Uma exportação `git archive` recebeu somente o diff candidato, sem `.env`, `no
 
 Os resultados acima são locais, sobre o candidato sem commit. O novo workflow ainda não executou no GitHub. A prova remota e os registros anteriores continuam identificados abaixo com seus próprios SHAs.
 
-**Markdown publicado e candidata local:** em 22/09/2026, o README da raiz foi conferido no GitHub no baseline `4bb9b57e…`, incluindo hierarquia, parágrafos, código, imagens, textos alternativos, legendas, âncoras e navegação. Em 320 px não houve rolagem horizontal global; tabelas, quando presentes nos documentos examinados, mantiveram rolagem na própria região. Essa inspeção pertence à versão publicada, não às edições locais seguintes. O parser GFM também examinou os 13 Markdown da candidata sem falha de caminho local ou âncora.
-
-A candidata foi renderizada em Chromium offline com parser GFM e folhas de estilo obtidas do GitHub. A revisão conjunta dos seis READMEs cobriu 24 combinações: larguras de 1440 e 320 px, temas claro e escuro, quatro por projeto. As imagens carregaram e não houve overflow global; as aberturas e tabelas móveis foram inspecionadas. Esse preview verifica a composição local, mas não reproduz toda a sanitização, navegação ou recursos do GitHub e não comprova publicação da candidata.
-
-A [orientação oficial para README](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes) sustenta a precedência `.github` → raiz → `docs` e a preferência por links relativos internos; a [sintaxe oficial](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#section-links) explica âncoras e títulos repetidos. Um único título principal, a concisão dos parágrafos e a densidade escolhida de imagens são decisões editoriais desta revisão, não cotas impostas pelo GitHub.
-
-A [qualidade do frontend](frontend-quality.md) distingue a revisão estática local das jornadas remotas. O [CI do commit `5718cdad`](https://github.com/arthurjoanes/gestao-recebiveis/actions/runs/35744528178) executou a composição publicada; as provas mais antigas abaixo continuam limitadas às suas próprias versões.
-
 ## CI da interface publicada — 22/09/2026
 
 No SHA **`5718cdad3c5052ddbf6f660797121e9c47aa46c8`**, o run **[35744528178](https://github.com/arthurjoanes/gestao-recebiveis/actions/runs/35744528178)**, tentativa 1, terminou com sucesso. Build, 158 testes de backend, atualização do banco, scans e lint/tipos passaram. A suíte Chromium/Playwright 1.63.0 executou **15 casos em 33,4 s: 14 jornadas interativas e 1 caso de formatação BRL**, sem skip, retry ou filtro de seleção; um worker.
@@ -53,7 +27,7 @@ O artefato [browser-evidence](https://github.com/arthurjoanes/gestao-recebiveis/
 
 O download do artefato [exige login no GitHub e acesso de leitura](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/download-workflow-artifacts). A consulta anônima do link retornou 404 nesta auditoria, mas a API do run confirmou o artefato `10702621807`, não expirado, com expiração prevista em **21/12/2026**. O recibo sanitizado e a imagem versionada acima preservam a evidência pública que não depende desse download temporário.
 
-Esta prova remota não altera a recusa local anterior de inicialização. Também não comprova comparação baseline/candidato, zoom nativo, leitor de tela, conformidade AA integral ou desempenho percebido. O SHA acima identifica o código testado; esta atualização documental não foi uma nova execução da aplicação.
+Esta prova remota não verifica zoom nativo, leitor de tela, conformidade WCAG integral ou desempenho de produção. O SHA acima identifica o código testado.
 
 ## Reproduzir a verificação local
 
@@ -70,39 +44,13 @@ O banco de testes usa `tmpfs`. A jornada tem banco e serviços próprios, no pro
 
 Na revisão de 21/09/2026, uma cópia contendo apenas os arquivos de publicação construiu as imagens e passou os 145 testes de backend, os 12 casos Chromium e as verificações de estilo e tipos. A jornada adicional pelo proxy confirmou 243 títulos após importar três registros, duas tentativas no retry e preservação dos saldos após conflito. A prova de interrupção e reinício manteve uma tentativa e uma entrega, recusando o token do worker antigo. As três imagens de execução tiveram zero achados no Trivy dessa data.
 
-## Revisão autoral de portfólio — 22/09/2026
+## Backend e dependências — 22/09/2026
 
-Revisei README, exemplos, decisões, referências de código e as quatro capturas reais da prova `11adf9df…`. Conservei fontes e imagens históricas: elas mostram a versão que executou a prova, não a composição local posterior. O exemplo CSV de R$ 2.000 e o caso de restore de R$ 125 são fixtures diferentes.
+O [recibo local](evidence/portfolio-review-20260922.json) identifica fontes, instalação e resultados. O backend construído com Python 3.13.15 aprovou Ruff, formato, mypy e **158 testes com PostgreSQL** em 89,94 s, com dois avisos de depreciação. Uma execução anterior com as mesmas fontes e locks em Python 3.13.12 também passou, mas não validava a imagem nova. Esses tempos não são comparação de desempenho.
 
-Em uma cópia isolada do estado local, `scripts/check-backend.sh` passou Ruff, formato (40 arquivos), mypy (28 fontes) e **158 testes com PostgreSQL**, em 34,34 s, sem skip. A suíte manteve dois avisos de depreciação Starlette/httpx e AnyIO. Usei banco temporário e fontes atuais montadas somente para leitura; nenhum frontend foi iniciado. O lock Python da imagem era idêntico ao candidato, mas o runtime existente era Python 3.13.12, enquanto o Dockerfile atual fixa 3.13.15: isso verifica fontes/dependências nesse runtime, não uma instalação nova da imagem atual. O ambiente próprio foi encerrado, sem remover volumes alheios.
+No Windows, Node 24.19.0 e npm 11.17.0 instalaram o frontend pelo lock; tipos e build passaram. O lint completo passou após formatação Prettier de quatro arquivos. O audit do lock retornou zero achados naquela data. Trivy 0.74.0 não encontrou vulnerabilidades na imagem de backend; o resultado não abrangia frontend ou implantação pública.
 
-Para fechar a instalação atual, construí depois somente o backend com o Dockerfile e o lock presentes, em tag própria: **Python 3.13.15**, imagem `sha256:1cf09bded5bb590e9eac61e935553d2f274ffc7b06c14c414cb8b876a09ceae1`. Sem montar fontes sobre a imagem, Ruff, formato, mypy e os **158 testes passaram novamente**, em 89,94 s, com os mesmos dois avisos. A primeira execução foi preservada. Havia outras cargas no host; esses tempos não são comparação de desempenho. O novo banco era temporário e os recursos próprios também foram encerrados. Nenhum frontend foi iniciado.
-
-No host Windows, com Node 24.19.0 e npm 11.17.0, `npm ci --no-audit --fund=false` instalou o frontend do lock em diretório novo; tipos e build de produção passaram. `npm audit --package-lock-only --json` retornou zero achados em 22/09/2026. ESLint passou, mas `npm run lint` saiu com código 1 na etapa Prettier: `responsive-filters.tsx`, `receivable-detail.tsx`, `receivables.tsx` e `tests/journey.spec.ts` já divergiam de formato no snapshot. A correção posterior foi somente Prettier nesses quatro arquivos: conferi que cada saída é exatamente a formatação dos bytes originais, sem edição adicional. O lint completo passou na segunda execução. Tipos e build acima foram executados antes dessa formatação; não a tratam como aprovação visual. Zero achados do npm não cobre imagem, segredo, aplicação ou futuras vulnerabilidades.
-
-Gitleaks 8.30.1 foi executado com redação integral e a configuração existente sobre 165 arquivos rastreados/não ignorados do snapshot e o histórico alcançável (`--all`, 16 commits). O scanner saiu com código 1 nos dois escopos por um alerta `generic-api-key` em `docs/evidence/frontend-quality-static-20260922.json:24`. Conferi que o valor é exatamente o SHA-256 LF de `frontend/src/lib/api.ts`, um digest de evidência, não uma credencial. Naquela execução, não acrescentei exceção nem declarei o scan aprovado. Uma invocação inicial por caminho absoluto também apontou hashes já excepcionados: o scan relativo aplicou os caminhos da configuração existente corretamente e conservou o alerta acima. Trivy 0.74.0 retornou **zero vulnerabilidades** na imagem de backend atual, via Docker local, sem filtro de severidade ou exceções. A base de avisos foi atualizada em 22/09/2026 às 07:24 UTC. O scanner manteve avisos sobre SBOM de terceiros, Alpine 3.24 fora de sua lista de EOL e termos adicionais em metadados de licença. Esse resultado cobre os pacotes de sistema/Python detectados, não o frontend ou uma implantação. Uma tentativa anterior foi interrompida para coordenação do host, sem resultado aproveitado; a execução concluída está registrada no recibo.
-
-**Aditivo de segredos:** depois de recompor novamente o SHA-256 LF, acrescentei uma exceção à regra `generic-api-key`, exigindo em conjunto o caminho exato, a chave JSON `frontend/src/lib/api.ts` e somente aquele digest. As regras padrão e as exceções anteriores permanecem. Com a [configuração restrita](../.gitleaks.toml), o novo scan dos 166 arquivos publicáveis e o histórico completo de 16 commits retornaram zero achados, código 0. Em cópias externas, outro caminho, outra chave e outro valor continuaram detectados; um token fictício no mesmo arquivo também retornou código 1. Os resultados anteriores com código 1 foram preservados. Isso corrige a classificação do digest, sem alterar a aplicação nem validar o frontend.
-
-O [recibo desta revisão](evidence/portfolio-review-20260922.json) identifica versão, instalação, resultados e limites. Conferi os 129 links locais e sete fragmentos de README/docs, além de referências de casos aos testes; não houve renderização Markdown nem nova jornada.
-
-**Situação posterior: design aprovado pelo autor e 15 casos Playwright aprovados no [CI do commit `5718cdad`](https://github.com/arthurjoanes/gestao-recebiveis/actions/runs/35744528178).** A revisão autoral local descrita acima não executou o frontend: respeitou a recusa automática anterior, sem repetir o comando nem usar outro método. O CI remoto posterior executou 14 jornadas interativas e o caso de formatação BRL, com novas capturas. O procedimento local completo `setup`/`test`/`proof` não foi repetido; comparação pareada, zoom nativo, leitor de tela e avaliação completa de acessibilidade continuam fora dessa prova.
-
-## Interface da carteira — 22/09/2026
-
-A composição foi refeita com navegação horizontal, carteira com filtros próximos à lista, resumo que prioriza saldo e títulos vencidos, importação em três passos e detalhe financeiro com identidade e ação juntas. A validação usou frontend compilado em modo standalone e a API da revisão de segurança, em um projeto Compose separado (`ui-gr-redesign-20260922`) com PostgreSQL temporário. As capturas representativas estão em `docs/img/`. As regressões de navegação fazem parte da suíte versionada em `frontend/tests/journey.spec.ts`.
-
-- ESLint, Prettier, TypeScript e build de produção passaram.
-- Os 14 testes Playwright passaram no Microsoft Edge/Chromium local. Além dos percursos de importação, baixa, permissões e falhas, há regressões de retorno de lembrete e título: preservação de filtros, página, rolagem e foco; resposta atrasada não rouba o foco de quem está digitando; uma página esvaziada oferece retorno à primeira página.
-- As cinco áreas foram verificadas em 1440, 768, 390 e 320 px e com zoom CSS de 200%, sem overflow horizontal da página ou erros JavaScript. A carteira e os vencidos reorganizam as linhas no celular para manter valor e situação visíveis. A fila de lembretes também reorganiza título, estado, horário e acesso às tentativas, sem esconder a ação fora da tela. Tabelas extensas de importação e histórico mantêm rolagem na própria região. A suíte também cobre 1366 px, dados longos, confirmações, navegação por teclado, sessão expirada, erro de rede e ausência de resultados.
-- A área de trabalho foi medida até 2560 px: largura limitada a 1500 px e margens centrais. Foram conferidos foco visível, preferência por movimento reduzido e sete pares principais de contraste, todos acima de 4,5:1. Isso não constitui auditoria completa nem certificação WCAG. Zoom CSS também não equivale a zoom nativo do navegador.
-- As capturas da carteira, do resumo e do título foram feitas a partir do frontend de produção com dados sintéticos, após jornadas que acrescentam lotes de teste. Seus totais não são uma comparação controlada com capturas anteriores. Houve inspeção dos prints, incluindo valores e nomes longos, além das medidas automáticas.
-
-A mudança reorganiza componentes React, CSS e textos, sem alterar as regras de importação, baixa, autorização ou recuperação. As provas de backend abaixo continuam identificadas pela revisão em que foram realizadas; não representam uma nova prova de carga ou de entrega externa.
-
-## Limpeza de variáveis CSS — 22/09/2026
-
-Foram removidas somente as declarações `--amber` e `--amber-soft`, sem consumidores nos 22 arquivos de `frontend/src` nem no restante das fontes versionadas. A inspeção também conferiu acesso dinâmico a propriedades CSS e a configuração do frontend. O [registro separado](evidence/interface-cleanup-20260922.json) guarda o escopo e os hashes antes/depois. As provas e capturas anteriores foram preservadas; esta limpeza teve apenas conferência de diff e formato, sem novo build, teste de aplicação ou revisão visual.
+A varredura inicial de segredos classificou um SHA-256 de fonte como `generic-api-key`. O digest foi recalculado e recebeu uma exceção que exige caminho, chave JSON e valor exatos. Com a [configuração restrita](../.gitleaks.toml), os 166 arquivos publicáveis e o histórico de 16 commits retornaram zero achados. Controles em outro caminho, chave ou valor, e um token fictício no mesmo arquivo, continuaram detectados. O recibo conserva os resultados anteriores.
 
 ## Asserção de foco no retorno — 22/09/2026
 
@@ -228,28 +176,21 @@ A conferência adicional de Ruff nos dois scripts Python, sem indicar configura�
 
 Gitleaks 8.30.1 verificou os arquivos publicáveis com as regras padrão e a configuração do repositório. Os achados novos eram os SHA-256 de `auth.py` e `test_api.py` nos comandos de verificação de fontes dos dois manifestos de outubro. Os valores foram recalculados e conferidos contra as cópias congeladas. A exceção mantém `AND` entre caminhos exatos e fingerprints exatos; um controle com chave sintética no mesmo manifesto continuou sendo detectado. O [registro dos fingerprints](evidence/evolution-20261012/ec3bf363168b/secret-fingerprint-review.json) contém versões, hashes e resultados redigidos. A [varredura final de 254 arquivos](evidence/evolution-20261012/ec3bf363168b/secret-final-scan.json), incluindo os 21 logs públicos sanitizados, retornou zero achados. Esses logs conservam espaços e linhas produzidos pelos comandos; a conferência de whitespace do diff de fontes/documentação os exclui. O workflow de histórico completo permanece habilitado.
 
-## Interface, paleta e recuperação — 12/10/2026
+## Sessão, confirmação e reflow — 12/10/2026
 
-A [revisão de UI/UX](uiux-20261012.md) implementa conferência de parcela/quitação, recuperação da intenção, proteção contra respostas de outra sessão, datas agrupadas e valores completos em telas menores. A [paleta da marca](../README.md#paleta-da-marca) define cores por função, acompanhadas de texto.
+A validação local das alterações incluídas em `075841b` cobriu a prévia de parcela/quitação, recuperação após timeout, respostas de outra sessão, revogação de acesso, filtros de datas e valores completos em telas menores. As fontes de aplicação testadas permaneceram iguais até o commit; a documentação foi atualizada separadamente.
 
-O [registro agregado](evidence/uiux-20261012/review.json) identifica 127 fontes da baseline `1776b97bf13b` e 131 do candidato `63687d0b0d53`, ambos sobre `61c1c7b`. O build e as capturas finais usam o runtime `02eca5b7cf23`. A última mudança foi exclusivamente no teste de acessibilidade, para reabrir o filtro móvel que a aplicação recolhe após aplicar a busca. Fontes de runtime e locks permaneceram byte a byte iguais; as três imagens foram reutilizadas por ID imutável na execução final dos testes.
-
-| Verificação | Execução e resultado |
+| Verificação | Resultado |
 | --- | --- |
-| Build de produção | `02eca5b7cf23`, Next.js, saída 0 |
-| ESLint, Prettier e TypeScript | `63687d0b0d53`, saída 0 |
-| Backend | `c17b690ae553`, 218 testes em 77,48 s; duas advertências de depreciação |
-| Migração | `c17b690ae553`, 48 recebimentos legados preservados e replayados, saída 0 |
-| Playwright | `63687d0b0d53`, 37/37 casos em cerca de 1,7 min, um worker, zero skip/retry |
-| Outro motor | Firefox 155.0: leitor entra, consulta aging, abre título e extrato; Chromium 153.0.8010.12 na suíte |
-| Trivy 0.74.0 | Três imagens de runtime `02eca5b7cf23`, zero vulnerabilidades, sem filtro de severidade ou exceções |
-| Comparação visual | 46 PNGs antes e 46 depois, Edge 155.0.4283.45, viewports de 320/390/768/1024/1440×900 |
-| Axe-core 4.13.0 | 46 estados finais, zero violações; três inconclusivos de contraste examinados manualmente |
+| Build de produção | Next.js, saída 0 |
+| ESLint, Prettier e TypeScript | Saída 0 |
+| Backend | 218 testes em 77,48 s; dois avisos de depreciação |
+| Migração | 48 recebimentos legados preservados e repetidos, saída 0 |
+| Playwright | 37/37 casos em cerca de 1,7 min, um worker, zero skip/retry |
+| Navegadores | Chromium 153.0.8010.12; Firefox 155.0 no percurso leitor → aging → título → extrato |
+| Trivy 0.74.0 | Três imagens de runtime, zero vulnerabilidades, sem filtro de severidade ou exceções |
+| Axe-core 4.13.0 | 46 estados, zero violações; três resultados inconclusivos de contraste examinados manualmente |
 
-Backend, migrações, banco, dados de entrada e seus locks não mudaram desde a execução `c17b690ae553`. Esses dois gates foram reaproveitados por identidade de fontes; não foram executados novamente no último namespace. As provas anteriores de restore mantêm suas datas e hashes.
+Backend, migrações, banco, dados e seus locks não mudaram após os respectivos testes. Backend e migração foram reaproveitados por igualdade de fontes; não foram executados novamente no ambiente final de navegador. Build e capturas usaram as mesmas imagens de runtime por ID imutável; a última mudança foi no teste que reabre o filtro móvel após seu recolhimento automático. As provas de restauração mantêm suas datas e hashes.
 
-O scanner deixou inconclusivo `.payment-preview > p` em 768, 1024 e 1440 px. A inspeção visual e a leitura de geometria/estilos confirmaram o parágrafo dentro da superfície, sem sobreposição com título ou valores: texto `#172B49`, fundo `#EDF3FC`, contraste 12,736:1. Quinze pares selecionados atendem aos mínimos usados de 4,5:1 para texto e 3:1 para componentes/foco. Teclado, retorno de foco, reflow, texto ampliado por CSS e movimento reduzido foram exercitados. Zoom nativo e leitor de tela não foram verificados; o resultado não certifica WCAG integral.
-
-O projeto `gr-uiux-20261012-02eca5b7cf23` permanece para revisão: [frontend em loopback](http://127.0.0.1:55834), API na porta 55833 e PostgreSQL interno. Somente `db`, `api` e `frontend` estão em execução; o worker não foi iniciado nesse ambiente de captura. Baseline, preparações substituídas e namespace E2E final foram removidos após conferir labels de propriedade. Os demais projetos não foram alterados.
-
-Gitleaks 8.30.1 retornou zero achados nos 355 arquivos publicáveis, incluindo as 92 capturas. A configuração existente permaneceu intacta. O [registro sanitizado](evidence/uiux-20261012/secret-scan.json) descreve esse inventário anterior à criação do próprio registro; snapshots, relatórios completos e traces ficam no runtime privado. Antes do push, a conferência é repetida com o registro incluído.
+Os testes exercitaram 320, 390, 768, 1024 e 1440 CSS px, teclado, retorno de foco, texto ampliado por CSS e movimento reduzido. Os resultados inconclusivos de `.payment-preview > p` em 768, 1024 e 1440 px foram conferidos: texto e fundo tinham contraste de 12,736:1, sem sobreposição com título ou valores. Zoom nativo, leitor de tela e desempenho de produção não foram verificados; esse escopo não certifica conformidade WCAG integral.
