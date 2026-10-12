@@ -1,18 +1,29 @@
 @import "./financial-workspace.css";
 /* Application shell and financial workspace. */
 :root {
+  /* Brand palette: deep blue, action blue, cash green, amber and ruby. */
+  --brand-deep-blue: #152c49;
+  --brand-action-blue: #1e57a4;
+  --brand-cash-green: #226b4b;
+  --brand-amber: #8a5900;
+  --brand-ruby: #a3323c;
+  --brand-mist: #f0f2f5;
+  --brand-white: #ffffff;
   --ink: #172b49;
   --muted: #526176;
-  --canvas: #f0f2f5;
-  --paper: #ffffff;
+  --canvas: var(--brand-mist);
+  --paper: var(--brand-white);
   --line: #d0d6df;
-  --accent: #1e57a4;
+  --accent: var(--brand-action-blue);
   --accent-dark: #16427e;
   --accent-soft: #edf3fc;
-  --positive: #226b4b;
-  --red: #a3323c;
+  --positive: var(--brand-cash-green);
+  --positive-soft: #e8f4ed;
+  --warning: var(--brand-amber);
+  --warning-soft: #fff5de;
+  --red: var(--brand-ruby);
   --red-soft: #fff0f0;
-  --brand-ink: #152c49;
+  --brand-ink: var(--brand-deep-blue);
   --balance: #1e477f;
   --movement: #e8f0ec;
   --control: #7a899e;
@@ -26,7 +37,7 @@ body {
   color: var(--ink);
   background: var(--canvas);
   font-family: var(--font-product), Arial, sans-serif;
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.5;
 }
 button,
@@ -55,7 +66,7 @@ a {
   color: var(--accent);
 }
 :where(button, a, input, select, textarea, summary, [tabindex]):focus-visible {
-  outline: 3px solid #1e57a4;
+  outline: 3px solid var(--accent);
   outline-offset: 3px;
 }
 input,
@@ -63,7 +74,7 @@ select,
 textarea {
   width: 100%;
   min-width: 0;
-  min-height: 40px;
+  min-height: 44px;
   border: 1px solid var(--control);
   background: var(--paper);
   border-radius: 4px;
@@ -80,7 +91,7 @@ textarea {
 }
 input[type="file"] {
   padding: 6px;
-  font-size: 13px;
+  font-size: 14px;
 }
 input[type="file"]::file-selector-button {
   background: var(--accent-soft);
@@ -95,7 +106,7 @@ label {
   display: flex;
   flex-direction: column;
   gap: 5px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
 }
 h1,
@@ -168,7 +179,7 @@ legend {
   background: var(--accent);
   color: #fff;
   font-weight: 600;
-  font-size: 13px;
+  font-size: 14px;
   min-height: 40px;
   padding: 8px 14px;
   white-space: nowrap;
@@ -338,7 +349,7 @@ table {
   width: 100%;
   border-collapse: collapse;
   white-space: nowrap;
-  font-size: 13px;
+  font-size: 14px;
 }
 th {
   padding: 11px 20px;
@@ -408,8 +419,8 @@ td small {
 .badge-pending,
 .badge-processing,
 .badge-authorized {
-  color: #295d94;
-  background: #edf3fc;
+  color: var(--accent);
+  background: var(--accent-soft);
 }
 .badge-paid,
 .badge-sent,
@@ -418,27 +429,27 @@ td small {
 .badge-new,
 .badge-valid,
 .badge-accepted {
-  color: #216347;
-  background: #e8f4ed;
+  color: var(--positive);
+  background: var(--positive-soft);
 }
-.badge-overdue,
 .badge-retry_scheduled,
 .badge-transient,
 .badge-transient_error,
 .badge-uncertain,
 .badge-unknown,
 .badge-response_lost {
-  color: #87560f;
-  background: #fff4de;
+  color: var(--warning);
+  background: var(--warning-soft);
 }
+.badge-overdue,
 .badge-failed,
 .badge-rejected,
 .badge-invalid,
 .badge-conflict,
 .badge-permanent,
 .badge-permanent_error {
-  color: #9c333b;
-  background: #fcecee;
+  color: var(--red);
+  background: var(--red-soft);
 }
 .alert {
   padding: 12px 16px;
@@ -451,12 +462,12 @@ td small {
 .alert-error {
   background: var(--red-soft);
   border: 1px solid #efcfce;
-  color: #912e34;
+  color: var(--red);
 }
 .alert-success {
-  background: #eaf6ee;
+  background: var(--positive-soft);
   border: 1px solid #c0ddca;
-  color: #215f3f;
+  color: var(--positive);
 }
 .info-banner {
   padding: 12px 16px;
@@ -534,7 +545,7 @@ td small {
   gap: 6px;
 }
 .footnote {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--muted);
   line-height: 1.65;
   margin-top: 12px;
@@ -631,7 +642,7 @@ td small {
   color: var(--muted);
 }
 .modal {
-  width: min(520px, calc(100% - 32px));
+  width: min(620px, calc(100% - 32px));
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 24px;
