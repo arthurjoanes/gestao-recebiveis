@@ -1,6 +1,6 @@
 # Padrão de documentação
 
-Padrão editorial dos seis projetos do portfólio. O README apresenta o projeto; os guias detalham reprodução, contratos, decisões e evidências. O [registro de fontes e afirmações](fontes-e-afirmacoes.md) reúne as referências detalhadas deste repositório.
+Guia de manutenção dos documentos do repositório. O README apresenta o projeto; os guias detalham reprodução, contratos, decisões e evidências. O [registro de fontes e afirmações](fontes-e-afirmacoes.md) reúne as referências detalhadas deste repositório.
 
 ## Ordem de leitura
 
@@ -16,11 +16,11 @@ Padrão editorial dos seis projetos do portfólio. O README apresenta o projeto;
 | Documentação             | Qual guia abrir para cada aprofundamento?                                |
 | Autor e licença          | Quem desenvolveu, como entrar em contato e qual licença se aplica?       |
 
-Essa ordem é uma decisão editorial para leitura de portfólio: entender o problema e ver a aplicação antecedem os detalhes de execução. Os títulos são iguais nos seis projetos; o conteúdo e o diagrama representam cada implementação.
+O README apresenta o problema e a aplicação antes dos detalhes de execução. Contratos, operação e testes ficam nos respectivos guias.
 
 ## Apresentação e navegação
 
-O cabeçalho usa badges clicáveis de navegação: azul para demonstração, roxo para arquitetura, verde para execução, ocre para evidências e azul do LinkedIn para contato. Os rótulos identificam o destino sem depender da cor. Os SVGs são locais e não declaram aprovação de testes ou métricas automáticas.
+O cabeçalho usa links de navegação com rótulos que identificam cada destino. Os SVGs são locais.
 
 O diagrama de arquitetura fica no próprio README, acompanhado de uma explicação e de links para a implementação. A [documentação do GitHub](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams) explica a renderização de Mermaid.
 
@@ -50,22 +50,3 @@ Corrija ou qualifique afirmações sem sustentação. Prefira fontes primárias 
 Blocos de código precisam declarar a linguagem correta, como `python`, `json`, `sql`, `yaml`, `sh` ou `powershell`. Campos e comandos curtos usam código em linha. A linguagem declarada habilita o realce do renderizador; as cores variam conforme o tema e os tokens presentes. Veja o [guia de realce do GitHub](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-and-highlighting-code-blocks).
 
 Ao editar, confira os links relativos, as âncoras, a leitura no celular, os exemplos e a procedência das imagens. Preserve destinos existentes quando reorganizar títulos. Atualize o registro de fontes quando uma alteração mudar uma afirmação, uma tarifa, uma versão ou um resultado. O GitHub descreve propósito, uso e caminhos relativos no [guia de READMEs](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes).
-
-## Referências de apresentação
-
-A amostra principal contém os **oito primeiros resultados por estrelas** retornados pela [API de pesquisa de repositórios do GitHub](https://api.github.com/search/repositories?q=stars%3A%3E100000&sort=stars&order=desc&per_page=15), em **22/09/2026 às 19:23 UTC**, com `incomplete_results=false`. A consulta usa o corte de 100.000 estrelas e ordenação decrescente. O [snapshot da consulta](references/readme-study-20260922.json) conserva os números desse instante. As observações de apresentação abaixo são uma análise editorial dos READMEs consultados naquela data.
-
-| Posição | Repositório                                                                         | Estrelas na consulta | Elemento aproveitado                                            |
-| ------- | ----------------------------------------------------------------------------------- | -------------------: | --------------------------------------------------------------- |
-| 1       | [Build Your Own X](https://github.com/codecrafters-io/build-your-own-x)             |              548.801 | Propósito curto e índice direto para o conteúdo.                |
-| 2       | [Awesome](https://github.com/sindresorhus/awesome)                                  |              508.964 | Navegação por assuntos e caminhos de contribuição separados.    |
-| 3       | [public-apis](https://github.com/public-apis/public-apis)                           |              482.304 | Índice e tabelas com colunas estáveis.                          |
-| 4       | [freeCodeCamp](https://github.com/freeCodeCamp/freeCodeCamp)                        |              455.975 | Identidade, badges úteis, propósito e sumário.                  |
-| 5       | [Free Programming Books](https://github.com/EbookFoundation/free-programming-books) |              397.453 | Recursos agrupados e licença fácil de encontrar.                |
-| 6       | [OpenClaw](https://github.com/openclaw/openclaw)                                    |              390.259 | Início rápido, composição do sistema, segurança e documentação. |
-| 7       | [System Design Primer](https://github.com/donnemartin/system-design-primer)         |              371.295 | Diagramas, decisões técnicas e fontes próximas ao assunto.      |
-| 8       | [Developer Roadmap](https://github.com/nilbuild/developer-roadmap)                  |              367.912 | Atalhos no cabeçalho e estrutura do repositório.                |
-
-O [Laya](https://github.com/NandhaKishorM/laya) foi a referência visual adicional indicada pelo autor. Seus badges e a separação entre exemplos, resultados e limites inspiraram a apresentação. Seus números de desempenho, preços e alegações não são evidência sobre estes projetos.
-
-As referências orientaram escolhas de navegação e hierarquia. Não foram copiados slogans, resultados, logotipos de projetos ou declarações de qualidade. A seleção por estrelas registra popularidade observada naquele momento; as escolhas de documentação foram avaliadas pelo que ajudam o leitor a encontrar.

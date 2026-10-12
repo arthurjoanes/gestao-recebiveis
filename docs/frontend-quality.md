@@ -1,121 +1,53 @@
-# Qualidade da interface financeira
+# Qualidade da interface
 
-A [revisão de UI/UX de 12/10/2026](uiux-20261012.md) usa a aplicação de produção, uma fixture sintética e fontes congeladas para comparar as tarefas antes/depois. A baseline `1776b97bf13b`, sobre `61c1c7b`, e o runtime `02eca5b7cf23` têm 46 capturas cada. Os testes finais de `63687d0b0d53` aprovaram 37 casos de navegador, sem skip/retry; seus resultados são separados dos do CI histórico.
+Este guia descreve os contratos de navegação, estados e acessibilidade do frontend. Regras financeiras e permissões são validadas no servidor; a interface apresenta os dados e preserva a intenção de cada ação.
 
-Os inventários, propostas e matriz abaixo descrevem a direção de 22/09/2026. As [capturas dessa data](image-captures.md) documentam seis vistas sobre `deade1369`, com navegação sem alteração financeira. As provas de CI, restauração e design conservam as fontes e datas que identificam.
+## Valores e estados financeiros
 
-Direção visual de 22/09/2026 sobre o commit `bd5aeb1c11d3fa2e98a4e401aa3e86b22e2945f4`. O baseline já tinha carteira, detalhe, filtros compactos e os quatro saldos visíveis. A nova composição separa **posição da carteira**, **movimentação recebida** e **conferência de títulos**, com marca e tipografia próprias.
+O Resumo distingue o saldo aberto, suas partes vencida e em dia, e os recebimentos do período. Filtros de vencimento e de pagamento têm efeitos diferentes e são identificados junto aos valores. Títulos e relatórios exibem original, recebido e saldo, com centavos completos.
 
-**Design aprovado pelo autor em 22/09/2026; execução automatizada comprovada no commit `5718cdad3c5052ddbf6f660797121e9c47aa46c8`:** o [CI do commit `5718cdad`](https://github.com/arthurjoanes/gestao-recebiveis/actions/runs/35744528178) aprovou 15 casos Playwright (14 jornadas interativas e 1 caso de formatação BRL), sem skip ou retry, e produziu 21 PNGs. A revisão local anterior aprovou lint, tipos, build e verificações estáticas; o lançamento foi recusado com `blocked by policy` e não foi repetido nem contornado. O CI posterior é uma prova remota distinta. O [recibo do CI](evidence/frontend-ci-20260922.json), o [registro da direção](evidence/visual-direction-static-20260922.json) e a [revisão anterior](evidence/frontend-quality-static-20260922.json) conservam seus escopos e fontes.
+Valores monetários usam centavos inteiros e formatação com `BigInt`. Situação, erro e sucesso são identificados por texto, além da cor. Carregamento, ausência de dados, falha de consulta e valor zero têm mensagens distintas.
 
-## Inventário e decisões que cada tela apoia
+A confirmação de recebimento reúne título, cliente, valor a registrar e saldo resultante. **Quitar saldo restante** envia explicitamente o valor conferido; uma alteração concorrente pode exigir consultar o saldo e criar uma nova intenção. Intenções antigas sem valor explícito conservam seu payload original durante o replay. Consulte o [contrato HTTP](api-contract.md) e as [regras da evolução](evolucao-20261012.md).
 
-| Tela ou estado                                           | Pessoa e decisão                                        | Informação indispensável / ação                                                                 |
-| -------------------------------------------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| Login, carregamento inicial e sessão expirada            | Operador ou leitor inicia/retoma a consulta             | Perfil, credenciais demo, erro explícito; entrar sem ocultar a distinção entre os papéis        |
-| Resumo e filtros de período                              | Financeiro separa dívida de recebimento                 | Aberto, vencido, em dia e recebido; datas e busca aplicadas; abrir o respectivo recorte         |
-| Títulos, página seguinte, vazio e página esvaziada       | Financeiro localiza uma obrigação                       | Código + sistema, cliente, vencimento, valor e situação; filtrar, abrir e voltar à mesma página |
-| Título aberto, pago ou cancelado                         | Operador confere antes de dar baixa; leitor consulta    | Uma identidade, valor e situação juntos; pagamento/histórico; ação apenas se aberto e operador  |
-| Confirmação de baixa/cancelamento, erro e envio em curso | Operador confirma uma mudança financeira                | Valor integral, consequência, motivo válido; bloqueio durante envio, Escape e foco de retorno   |
-| Importações, prévia, conflito, confirmação e histórico   | Operador confere o lote; leitor consulta resultados     | Contagens, total, linha e erro; confirmar apenas lote elegível, sem inclusão parcial            |
-| Lembretes, seleção e tentativas                          | Financeiro distingue fila, tentativa e entrega simulada | Estado, etapa, próxima tentativa, horários e identidade; abrir/fechar preservando o recorte     |
-| Demonstração e controles indisponíveis                   | Pessoa avaliadora reproduz cenários fictícios           | Relógio comercial separado do real, pausa, cenário e papel; não representa envio externo        |
-| Navegação, menu e conta                                  | Ambos os perfis mudam de área e saem                    | Área atual, perfil, nome acessível, foco e erro de logout                                       |
+## Sessão e recuperação
 
-Carregamento, ausência de dados, erro de consulta e valor zero são estados diferentes. Atualizar refaz a consulta; a data comercial não é apresentada como horário de atualização da página.
+- Logout retira o conteúdo protegido imediatamente e limpa intenções locais, mesmo se a resposta da API se perder.
+- Respostas de uma sessão anterior são descartadas. Consultas substituídas são canceladas e não atualizam o novo recorte.
+- Um 403 revalida identidade, perfil e CSRF. Perda de permissão retira os controles de alteração.
+- Timeout, resposta inválida ou perda de conexão após pagamento conservam chave e conteúdo para recuperação; a interface não cria automaticamente outro recebimento.
+- O leitor consulta os dados sem controles de pagamento, cancelamento ou configuração da demo.
 
-## Diagnóstico e duas alternativas antes de expandir
+O estado de autenticação do cliente pertence ao navegador. A renderização no servidor usa um estado inicial vazio, sem compartilhar credenciais ou identidade entre requisições.
 
-As prioridades indicam o impacto do problema no baseline: P1 compromete a compreensão da tarefa; P2 representa atrito de leitura; P3 é refinamento visual. A linha de preservação não registra um defeito. A validação abaixo distingue inspeção estática, jornadas remotas no SHA publicado e verificações ainda não realizadas.
+## Navegação e formulários
 
-| Evidência do baseline atual                                                       | Efeito sobre a decisão                              | Prioridade                 | Intervenção                                                                                                                                            | Validação e limite                                                                                                                                                                                                                                                                           |
-| --------------------------------------------------------------------------------- | --------------------------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Quatro saldos lado a lado, com peso semelhante                                    | Recebido parece uma parcela do aberto               | P1                         | Aberto ocupa a largura de seu grupo; vencido e em dia aparecem abaixo como partes. Recebido ocupa superfície separada com período e ressalva explícita | [Fonte do Resumo](../frontend/src/features/overview.tsx) conserva os quatro valores da API e explicita as relações. CI aprovou visibilidade dos quatro saldos, recortes e ausência de overflow nas cinco larguras da suíte; confronto visual pareado com o baseline permanece não verificado |
-| Carteira já apresenta código/origem, cliente, vencimento, valor e situação juntos | Tabela sustenta conferência real                    | Não aplicável: preservação | Preservar tabela e filtros aplicados; não trocar títulos por cartões                                                                                   | [Fonte da carteira](../frontend/src/features/receivables.tsx) mantém campos e paginação. CI aprovou filtros, retorno à página e foco, inclusive resposta atrasada sem roubar a digitação                                                                                                     |
-| Detalhe já reúne valor, situação e baixa                                          | Proximidade correta, mas superfície igual às demais | P2                         | Borda de identificação do registro e separação entre decisão financeira e metadados; mesmas ações e permissões                                         | Inspeção de fontes preserva ações e papéis. CI aprovou detalhe com dados longos nas cinco larguras, confirmação e retorno de foco; não é estudo de leitura com pessoas                                                                                                                       |
-| Ícone quadrado genérico e fonte de sistema                                        | Produtos diferentes pareciam o mesmo shell          | P3                         | Símbolo original derivado do R/coluna de registros, IBM Plex Sans e cabeçalho navy                                                                     | SVGs/fontes e amostras 16/24/32 px inspecionados estaticamente. Carregamento, fallback e favicon na aplicação: não verificados                                                                                                                                                               |
+Busca, filtros, página e registro selecionado permanecem ao abrir e voltar de títulos, aging, extrato e tentativas de lembrete. O retorno restaura o foco no acionador; uma resposta atrasada não move o foco de quem já está digitando.
 
-As duas propostas usam **os mesmos dados** da demo já consultada: referência 17/08/2026, aberto R$ 515.153,87 (192 títulos), vencido R$ 243.020,08 (96), em dia R$ 272.133,79 (96), recebido de 01 a 17/08 R$ 117.816,83 (48). Não são indicadores novos.
+Diálogos têm nome acessível, foco inicial, navegação por Tab e Shift+Tab, fechamento por Escape e retorno ao acionador. Durante envio, controles impedem nova confirmação. Mensagens de erro ficam próximas do campo, e validação inválida direciona o foco à entrada correspondente.
 
-- [Proposta A — posição e movimento](design/proposta-a.png) ([SVG](design/proposta-a.svg)): agrupa partes do aberto e separa recebimentos. **Escolhida** pela relação explícita entre os valores e pelo acesso direto à lista vencida.
-- [Proposta B — conferência primeiro](design/proposta-b.png) ([SVG](design/proposta-b.svg)): lista ocupa o lado principal, saldos formam uma coluna lateral. Rejeitada porque enfraquece a leitura do todo e das partes no Resumo.
+Datas de vencimento e recebimento são agrupadas separadamente. Cada paginação tem nome próprio; a impressão do extrato identifica filtros e página exibida, enquanto os totais abrangem o recorte completo.
 
-Ambas são **simulações de composição**, identificadas dentro da imagem; não são screenshots nem prova de responsividade. A escolha orienta a implementação e continua sem estudo de usabilidade. A pesquisa rejeitou aparência editorial bege/serifada e filetes decorativos.
+## Responsividade e acessibilidade
 
-## Referências e tradução para o produto
+A carteira e os títulos dos relatórios reorganizam suas linhas até 1100 px para manter saldo, situação e identidade visíveis. O menu e os filtros móveis recolhem até 900 px; aplicar filtro altera a consulta somente no envio. Tabelas extensas de importações e histórico mantêm rolagem local identificada.
 
-[Stripe — gestão de faturas](https://docs.stripe.com/invoicing/dashboard), em imagem oficial, mostrou valor/situação/ação vinculados ao documento. Foi aproveitada a proximidade para conferência, sem cobrança externa, integração ou cópia. A captura do [SolidInvoice](https://github.com/SolidInvoice/SolidInvoice) consultada anteriormente reforçou a lista de trabalho; seus cartões coloridos equivalentes e colunas comprimidas foram rejeitados. Nenhum código desses produtos foi incorporado; suas licenças não são tratadas como licença geral de dependências ou imagens.
+Confira pelo menos 320, 390, 768, 1024 e 1440 CSS px, incluindo nomes longos, valores altos, vazio, erros e diálogo aberto. Teste teclado, foco visível, texto ampliado e preferência por movimento reduzido. Não dependa apenas de uma varredura automática para contraste ou semântica.
 
-| Fonte primária / material consultado                                                                                                                                  | Aproveitado e adaptado                                                                   | Rejeitado / licença                                                                                                        |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| [Linear — redesenho](https://linear.app/now/how-we-redesigned-the-linear-ui), imagem oficial da interface com lista e detalhe                                         | Contraste entre navegação, edição e conteúdo; cor intensa tem uma função                 | Não copiar shell, código, marca ou imagem. A publicação não concede licença para reutilizar seus assets                    |
-| [Carbon — tabelas](https://carbondesignsystem.com/components/data-table/usage/) e [eixos/rótulos](https://carbondesignsystem.com/data-visualization/axes-and-labels/) | Alinhamento numérico, unidade e comparabilidade; controles junto do trabalho             | Não adicionar gráficos para decorar nem arredondar dinheiro para K/M; padrões consultados, nenhum componente copiado       |
-| [Atlassian — cor](https://atlassian.design/foundations/color/) e [Radix — escalas](https://www.radix-ui.com/colors/docs/palette-composition/understanding-the-scale)  | Separar fundo, elemento interativo, texto e status                                       | Não adotar as paletas como identidade pronta; sem pacote ou tokens copiados                                                |
-| [Pentagram — Galaxy](https://www.pentagram.com/work/galaxy), aplicação real de símbolo e wordmark                                                                     | Um gesto reconhecível que funciona sem ornamento e em aplicações diferentes              | Não reutilizar círculo/quadrado, desenho ou marca; direitos dos autores                                                    |
-| [Swavee — identidade conceitual](https://www.behance.net/gallery/241721015/Visual-Identity-design-for-Swavee), apresentação no Behance                                | Relação entre nome, símbolo e aplicação; referência fictícia explicitamente identificada | Não copiar letras, esfera, fotos, gradientes ou marketing. Portfólio conceitual não comprova usabilidade nem exclusividade |
+IBM Plex Sans 400/600 é servida localmente com `next/font/local`, `display: swap` e fallback Arial. Preserve a [licença OFL 1.1](../frontend/src/app/fonts/plex-LICENSE.txt) e os [registros de origem](../frontend/src/app/fonts/sources.json).
 
-As [Web Interface Guidelines](https://github.com/vercel-labs/web-interface-guidelines/blob/main/command.md) orientaram foco visível, redução de movimento, campos nomeados e a separação entre consultar e aplicar filtros. [Estado em React](https://react.dev/learn/choosing-the-state-structure), [reflow](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html) e [alvos](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html) orientam decisões; não certificam a aplicação. Estas fontes sustentam padrões e inferências de design, não uma avaliação de usabilidade com usuários.
+## Testes e manutenção
 
-## Identidade, tipografia e superfícies
+Execute o comando [documentado de verificação](verification.md#reproduzir-a-verificação-local). Build, ESLint, Prettier e TypeScript fazem parte das verificações do frontend.
 
-O símbolo é um desenho original de coluna de registro ligada à letra R: indica carteira e conferência, sem brasão financeiro genérico. [Wordmark](../frontend/public/brand/wordmark.svg), [compacto](../frontend/public/brand/mark.svg), [mono](../frontend/public/brand/mark-mono.svg), [reverso](../frontend/public/brand/mark-reverse.svg) e [favicon](../frontend/src/app/icon.svg) foram produzidos em SVG. O texto da marca no produto usa a mesma família, com nome acessível e símbolo decorativo. A [conferência a 16/24/32 px](design/marcas-16-24-32.png) preservou R/coluna em rasterização estática; legibilidade na aba real permanece não verificada. Não se alega exclusividade jurídica da marca.
+| Suíte | Cobertura principal |
+| --- | --- |
+| [journey.spec.ts](../frontend/tests/journey.spec.ts) | Importação, conflitos, lembretes, perfis, filtros, paginação e retorno de foco |
+| [payments-reports.spec.ts](../frontend/tests/payments-reports.spec.ts) | Parcelas, recuperação, aging, extrato e impressão |
+| [session-safety.spec.ts](../frontend/tests/session-safety.spec.ts) | Logout, troca de conta, respostas atrasadas e revogação de acesso |
+| [uiux-financial.spec.ts](../frontend/tests/uiux-financial.spec.ts) | Valor confirmado, intenção legada e timeout de pagamento |
+| [uiux-accessibility.spec.ts](../frontend/tests/uiux-accessibility.spec.ts) | Axe, reflow, texto ampliado, movimento reduzido e percurso em Firefox |
 
-A [comparação tipográfica](design/tipografia.png) usa os arquivos reais transformados em contornos. IBM Plex Sans 400/600 foi escolhida pela diferenciação de dígitos e pela leitura compacta dos registros; Source Sans 3 ficou para o texto analítico da Loja. PT-BR, moeda, sinais e dígitos foram conferidos por FontTools; os dígitos têm avanços iguais por padrão, sem feature `tnum` nos arquivos. O CSS também declara números tabulares. O carregamento real/fallback ainda não foi observado. `next/font/local`, `display: swap` e Arial como fallback não dependem de serviço externo.
+A validação local de 12/10/2026 aprovou 37 casos, sem skip ou retry. Os [resultados e limites](verification.md#sessão-confirmação-e-reflow--12102026) identificam as versões e verificações realizadas. Zoom nativo, leitor de tela, produtividade com usuários e desempenho de produção não foram demonstrados; os testes não certificam conformidade WCAG integral.
 
-Os dois WOFF2 somam **130.080 bytes** antes do transporte/cache, custo novo para a identidade. Não houve medição de LCP ou interação. Fontes IBM Plex no commit `78cd4223d8de9fcb78cba84eadecb269c56093c5`, [origens e hashes](../frontend/src/app/fonts/sources.json), sob [OFL 1.1 integral](../frontend/src/app/fonts/plex-LICENSE.txt), mantidas sem alteração. Código do projeto e fontes têm licenças próprias; nenhum kit de dashboard foi incorporado.
-
-Canvas `#f0f2f5`, registros brancos, cabeçalho `#152c49`, aberto `#1e477f`, recebido `#e8f0ec`: são funções diferentes, não cartões com cor trocada. Verde se refere a recebimento; vencido mantém texto e valor em âmbar. Filtros usam superfície de preparação neutra. A ação é azul, erro mantém vermelho/rótulo. Nove pares principais passaram cálculo isolado de contraste; isso não equivale a conformidade integral.
-
-Conteúdo centrado até 1440 px, margens 36/24/16 px. A posição ocupa duas partes da largura e o recebido uma; até 1050 px, grupos se empilham; até 480 px, vencido/em dia também. O maior número usa `clamp(28px, 3.3vw, 44px)`; os demais preservam centavos e podem quebrar. Carteira desktop continua tabela; filtros recolhem até 900 px sem alterar a consulta antes do envio. Detalhe, confirmação, importação, lembretes e demo compartilham tokens/ritmo sem receber indicadores decorativos. Transições de cor de 150 ms e preferência de movimento reduzido permanecem; foi removida a animação de entrada do título.
-
-## Matriz das 11 dimensões
-
-Cada célula mostra **antes → depois**. C = Conforme no escopo da inspeção de fontes; P = Parcialmente conforme; NC = Não conforme; NV = Não verificado; NA = Não aplicável. O estado C documental/estático não implica conformidade visual, teste de usuário ou WCAG integral. “Depois” se refere à direção implementada em `5718cdad`; a execução remota torna parciais os itens antes não verificados, sem transformar cobertura limitada em conformidade integral.
-
-| Dimensão                                       | Login | Resumo | Carteira | Detalhe + confirmação | Importações + prévia | Lembretes + tentativas | Demo | Navegação + conta |
-| ---------------------------------------------- | ----- | ------ | -------- | --------------------- | -------------------- | ---------------------- | ---- | ----------------- |
-| 1. Objetivo e público                          | C→C   | C→C    | C→C      | C→C                   | C→C                  | C→C                    | C→C  | C→C               |
-| 2. Hierarquia da informação                    | C→C   | P→P    | P→P      | P→P                   | C→C                  | C→C                    | C→C  | C→C               |
-| 3. Layout, alinhamento, espaçamento, densidade | P→P   | P→P    | P→P      | P→P                   | P→P                  | P→P                    | P→P  | P→P               |
-| 4. Tipografia, cores e consistência            | P→P   | P→P    | P→P      | P→P                   | P→P                  | P→P                    | P→P  | P→P               |
-| 5. Indicadores, gráficos e tabelas             | NA→NA | P→P    | P→P      | C→C                   | C→C                  | C→C                    | C→C  | NA→NA             |
-| 6. Navegação, filtros, formulários e ações     | P→P   | P→P    | P→P      | P→P                   | P→P                  | P→P                    | P→P  | P→P               |
-| 7. Carregamento, vazio, erro e atualização     | C→P   | C→P    | C→P      | C→P                   | C→P                  | C→P                    | C→P  | C→P               |
-| 8. Acessibilidade e responsividade             | P→P   | P→P    | P→P      | P→P                   | P→P                  | P→P                    | P→P  | P→P               |
-| 9. Desempenho                                  | P→P   | P→P    | P→P      | P→P                   | P→P                  | P→P                    | P→P  | P→P               |
-| 10. Manutenção e reaproveitamento              | C→C   | C→C    | P→C      | P→C                   | C→C                  | C→C                    | C→C  | C→C               |
-| 11. Dados, regras e permissões                 | C→C   | C→C    | C→C      | C→C                   | C→C                  | C→C                    | C→C  | C→C               |
-
-NA na dimensão 5: login e navegação não apresentam informação analítica ou tabela. Os outros casos foram avaliados quanto aos números/tabelas existentes; não há justificativa para adicionar gráficos decorativos.
-
-P na hierarquia nova: o CI renderizou a composição, mas não houve observação de uso com pessoas. P em estados: as jornadas exercitaram erros, vazios, expiração, filtros e proteção de foco; não esgotam todas as combinações. P em layout, navegação e acessibilidade: há checks reais e capturas no escopo da suíte, sem comparação pareada de todas as telas, zoom nativo ou leitor de tela. P em desempenho: assets de build foram comparados, mas waterfall, paint, renderizações e interação não foram medidos. P nas cores: pares principais calculados; estados sobrepostos e todos os componentes não foram auditados visualmente.
-
-## Contratos e verificações
-
-Cliente HTTP, tipos, formatação com `BigInt`, hook de consulta, navegação/foco, backend, auth, papéis e regras ficaram fora do delta. O agrupamento usa os quatro valores retornados, sem somá-los novamente no frontend. O vencido é parte do aberto; recebido mantém suas próprias datas. Importação não passa a permitir inclusão parcial; lembretes continuam simulados; controles do leitor não ganham permissão.
-
-Na revisão local: **ESLint, Prettier, TypeScript e build de produção aprovados; 15 casos Playwright apenas listados**. Dez asserções puras de formatação e nove pares de contraste foram conferidos. O manifesto histórico lista hashes e assets emitidos; bytes de build não medem transferência ou velocidade percebida. Depois, o [CI do commit `5718cdad`](https://github.com/arthurjoanes/gestao-recebiveis/actions/runs/35744528178) executou os **15 casos com sucesso em 33,4 s**: 14 jornadas interativas e 1 caso de formatação, Chromium/Playwright 1.63.0, um worker, zero skip/retry, sem filtro de seleção. As jornadas incluem cinco larguras (1440/1366/768/390/320), dados longos, baixa/importação, papéis, filtros, página/foco, erro e recuperação. As [21 capturas do artefato](https://github.com/arthurjoanes/gestao-recebiveis/actions/runs/35744528178/artifacts/10702621807) (download com login, sujeito a expiração; [acesso e cópia pública preservada](verification.md#ci-da-interface-publicada--22092026)) pertencem a essa execução; seus estados podem variar conforme os casos modificam a massa. Não foram iniciados recursos locais de aplicação nesta atualização.
-
-As imagens em `docs/img/` continuam históricas. A [captura publicada do Resumo](screenshots/publication-20260922/overview.png) veio do CI `5718cdad`; não forma par controlado com o baseline. Ainda falta comparar baseline/candidato com mesmo seed, perfil, relógio, filtros e recorte `TIT-0001`/vencido/18-07-2026, cobrindo todas as telas do inventário e wide 2560. Zoom nativo de 200%, leitor de tela, fallback/favicon e desempenho percebido continuam não verificados. A aprovação do design e os testes automatizados não comprovam conformidade AA integral ou desempenho em produção.
-
-## Manutenção da interface e da documentação
-
-Antes de alterar telas, confira o inventário, os contratos e os limites das provas deste documento. Compare as versões com os mesmos dados, filtros, perfil e dimensões; preserve trabalho em andamento e evidências históricas. Execute lint, verificação de tipos, build e regressões pertinentes. Registre separadamente verificações executadas, inspeções e pendências. Propostas em `docs/design/` são simulações, não capturas da aplicação; fontes locais mantêm os avisos OFL.
-
-### Apresentação de código
-
-- Nos READMEs e na documentação, identifique a linguagem dos blocos de código (`json`, `python`, `powershell`, `sh`, `sql`, `yaml` etc.) para habilitar o realce sintático. Use `text` para saídas sem sintaxe, prosa e diagramas ASCII.
-- Nas interfaces, use realce da linguagem com contraste legível. Preserve o texto original e o conteúdo copiado; a formatação para leitura deve ser uma opção separada.
-- Mudanças de apresentação não alteram evidências históricas, hashes ou capturas antigas. Gere registros atuais separados quando necessário.
-
-## Código e evidências relacionados
-
-[workspace](../frontend/src/features/workspace.tsx) · [jornadas](../frontend/tests/journey.spec.ts).
-
-## Revisão por tarefa em 12/10/2026
-
-A revisão atual conserva IBM Plex Sans, marca R/coluna e a separação entre saldo da carteira e recebido no período. A [paleta de marca](uiux-20261012.md#tipografia-espaço-e-cores) associa rubi a vencidos/erros e âmbar a alerta/risco, junto aos azuis e verde existentes. A confirmação reúne título, valor a registrar e saldo resultante. Um replay pendente conserva sua intenção original, inclusive nos registros locais antigos sem valor explícito. Filtros, paginação e retorno orientam a passagem entre título, aging e extrato.
-
-A coleta `before-4` reúne 46 capturas, com nove estados em cinco larguras, de 320 a 1440 CSS px, e vazio em 390 px. A baseline teve zero violações automáticas, com inconclusivos de ARIA/contraste. O scanner axe-core 4.13.0 analisou 46 estados finais, também sem violações; três inconclusivos de contraste de `.payment-preview > p`, em 1440, 1024 e 768 px, permanecem registrados. Quinze pares da paleta passaram os mínimos definidos para texto/controles. Esses resultados não certificam WCAG 2.2 AA. O [diagnóstico e aceite](uiux-20261012.md#diagnóstico-e-aceite) e a [verificação](verification.md) descrevem o escopo. Zoom nativo e leitor de tela continuam não verificados; a ampliação por CSS é um cenário distinto.
-
-A inspeção de 16 imagens originais comprovou o achado P2 da carteira: saldo e situação ficavam fora da área visível em 768 e 1024 px. A intervenção reorganiza linhas da carteira e dos relatórios até 1100 px, mantendo o menu móvel até 900 px. Na primeira rodada C17, 31 dos 37 casos E2E passaram; uma falha real de reflow com entrada de data e texto ampliado foi corrigida junto às asserções que falharam. A [rodada final](uiux-20261012.md#rodada-final) aprovou os 37 casos, e 16 originais finais foram inspecionados sem bloqueio visual nos recortes financeiros.
+Referências técnicas: [WCAG 2.2](https://www.w3.org/TR/WCAG22/), [APG: diálogo modal](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/) e [Playwright: acessibilidade](https://playwright.dev/docs/accessibility-testing).

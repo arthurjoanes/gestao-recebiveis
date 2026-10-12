@@ -59,7 +59,3 @@ O [aviso de `braces`](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm), CVE-20
 A substituição de `fast-glob` por `tinyglobby` foi comparada com as opções reais do plugin Next e produziu resultados diferentes para expansão de diretórios. O override foi removido. O rebaixamento de `eslint-config-next` sugerido pelo npm também não foi aplicado: mudaria a versão principal sem resolver a revisão de compatibilidade do projeto. A pendência continua visível no audit completo.
 
 O [aviso do Next.js](https://github.com/advisories/GHSA-vcvr-r3jv-pc5j) afeta o processamento de SVG não confiável por `next/og` / `ImageResponse`. Essas APIs não foram encontradas no projeto. A atualização remove a versão atingida do lock; a ausência desse caminho no código não foi tratada como prova geral de ausência de vulnerabilidades.
-
-## Revisão da prosa com Humanizer
-
-As seções desta conferência complementar passaram pela mesma revisão de prosa, com checagem dos números contra os recibos. O processo completo de leitura, identificação de padrões, reescrita e conferência foi aplicado a `README.md`, `docs/security.md`, `docs/api-contract.md`, `docs/demo.md` e a este relatório. A prosa ficou mais direta e os títulos e passos perderam ênfase decorativa. Não existe `SECURITY.md` na raiz; o guia de segurança do projeto é `docs/security.md`. Comandos, código, links existentes, fatos, datas e evidências históricas foram preservados.

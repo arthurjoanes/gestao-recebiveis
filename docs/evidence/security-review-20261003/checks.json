@@ -204,68 +204,6 @@
     "final_snapshot_command": "gitleaks dir --config .gitleaks.toml --redact . (cwd: snapshot com caminhos relativos, mesmas exceções existentes)",
     "final_snapshot_findings": 0
   },
-  "humanizer": {
-    "skill_version": "3.1.0",
-    "mode": "file",
-    "workflow": "leitura, identificação, rascunho, conferência de fatos e padrões, versão final",
-    "files": [
-      "README.md",
-      "docs/security.md",
-      "docs/api-contract.md",
-      "docs/demo.md",
-      "docs/SECURITY-REVIEW-2026-10-03.md"
-    ],
-    "existing_fenced_code_identical": true,
-    "existing_link_targets_preserved": true,
-    "existing_inline_code_preserved": true,
-    "historical_evidence_changed": false,
-    "complementary_sections_reviewed": true,
-    "final_file_sha256": [
-      {
-        "file": "README.md",
-        "sha256": "348bbf59ebec7564c2b9b088b4a991ce58212eb3f8797431028081f618b0a63c"
-      },
-      {
-        "file": "docs/security.md",
-        "sha256": "eb64e028b244eab4b47aa8dbb4d2836f233f0a1f309a9ceabc60707d6efbf8d3"
-      },
-      {
-        "file": "docs/api-contract.md",
-        "sha256": "13bd1853a746a8319bee73dd361f1e28d7d15d10e42709b4e937ec79f2885265"
-      },
-      {
-        "file": "docs/demo.md",
-        "sha256": "150ac57ef3e881b5ae47a3ae2d6b9a4398f7316c0673bff05e480b11c4a18e2b"
-      },
-      {
-        "file": "docs/SECURITY-REVIEW-2026-10-03.md",
-        "sha256": "078e82f44c195db9b2f14ba83e3fd32675ad70aebfeafeadce6f6ee8a1e6912a"
-      }
-    ],
-    "reviewed_worktree_file_sha256": [
-      {
-        "file": "README.md",
-        "sha256": "348bbf59ebec7564c2b9b088b4a991ce58212eb3f8797431028081f618b0a63c"
-      },
-      {
-        "file": "docs/security.md",
-        "sha256": "eb64e028b244eab4b47aa8dbb4d2836f233f0a1f309a9ceabc60707d6efbf8d3"
-      },
-      {
-        "file": "docs/api-contract.md",
-        "sha256": "64a7bcc4777603fbd4af9b3ec1f550ed625a85f7ad0a9b765f728c42550d1da7"
-      },
-      {
-        "file": "docs/demo.md",
-        "sha256": "555c30b65fa05fc2c7e4a268295d8cb772412e5214fe05c2ad419f6b64d945b1"
-      },
-      {
-        "file": "docs/SECURITY-REVIEW-2026-10-03.md",
-        "sha256": "7ee24b64331bda9921600fec15fa66557431b0555e29a11c3a47351978bdfc78"
-      }
-    ],
-    "hash_representation": "final_file_sha256 identifica os blobs Git publicados; reviewed_worktree_file_sha256 conserva os bytes do worktree revisto."
-  },
   "reviewed_source_sha256": [
     {
       "file": "README.md",
