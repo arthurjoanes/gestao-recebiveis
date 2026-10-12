@@ -27,8 +27,8 @@ Os caminhos abaixo são relativos a `/api/v1`; saúde e Swagger aparecem separad
 | `POST /demo/worker`               | `enabled`                                                 | Estado da demo                                                         |
 | `POST /demo/scenario`             | `receivable_id`, `scenario`                               | Detalhe do título                                                      |
 | `GET /receivables`                | `q`, `status`, `due_from`, `due_to`, `page`, `page_size`  | Lista de títulos                                                       |
-| `GET /receivables/{id}`           | ID                                                        | Título, `payment`, `reminders` e `events`                              |
-| `POST /receivables/{id}/payments` | `idempotency_key`, `note` opcional                        | Pagamento                                                              |
+| `GET /receivables/{id}`           | ID                                                        | Título, `payments`, `payment` transitório, `reminders` e `events`                              |
+| `POST /receivables/{id}/payments` | `idempotency_key`, `note` e `amount_cents` opcionais                        | Pagamento                                                              |
 | `POST /receivables/{id}/cancel`   | `reason`                                                  | Título                                                                 |
 | `GET /overview`                   | `q`, `due_from`, `due_to`, `received_from`, `received_to` | Resumo financeiro                                                      |
 | `POST /imports`                   | Multipart `file`                                          | Lote completo                                                          |
@@ -48,8 +48,8 @@ Os campos apresentados resumem os modelos. Consulte os tipos e a nulabilidade co
 
 | Objeto            | Campos                                                                                                                                                                                                            |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Título            | `id`, `source_system`, `external_receivable_id`, `customer_id`, `customer_name`, `customer_email`, `description`, `amount_cents`, `due_date`, `status`, `overdue`, `scenario`                                     |
-| Pagamento         | `id`, `amount_cents`, `paid_at`, `recorded_at`; `payment` é `null` quando ausente                                                                                                                                 |
+| Título            | `id`, `source_system`, `external_receivable_id`, `customer_id`, `customer_name`, `customer_email`, `description`, `amount_cents`, `paid_cents`, `remaining_cents`, `payment_state`, `payments`, `due_date`, `status`, `overdue`, `scenario`                                     |
+| Pagamento         | `id`, `amount_cents`, `note`, `paid_at`, `recorded_at`; `payment` é transitório (exatamente um recebimento)                                                                                                                                 |
 | Resumo            | `open_cents`, `overdue_cents`, `current_cents`, `received_cents`, `open_count`, `overdue_count`, `current_count`, `paid_count`, `canceled_count`, `business_date`, `received_from`, `received_to`                 |
 | Lote completo     | `id`, `filename`, `status`, `created_at`, `report`                                                                                                                                                                |
 | Relatório do lote | `row_count`, `new_count`, `existing_count`, `duplicate_count`, `total_cents`, `errors`, `rows`                                                                                                                    |
@@ -78,7 +78,7 @@ O e-mail é normalizado; senha é conferida exatamente como recebida, incluindo 
 
 `due_from`/`due_to` afetam apenas a carteira. `received_from`/`received_to` afetam apenas pagamentos pela data comercial da baixa, calculada em São Paulo. A busca `q` é comum aos dois. O intervalo de recebimento padrão vai do primeiro dia do mês comercial à data comercial atual; limites são inclusivos. Espaços externos da busca são removidos; `%`, `_` e barra invertida são tratados literalmente. Intervalos invertidos retornam 422.
 
-Pagamento é sempre **integral**: o valor vem do título bloqueado, não do corpo da requisição. `amount_cents`, `amount_brl` ou qualquer campo adicional são rejeitados com 422 e identificação do campo; nenhuma baixa parcial é gravada. `idempotency_key` aceita 8 a 100 caracteres e `note` até 500, após remoção de espaços externos. Mesmo título/chave/conteúdo retorna o mesmo pagamento; mesma chave com outro conteúdo retorna 409. `reason` de cancelamento exige 3 a 500 caracteres após trim.
+Pagamento aceita `amount_cents` opcional como string estrita de centavos positivos até `9223372036854775807`. Sem valor, quita o saldo restante. JSON numérico, bool, zero, negativo, expoente, decimal e campos extras são rejeitados com 422. Omitir o valor e informá-lo explicitamente são intenções distintas; alterar essa intenção com a mesma chave retorna 409. `idempotency_key` aceita 8 a 100 caracteres e `note` até 500, após remoção de espaços externos. Mesmo título/chave/conteúdo retorna o mesmo pagamento; mesma chave com outro conteúdo retorna 409. `reason` de cancelamento exige 3 a 500 caracteres após trim.
 
 `enabled` no controle de worker exige booleano JSON real (`true`/`false`), sem aceitar string ou inteiro. `receivable_id` no cenário exige inteiro JSON positivo dentro da faixa dos IDs. Valores fora da faixa são rejeitados antes da consulta ao PostgreSQL.
 
@@ -95,3 +95,16 @@ Pagamento é sempre **integral**: o valor vem do título bloqueado, não do corp
 | Limites HTTP            | [`request_limits.py`](../backend/src/gestao_recebiveis/request_limits.py) · [`database.py`](../backend/src/gestao_recebiveis/database.py)                                       |
 | Carteira e recebimentos | [`receivables.py`](../backend/src/gestao_recebiveis/receivables.py) · [`reporting.py`](../backend/src/gestao_recebiveis/reporting.py)                                           |
 | Limite do login         | [`login_admission.py`](../backend/src/gestao_recebiveis/login_admission.py)                                                                                                     |
+
+## Parcelas e relatórios — 12/10/2026
+
+Título em lista/detalhe inclui `paid_cents`, `remaining_cents`, `payment_state` (`unpaid`, `partial`, `paid`). Listas e detalhe expõem `payments[]` por `paid_at`, depois `id`. O campo singular `payment` está depreciado: existe somente com exatamente um recebimento e retorna `null` com zero ou vários. Cada resposta de pagamento preserva valor, nota e instantes imutáveis, sem saldo corrente.
+
+Cancelamento de título com qualquer recebimento retorna 409. Cancelamento já confirmado conserva sua idempotência. Uma parcela não cancela nem acrescenta etapas de lembrete. Cada tentativa mostra `authorized_remaining_cents` e `authorized_at`; o valor é o snapshot da autorização, inclusive quando o saldo atual já mudou.
+
+| GET autenticado | Filtros | Retorno |
+| --- | --- | --- |
+| `/reports/aging` | `q`, `customer_id`, `due_from`, `due_to`, `bucket`, `page`, `page_size` | Metadados, `open_cents`, `title_count`, `buckets[]`, `items`, `total`, `page`, `page_size` |
+| `/customers/{id}/statement` | `q`, `status`, vencimento, recebimento, `page`, `page_size`, `payment_page`, `payment_page_size` | `customer`, `totals`, páginas `titles` e `payments`, metadados e filtros |
+
+As chaves de faixa são `current`, `1_30`, `31_60`, `61_90`, `over_90`. A lista `/receivables` aceita `customer_id` e `aging_bucket` para preservar o drill-down. Reader pode consultar os dois relatórios. IDs, datas, busca e paginação conservam os limites HTTP; filtros inválidos retornam 422. Não existe `as_of` histórico. Fronteiras, totais e independência dos períodos estão no [contrato detalhado](evolucao-20261012.md).

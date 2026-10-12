@@ -15,13 +15,13 @@ $DemoCredential = Get-Credential -UserName 'operador@example.com'
 2. Importar (45s). Em Importações, envie `data/samples/valid.csv`. A prévia deve indicar três títulos novos e **R$ 2.000,00**. Confirme e procure `DEMO-001` em Títulos. A carteira passa a ter 243 títulos.
 3. Repetir (30s). Importe `data/samples/repeated.csv` ou `reordered.csv`. Os três títulos aparecem como existentes; confirme. A quantidade e o total financeiro não aumentam. O lote registra o que aconteceu.
 4. Falha transitória e retry (60s). Abra **Demonstração**. Em **Buscar título em aberto**, procure `DEMO-001`; selecione o título, escolha **Falha transitória seguida de sucesso** e clique **Aplicar cenário** antes da primeira tentativa. Clique **Retomar processamento**. Em Lembretes, localize o título: a primeira tentativa falha, o retry usa a mesma intenção/chave e chega a enviado. No modo demo padrão, os intervalos são 1/2/4/8 segundos. Clique em **Ver tentativas** para abrir o detalhe ao lado da fila no desktop, ou acima dela em telas estreitas. Confira as duas tentativas e a entrega simulada; **Fechar detalhe** devolve o foco à ocorrência selecionada, preservando os filtros e a página. Volte a Demonstração e clique **Pausar processamento**. O agendador continua ativo; autorizações anteriores à pausa podem concluir.
-5. Pagamento e pendências (60s). Com o processamento pausado, use **Nova data e hora comercial**, em Demonstração, para avançar para 20/08/2026 às 10:00. Aguarde aparecer a nova intenção D0 de `DEMO-003` em Lembretes. Abra esse título, registre pagamento integral e confira a baixa, o evento financeiro e a intenção pendente cancelada. Retome o processamento para mostrar que nenhuma nova autorização ocorre após a baixa.
+5. Pagamento e pendências (60s). Com o processamento pausado, use **Nova data e hora comercial**, em Demonstração, para avançar para 20/08/2026 às 10:00. Aguarde aparecer a nova intenção D0 de `DEMO-003` em Lembretes. Abra esse título, registre uma parcela de R$ 100,00 e confira o saldo; depois use quitar saldo e confira a baixa, o evento financeiro e a intenção pendente cancelada. Retome o processamento para mostrar que nenhuma nova autorização ocorre após a baixa.
 6. Conflito sem alteração parcial (40s). Anote os indicadores atuais. Importe `data/samples/conflicting.csv`: mudança de R$ 1.250,09 para R$ 9.999,99 no `DEMO-001` deve bloquear o lote. `DEMO-004` não pode aparecer na carteira e os indicadores permanecem iguais. Mesmo que `DEMO-001` já esteja pago, a repetição não sobrescreve o estado.
 7. Testes (30s). Abra `backend/tests/` e `docs/verification.md`: importações concorrentes, dois workers, token antigo, resposta perdida e pagamento versus autorização.
 
-![Recorte atual do saldo, situação e ações de TIT-0001, no valor de R$ 1.217,39](screenshots/current-20260922/titulo.png)
+![Captura histórica de 22/09/2026: saldo, situação e ações de TIT-0001, no valor de R$ 1.217,39](screenshots/current-20260922/titulo.png)
 
-_Captura real de 22/09/2026, sem efetuar baixa ou cancelamento. [Outras telas atuais e reprodução](image-captures.md). A imagem anterior em `img/titulo.png` permanece somente como evidência histórica._
+_Captura real de 22/09/2026, sem efetuar baixa ou cancelamento. [Versões das capturas e reprodução](image-captures.md). A imagem anterior em `img/titulo.png` permanece somente como evidência histórica._
 
 ## Cenários adicionais
 
@@ -43,7 +43,7 @@ O comando constrói backend, frontend e navegador pelo código atual, aplica mig
 2. Valor esperado (1 min). Abra `accepted-before-interruption.json`: um título de 31 centavos, uma tentativa autorizada ainda `unknown`, uma entrega persistida. O processo sai com código 86 no ponto de falha, sem chamar `finish`.
 3. Falha e recuperação (1 min). O script reinicia somente o PostgreSQL descartável. Abra `recovered-after-restart.json`: horário de início do banco mudou, o token aumentou e o proprietário antigo foi recusado. A mesma tentativa passa a `success`, com uma entrega. O lease usa tempo real, sem avanço artificial.
 4. Jornada (2 min). `proxy-journey.txt` registra importação de três títulos/200000 centavos, repetição sem aumento, retry transitório, baixa idempotente e conflito sem alteração parcial. O HTTP atravessa Next → API; os casos Chromium percorrem a interface e estados de erro/acesso.
-5. Decisão e limite (1 min). Localize `claim`, `authorize`, `finish` e `FakeProvider.send`. Há transação antes e depois da chamada, não um lock mantido durante o provedor. A baixa bloqueia autorizações futuras; não desfaz a anterior. O fake persistente permite esse teste local, mas não garante entrega a um cliente nem exactly-once externo.
+5. Decisão e limite (1 min). Localize `claim`, `authorize`, `finish` e `FakeProvider.send`. Há transações antes e depois da chamada; `send` ocorre sem lock financeiro. A quitação bloqueia autorizações futuras e conserva a tentativa anterior para reconciliação. O fake persistente permite esse teste local, mas não garante entrega a um cliente nem exactly-once externo.
 
 O diretório `artifacts/proof/<execução>/` guarda relatório, hashes e resultados. Código inesperado interrompe a execução; o cleanup ocorre mesmo em falha. Logs e arquivos de uma execução com falha permanecem para diagnóstico. Capturas Chromium ficam em `artifacts/proof-e2e/`.
 
@@ -72,3 +72,9 @@ A tarefa `migrate` depende de `db-init`, que provisiona os papéis. Fontes: [Com
 ## Código e evidências relacionados
 
 [seed](../backend/src/gestao_recebiveis/seed.py) · [amostra CSV](../data/samples/valid.csv) · [política](../backend/src/gestao_recebiveis/reminders/policy.py).
+
+## Parcelas, aging e extrato — 12/10/2026
+
+Com dados fictícios e processamento pausado, abra um título sem recebimentos. Use **Registrar pagamento** e, em **Tipo de recebimento**, escolha **Informar valor em reais**. Informe `0,01` e confirme. Confira original, recebido, saldo e badge Parcial; a opção cancelar fica indisponível. **Quitar saldo restante** recebe o saldo que houver no servidor ao confirmar. Abra Aging e uma faixa: busca, cliente e vencimento seguem para o recorte de títulos. Abra Extrato do cliente no detalhe, confira o código externo e filtre o período recebido. O saldo atual inclui também recebimentos anteriores ao período. Use Imprimir extrato para a página exibida, cujo cabeçalho identifica filtros e paginação.
+
+Para demonstrar replay, use o caso automatizado de resposta perdida em [payments-reports.spec.ts](../frontend/tests/payments-reports.spec.ts). Ele perde a resposta após commit, recarrega e recupera a intenção local. A chave e o conteúdo permanecem iguais e o histórico conserva um único recebimento/evento. Capturas de 22/09/2026 acima pertencem à versão histórica.

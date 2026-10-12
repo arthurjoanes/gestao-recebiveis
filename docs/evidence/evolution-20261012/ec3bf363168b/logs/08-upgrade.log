@@ -1,0 +1,8 @@
+{"customers": 60, "receivables": 240, "seed_payments": 48, "batch_id": 1}
+Database roles ready; existing application data preserved.
+Database roles ready; existing application data preserved.
+Database roles ready; existing application data preserved.
+{"customers": 60, "receivables": 240, "seed_payments": 48, "batch_id": 1}
+Upgrade passed: legacy IDs, timestamps, hashes and 48 receipts preserved and replayed; partial receipts supported, inconsistent upgrade and destructive downgrade refused; roles idempotent.
+ Container gr-evolucao-20261012-ec3bf363168b-upgrade-test-run-6d410a99a6ee Creating 
+ Container gr-evolucao-20261012-ec3bf363168b-upgrade-test-run-6d410a99a6ee Created 

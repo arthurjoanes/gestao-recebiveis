@@ -39,3 +39,9 @@ O [coletor](../scripts/capture_docs.cjs) exige pasta vazia para não sobrescreve
 - Os quatro PNGs em `design/` são propostas e espécimes, não telas reais. A [decisão de design](frontend-quality.md) identifica seu uso.
 
 A revisão inventariou os 12 PNGs anteriores, suas referências e hashes, sem duplicatas binárias internas. Todos têm função documental; nenhuma imagem de prova foi excluída. A fixture `repeated.csv` repete `valid.csv` deliberadamente para testar idempotência; não é resíduo.
+
+## Evolução de 12/10/2026
+
+As cinco capturas de `screenshots/restore-proof/6e75361b018645ffa98bce7ad338d4d4/` vieram do navegador real durante a [restauração final](restore-proof.md#cenário-de-parcelas--candidato-de-12102026). Mostram as telas alteradas de lembrete, título integral, título parcial, extrato e aging. A viewport é 1440×1080; os PNGs conservam a página inteira, sem edição de pixels, e ficam em links na documentação. O [manifesto](evidence/restore-proof/6e75361b018645ffa98bce7ad338d4d4/manifest.json) registra fontes congeladas, imagens, hashes e resultados.
+
+O [coletor](../scripts/capture_restore_story.cjs) só consulta após login e exige os totais/linhas prontos antes das capturas dos relatórios. A inspeção visual confirmou original R$ 125, recebido R$ 75 e saldo R$ 50 no extrato; aging inclui apenas o saldo residual do título parcial. Importações permaneceram sem novas capturas nesta evolução. As imagens de `1054efee…` foram preservadas: sua prova financeira passou, mas extrato e aging ainda carregavam ao capturar; elas não representam relatórios prontos. As pastas de 22/09/2026 continuam históricas.

@@ -1,0 +1,12 @@
+2026-10-12T05:15:29Z	INFO	[vuln] Vulnerability scanning is enabled
+2026-10-12T05:15:32Z	INFO	Detected OS	family="alpine" version="3.24.1"
+2026-10-12T05:15:32Z	WARN	This OS version is not on the EOL list	family="alpine" version="3.24"
+2026-10-12T05:15:32Z	INFO	[alpine] Detecting vulnerabilities...	os_version="3.24" repository="3.24" pkg_num=18
+2026-10-12T05:15:32Z	INFO	Number of language-specific files	num=1
+2026-10-12T05:15:32Z	INFO	[node-pkg] Detecting vulnerabilities...
+
+📣 [34mNotices:[0m
+  - Version 0.75.0 of Trivy is now available, current version is 0.74.0
+
+To suppress version checks, run Trivy scans with the --skip-version-check flag
+

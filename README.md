@@ -1,6 +1,6 @@
 # Gestão de recebíveis
 
-Aplicação para demonstrar a importação de contas a receber, o registro de pagamentos integrais e o acompanhamento de lembretes simulados. Desenvolvi a carteira e suas regras financeiras com dados de uma empresa fictícia em reais (BRL), incluindo os fluxos de recuperação.
+Aplicação para importar contas a receber, registrar recebimentos parciais ou integrais e acompanhar lembretes simulados. O aging mostra o saldo por faixa de atraso; o extrato operacional reúne títulos e recebimentos por cliente. Desenvolvi as regras financeiras e os fluxos de recuperação com dados de uma empresa fictícia em reais (BRL).
 
 <!-- Navegação do README -->
 <p>
@@ -13,7 +13,7 @@ Aplicação para demonstrar a importação de contas a receber, o registro de pa
 
 ## Visão geral
 
-Um título registra quanto um cliente deve e o vencimento; dar baixa é registrar o pagamento integral. O operador altera a carteira e o leitor apenas consulta. Repetir um arquivo ou uma requisição deve conservar a mesma dívida e o mesmo pagamento.
+Um título registra quanto um cliente deve e o vencimento; dar baixa é registrar um recebimento que reduz o saldo. O operador altera a carteira e o leitor apenas consulta. Repetir um arquivo ou uma requisição deve conservar a mesma dívida e o mesmo pagamento.
 
 | Situação                           | Comportamento implementado                                 |
 | ---------------------------------- | ---------------------------------------------------------- |
@@ -47,7 +47,7 @@ A prova histórica de **22/09/2026** usa outra massa: dois títulos de **R$ 50 +
 flowchart TB
     Browser["Operador ou leitor"]
     Web["Next.js :3101<br/>carteira, CSV e histórico"]
-    API["FastAPI :8101<br/>sessão, CSRF e perfil<br/>importação e baixa integral"]
+    API["FastAPI :8101<br/>sessão, CSRF e perfil<br/>importação, parcelas e relatórios"]
     DB[("PostgreSQL interno<br/>lotes, carteira e pagamentos<br/>sessões, fila e auditoria")]
     Worker["Worker Python<br/>etapas D-3 / D0 / D+3 / D+7<br/>lease e token de posse"]
     Fake["FakeProvider no worker<br/>resultado por tentativa<br/>entrega por chave idempotente"]
@@ -65,9 +65,9 @@ O caminho HTTP é síncrono; a seta pontilhada representa o consumo em segundo p
 | Caminho | Responsabilidade e garantia |
 | --- | --- |
 | [CSV → prévia → confirmação](backend/src/gestao_recebiveis/imports.py) | Guarda bytes e diagnóstico; relê o lote e usa savepoint para rejeitar conflitos sem importação parcial |
-| [Baixa integral](backend/src/gestao_recebiveis/receivables.py) | Serializa a chave idempotente, bloqueia o título e grava pagamento, cancelamento de pendências e auditoria na mesma transação |
+| [Recebimento](backend/src/gestao_recebiveis/receivables.py) | Serializa a chave idempotente, bloqueia o título e grava recebimento/auditoria; quitação cancela pendências na mesma transação |
 | [Lembrete em segundo plano](backend/src/gestao_recebiveis/worker.py) | Assume o job por lease, autoriza antes de enviar e reconcilia a mesma tentativa quando o resultado é desconhecido |
-| [Persistência e acesso](backend/src/gestao_recebiveis/models.py) | Unicidade no banco protege título, pagamento e etapa; o runtime usa `gestao_app`, separado do papel de migração |
+| [Persistência e acesso](backend/src/gestao_recebiveis/models.py) | Unicidade no banco protege título, chave de pagamento e etapa; o runtime usa `gestao_app`, separado do papel de migração |
 
 O [Compose](compose.yaml) publica frontend/API apenas em loopback e mantém o banco interno. `db-init` provisiona papéis, `migrate` aplica o schema e `seed` carrega a demo como tarefas pontuais. O [guia de arquitetura](docs/architecture.md) detalha módulos, tabelas, sequência de recuperação e limites das transações.
 
@@ -94,7 +94,7 @@ O [Compose](compose.yaml) publica frontend/API apenas em loopback e mantém o ba
 | Persistência | PostgreSQL para carteira e fila; permite coordenação transacional e concentra a operação no banco |
 | Execução     | Docker Compose, com bancos separados para demo e testes                                           |
 
-Escolhi centavos inteiros para BRL, pagamentos integrais e uma fila no mesmo banco. Essas escolhas estão ligadas ao problema e aos respectivos custos nas [decisões técnicas](docs/decisoes-tecnicas.md). Dependências e versões: [lock Python](backend/uv.lock), [lock frontend](frontend/package-lock.json) e [Dockerfile do banco](database/Dockerfile).
+Escolhi centavos inteiros para BRL, recebimentos associados ao título e uma fila no mesmo banco. Essas escolhas estão ligadas ao problema e aos respectivos custos nas [decisões técnicas](docs/decisoes-tecnicas.md). Dependências e versões: [lock Python](backend/uv.lock), [lock frontend](frontend/package-lock.json) e [Dockerfile do banco](database/Dockerfile).
 
 <a id="executar-e-verificar"></a>
 <a id="rodar-localmente"></a>
@@ -129,8 +129,8 @@ O [recibo do CI de 22/09/2026](docs/evidence/frontend-ci-20260922.json), sobre `
 
 ## Limites e segurança
 
-- O [contrato financeiro](backend/src/gestao_recebiveis/schemas.py) cobre uma empresa, BRL e pagamento integral; Pix, boleto, juros, estorno e envio externo não estão implementados.
-- Baixa confirmada impede novas [autorizações de lembrete](backend/src/gestao_recebiveis/reminders/service.py); não desfaz uma autorização anterior em trânsito.
+- O [contrato financeiro](backend/src/gestao_recebiveis/schemas.py) cobre uma empresa, BRL e recebimentos positivos até o saldo; Pix, boleto, juros, estorno e envio externo não estão implementados.
+- Quitação confirmada impede novas [autorizações de lembrete](backend/src/gestao_recebiveis/reminders/service.py); uma autorização anterior em trânsito conserva seu payload e pode exigir reconciliação.
 - O provedor simulado usa o mesmo PostgreSQL. A restauração local não prova recuperação de um efeito em serviço externo ou perda do host.
 - O Compose publica serviços em loopback. Uso público exige identidade, HTTPS e configuração operacional próprios.
 - Produtividade com usuários, carga de produção, leitor de tela, zoom nativo e conformidade AA integral não foram demonstrados.
@@ -162,3 +162,9 @@ Desenvolvido por **Arthur Joanes**. Para conversar sobre recebíveis, consistên
 </p>
 
 Código sob [licença MIT](LICENSE). IBM Plex Sans mantém a [licença OFL 1.1](frontend/src/app/fonts/plex-LICENSE.txt) e a [origem](frontend/src/app/fonts/sources.json). Ícones da stack e LinkedIn: [Devicon, licença MIT](docs/stack/LICENSE.devicon).
+
+## Evolução de 12/10/2026
+
+A carteira mostra valor original, recebido e saldo. Uma parcela mantém o título aberto; quitar o saldo encerra o título e cancela as pendências de lembrete. Aging distribui o saldo aberto entre em dia, 1–30, 31–60, 61–90 e acima de 90 dias. O extrato identifica o cliente pelo ID e código externo, lista títulos e recebimentos e permite impressão pelo navegador.
+
+O [contrato da evolução](docs/evolucao-20261012.md) descreve migração, filtros, repetição após resposta perdida e limites dos relatórios. Resultados desta versão estão em [verificação](docs/verification.md); recibos e imagens de 2026 anteriores continuam históricos.

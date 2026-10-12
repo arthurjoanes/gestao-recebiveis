@@ -94,3 +94,29 @@ O provedor fictício guarda aceitação e entrega **no mesmo PostgreSQL restaura
 ## Ajuste posterior à prova
 
 O [CI de `7607f9a`](https://github.com/arthurjoanes/gestao-recebiveis/actions/runs/35698694847) construiu as imagens, mas parou em cinco erros de ordem de importações no novo probe. A checagem local anterior partira da raiz, enquanto o CI executa Ruff em `backend`; a classificação dos imports diferiu. Foram reorganizados somente esses blocos. O [registro do ajuste](evidence/restore-proof/post-publication-import-order.json) confere hashes e estrutura do código, descontando apenas a ordem dos imports, e registra lint/formato no diretório do CI e os 16 testes host aprovados. A execução financeira não foi repetida; seu manifesto e fontes originais permanecem preservados. O resultado do novo CI pertence ao novo commit, não ao que falhou.
+
+## Cenário de parcelas — candidato de 12/10/2026
+
+O probe atual conserva o título integral RESTORE-PAID de R$ 50 e acrescenta uma parcela de R$ 25 em RESTORE-UNKNOWN, de R$ 75, antes do corte. A carteira passa a R$ 50 abertos e R$ 75 recebidos, em dois pagamentos. A tentativa unknown congela o saldo autorizado de R$ 50. Após restore, ambos os replays devem devolver os mesmos IDs e preservar o estado completo; a reconciliação deve manter tentativa, payload, chave e entrega.
+
+O cenário e os [22 testes das guardas](../scripts/tests/test_restore_proof.py) não alteram os manifestos antigos. A execução desta versão, ou seu bloqueio de ambiente, consta em [verificação](verification.md). A prova de 22/09/2026 continua com seus R$ 75 abertos e R$ 50 pagos.
+
+Por padrão, o runner exige que não haja outros projetos ativos. `--allow-other-projects` permite executar esta prova em host compartilhado e registra essa condição e a contagem de containers externos. O isolamento, a conferência de labels e a limpeza exclusiva dos dois projetos da prova continuam obrigatórios. Os tempos nesse modo incluem a disputa do host e não demonstram desempenho em ambiente exclusivo.
+
+Em 12/10/2026, a [execução final `6e75361b…`](evidence/restore-proof/6e75361b018645ffa98bce7ad338d4d4/manifest.json) passou em 197,941 s. Restaurou exatamente tabelas e sequências, repetiu os recebimentos integral e parcial sem alteração e reconciliou a mesma tentativa com uma entrega. Corrupção, destino ocupado e modo incorreto foram recusados. Origem e dump conservaram seus hashes; a limpeza confirmou zero recursos próprios. O [registro de verificação](verification.md#pagamentos-parciais-aging-e-extrato-12102026) distingue a falha inicial de Docker e a captura incompleta da primeira execução financeira aprovada.
+
+Para repetir em host compartilhado:
+
+```powershell
+py -3.13 -m unittest discover -s scripts/tests -v
+py -3.13 scripts/prove_restore.py plan --allow-other-projects
+py -3.13 scripts/prove_restore.py execute --deadline-seconds 1200 --allow-other-projects
+```
+
+| Captura atual | Estado sintético conferido |
+| --- | --- |
+| [Tentativa reconciliada](screenshots/restore-proof/6e75361b018645ffa98bce7ad338d4d4/03-mesma-tentativa-reconciliada.png) | Uma tentativa, uma entrega, saldo autorizado R$ 50 com data explícita |
+| [Integral preservado](screenshots/restore-proof/6e75361b018645ffa98bce7ad338d4d4/04-mesma-baixa-preservada.png) | Original R$ 50, recebido R$ 50, saldo zero e histórico plural |
+| [Parcela preservada](screenshots/restore-proof/6e75361b018645ffa98bce7ad338d4d4/05-parcela-saldo-preservados.png) | Original R$ 75, recebido R$ 25, saldo R$ 50, estado parcial |
+| [Extrato operacional](screenshots/restore-proof/6e75361b018645ffa98bce7ad338d4d4/06-extrato-operacional.png) | Dois títulos, dois recebimentos, recebido R$ 75 e saldo nominal/cobrável R$ 50 |
+| [Aging residual](screenshots/restore-proof/6e75361b018645ffa98bce7ad338d4d4/07-aging-residual.png) | Um título em dia e R$ 50 distribuídos entre as faixas |

@@ -36,3 +36,11 @@ A prévia da interface exibe **50 registros por página** e conserva todos os di
 ## Massa padrão e fixture
 
 O gerador usa seed `42`, versão `1`, referência `2026-08-17`, **60 clientes e 240 títulos**. O manifesto acompanha o CSV. A fixture manual é separada e contém centavos verificáveis sem reutilizar o algoritmo. Fontes: [gerador](../backend/src/gestao_recebiveis/generator.py), [seed](../backend/src/gestao_recebiveis/seed.py) e [amostras](../data/samples).
+
+## Recebimentos e posição atual — 12/10/2026
+
+`payments` aceita vários recebimentos positivos diretamente ligados a um título. O valor original e sua identidade importada permanecem imutáveis. `paid_cents = SUM(payments.amount_cents)` e `remaining_cents = amount_cents - paid_cents`, com `0 <= paid_cents <= amount_cents`. A chave idempotente continua globalmente única. Reimportação idêntica conserva status, parcelas, IDs e timestamps.
+
+Cancelados ficam fora da carteira cobrável. Seu saldo nominal permanece visível e separado de `open_cents`, junto ao motivo na auditoria. A migração `e71c2f`, posterior a `d6420a`, valida os registros legados antes de remover a unicidade por título. Ela preserva pagamentos integrais; inconsistências e downgrade com múltiplos pagamentos ou parcial interrompem a operação sem apagar dinheiro.
+
+Aging e extrato apresentam posição atual em BRL, com data comercial e instante de geração explícitos. Ausência de data financeira de emissão e de ledger histórico impede afirmar posição contábil passada, abertura ou fechamento.

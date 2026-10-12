@@ -1,0 +1,49 @@
+All checks passed!
+42 files already formatted
+Success: no issues found in 29 source files
+============================= test session starts ==============================
+platform linux -- Python 3.13.15, pytest-9.1.1, pluggy-1.6.0
+rootdir: /app
+configfile: pyproject.toml
+testpaths: tests
+plugins: anyio-4.15.1
+collected 218 items
+
+tests/test_api.py .....................                                  [  9%]
+tests/test_database_roles.py ......                                      [ 12%]
+tests/test_field_matrix.py ............................................. [ 33%]
+...................................                                      [ 49%]
+tests/test_financial.py ........................................         [ 67%]
+tests/test_login_admission.py .......                                    [ 70%]
+tests/test_reminders.py ...........................................      [ 90%]
+tests/test_reports.py .....................                              [100%]
+
+=============================== warnings summary ===============================
+.venv/lib/python3.13/site-packages/fastapi/testclient.py:1
+  /app/.venv/lib/python3.13/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+.venv/lib/python3.13/site-packages/starlette/testclient.py:53
+  /app/.venv/lib/python3.13/site-packages/starlette/testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================= 218 passed, 2 warnings in 51.07s =======================
+ Network gr-evolucao-20261012-ec3bf363168b_gestao_recebiveis Creating 
+ Network gr-evolucao-20261012-ec3bf363168b_gestao_recebiveis Creating 
+ Network gr-evolucao-20261012-ec3bf363168b_gestao_recebiveis Created 
+ Network gr-evolucao-20261012-ec3bf363168b_gestao_recebiveis Created 
+ Container gr-evolucao-20261012-ec3bf363168b-db-test-1 Creating 
+ Container gr-evolucao-20261012-ec3bf363168b-db-test-1 Created 
+ Container gr-evolucao-20261012-ec3bf363168b-db-test-init-1 Creating 
+ Container gr-evolucao-20261012-ec3bf363168b-db-test-init-1 Created 
+ Container gr-evolucao-20261012-ec3bf363168b-db-test-1 Starting 
+ Container gr-evolucao-20261012-ec3bf363168b-db-test-1 Started 
+ Container gr-evolucao-20261012-ec3bf363168b-db-test-1 Waiting 
+ Container gr-evolucao-20261012-ec3bf363168b-db-test-1 Healthy 
+ Container gr-evolucao-20261012-ec3bf363168b-db-test-init-1 Starting 
+ Container gr-evolucao-20261012-ec3bf363168b-db-test-init-1 Started 
+ Container gr-evolucao-20261012-ec3bf363168b-db-test-init-1 Waiting 
+ Container gr-evolucao-20261012-ec3bf363168b-db-test-init-1 Exited 
+ Container gr-evolucao-20261012-ec3bf363168b-test-run-9a2af7ccb103 Creating 
+ Container gr-evolucao-20261012-ec3bf363168b-test-run-9a2af7ccb103 Created 

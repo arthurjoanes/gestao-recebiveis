@@ -2,7 +2,7 @@
 
 ## Problema, usuários e limites
 
-Importação de títulos, recebimentos e lembretes simulados. Operadores importam, pagam, cancelam e controlam a demo; leitores consultam. Uma empresa, BRL, pagamento integral.
+Importação de títulos, recebimentos e lembretes simulados. Operadores importam, pagam, cancelam e controlam a demo; leitores consultam. Uma empresa fictícia, BRL e recebimentos parciais ou integrais.
 
 **Problema central:** preservar a identidade e o valor de uma dívida quando o arquivo, a requisição de pagamento ou uma tentativa de envio se repetem. A arquitetura coordena essas decisões no banco e deixa a interface mostrar o que foi confirmado. O público pretendido é quem confere uma carteira de recebíveis; a demonstração não comprova adoção por uma empresa real.
 
@@ -55,7 +55,7 @@ Setas contínuas são chamadas ou acessos síncronos dentro de cada fluxo. A pon
 | [Cliente HTTP](../frontend/src/lib/api.ts) e [proxy](../frontend/next.config.ts) | Formulários e filtros → `/api/v1` com sessão/CSRF → estados de tela | A interface apresenta o resultado confirmado; não decide saldos |
 | [Autenticação](../backend/src/gestao_recebiveis/auth.py) e [admissão de login](../backend/src/gestao_recebiveis/login_admission.py) | Cookie ou credenciais → usuário/perfil → acesso ou 401/403 | Login reserva cota em transação independente; falha de senha não desfaz a reserva |
 | [Importação](../backend/src/gestao_recebiveis/imports.py) | CSV persistido → validação, comparação e confirmação → lote com relatório | Savepoint isola alterações financeiras do diagnóstico de rejeição |
-| [Recebíveis](../backend/src/gestao_recebiveis/receivables.py) | Título + chave de pagamento → locks e transição → pagamento integral | Pagamento, estado, pendências e auditoria compartilham commit |
+| [Recebíveis](../backend/src/gestao_recebiveis/receivables.py) | Título + chave e valor opcional → locks e saldo → recebimento parcial ou quitação | Recebimento e auditoria compartilham commit; quitação cancela pendências |
 | [Worker](../backend/src/gestao_recebiveis/worker.py) e [fila](../backend/src/gestao_recebiveis/reminders/service.py) | Vencimento/job → agendamento, posse e autorização → tentativa finalizada ou reagendada | Claim, autorização e finalização têm transações curtas separadas |
 | [Simulador](../backend/src/gestao_recebiveis/reminders/provider.py) | `attempt_id` → resultado imutável e entrega por chave → sucesso/falha/resposta perdida | Executa após o commit da autorização; não é integração de envio externo |
 
@@ -65,9 +65,9 @@ Esses processos rodam no mesmo computador na demonstração. Separar containers 
 
 ## Dados e transações
 
-Cliente único por source_system/external_customer_id; título por source_system/external_receivable_id. IDs internos em INTEGER positivo; valores em BIGINT de centavos. Estado open/paid/canceled persistido; overdue calculado. Pagamento único por título, chave idempotente e conteúdo conferidos. Lotes guardam bytes originais, SHA-256, linhas e relatórios.
+Cliente único por source_system/external_customer_id; título por source_system/external_receivable_id. IDs internos em INTEGER positivo; valores em BIGINT de centavos. Estado open/paid/canceled persistido; overdue e payment_state calculados. Vários recebimentos por título, com chave idempotente global única e conteúdo conferido. Lotes guardam bytes originais, SHA-256, linhas e relatórios.
 Importação: lote bloqueado; savepoint para clientes/títulos/auditoria; erro desfaz todos os efeitos financeiros, preservando diagnóstico. Clientes e títulos são processados em ordem de chave com ON CONFLICT DO NOTHING seguido de comparação bloqueada.
-Pagamento/cancelamento: lock título antes de jobs, alteração financeira, cancelamento de pendências e auditoria na mesma transação. Pagamento também serializa a chave idempotente com advisory lock; reutilizar a chave para outro título ou conteúdo resulta em conflito. Os locks decisivos atualizam a instância SQLAlchemy com `populate_existing`, evitando decisões sobre um objeto cacheado antes de uma mudança concorrente.
+Pagamento/cancelamento: lock do título antes dos jobs; recebimento e auditoria na mesma transação. Quitação e cancelamento encerram pendências nessa transação. Pagamento serializa primeiro a chave idempotente com advisory lock; reutilizar a chave para outro título ou conteúdo resulta em conflito. Os locks decisivos atualizam a instância SQLAlchemy com `populate_existing`, evitando decisões sobre um objeto cacheado antes de uma mudança concorrente.
 
 Na API, `get_session` abre a transação e a dependência FastAPI usa escopo `function`: o commit termina antes de enviar a resposta ao cliente. Casos de uso não fazem commit. O worker e os comandos de seed abrem suas próprias transações, usando os mesmos casos de uso.
 
@@ -77,7 +77,7 @@ Na API, `get_session` abre a transação e a dependência FastAPI usa escopo `fu
 | --- | --- |
 | `customers` → `receivables` | Um cliente tem vários títulos; cada identidade externa é única dentro de `source_system` |
 | `import_batches` → `import_lines` | Lote mantém conteúdo binário e SHA-256; linhas são únicas por lote/número e conservam a conferência |
-| `receivables` → `payments` | Até um pagamento por título; `idempotency_key` é única e `request_hash` compara título/nota |
+| `receivables` → `payments` | Vários recebimentos por título; `idempotency_key` global única e `request_hash` compara título/nota/valor explícito |
 | `receivables` → `reminders` → `attempts` | Job único por título/etapa e título/dia; tentativa única por job/número, com payload da autorização |
 | `reminder_day_guards` | Reserva única por título/data comercial; limita recuperação de etapas no mesmo dia |
 | `attempts` → `provider_results`; `reminders` → `deliveries` | Resultado único por tentativa; entrega única por lembrete e chave idempotente |
@@ -88,7 +88,7 @@ As restrições estão em [`models.py`](../backend/src/gestao_recebiveis/models.
 ### Duas requisições que alteram a carteira
 
 1. **Importação:** `POST /api/v1/imports` valida o CSV e persiste uma prévia, sem inserir títulos. `POST /api/v1/imports/{id}/confirm` bloqueia o lote, relê seus bytes e revalida contra a carteira atual. Inserções e auditoria financeira ficam num savepoint; qualquer conflito desfaz esse trecho e mantém `status=rejected`, linhas e relatório na transação externa. Uma confirmação repetida retorna o lote já encerrado.
-2. **Baixa:** `POST /api/v1/receivables/{id}/payments` recebe chave e nota. O advisory lock serializa a chave antes de verificar um pagamento anterior. A mesma chave/conteúdo devolve o pagamento existente; conteúdo diferente conflita. Para um pagamento novo, o lock do título antecede os jobs; `paid`, pagamento, cancelamento de pendências e evento de auditoria são confirmados juntos.
+2. **Baixa:** `POST /api/v1/receivables/{id}/payments` recebe chave, nota e valor opcional de parcela. O advisory lock serializa a chave antes de verificar um pagamento anterior. A mesma chave/conteúdo devolve o pagamento existente; conteúdo diferente conflita. Para um pagamento novo, o lock do título antecede os jobs; recebimento e auditoria são confirmados juntos; somente a quitação marca `paid` e cancela pendências.
 
 Esses limites são exercitados em [`test_financial.py`](../backend/tests/test_financial.py): prévia revalidada, conflito atômico, imports concorrentes e uma chave de pagamento disputada por dois títulos.
 
@@ -104,7 +104,7 @@ O upload aceita CSV UTF-8 até 2 MiB e 5.000 registros. Um middleware limita o c
 
 A página inicial controla a sessão. `features/login.tsx` cuida da entrada; `features/workspace.tsx` coordena as áreas; `components/workspace-navigation.tsx` cuida de navegação e foco. A lista de títulos e seu detalhe possuem componentes distintos. `import-preview.tsx` pagina a conferência em 50 linhas, enquanto `imports.tsx` conduz upload, confirmação e histórico. A resposta de detalhe ainda transfere o relatório completo limitado a 5.000 registros.
 
-No celular, Menu abre cinco destinos verticais em diálogo nativo com Escape, contenção de foco e retorno ao botão de origem; o Workspace coordena o foco no conteúdo após mudanças de área ou detalhe, inclusive pelos atalhos financeiros e pelo botão de retorno. A conta tem diálogo próprio. No Resumo, os filtros antecedem a posição financeira; o formulário mantém rascunho separado do último recorte aplicado. Datas invertidas permanecem abertas, com erro associado aos campos e sem nova consulta. Aberto decompõe-se em vencido e em dia (inclui hoje), com ações que preservam busca e vencimento ao abrir os títulos. Recebido mantém seu intervalo independente e explícito.
+No celular, Menu abre os destinos verticais em diálogo nativo com Escape, contenção de foco e retorno ao botão de origem; o Workspace coordena o foco no conteúdo após mudanças de área ou detalhe, inclusive pelos atalhos financeiros e pelo botão de retorno. A conta tem diálogo próprio. No Resumo, os filtros antecedem a posição financeira; o formulário mantém rascunho separado do último recorte aplicado. Datas invertidas permanecem abertas, com erro associado aos campos e sem nova consulta. Aberto decompõe-se em vencido e em dia (inclui hoje), com ações que preservam busca e vencimento ao abrir os títulos. Recebido mantém seu intervalo independente e explícito.
 
 ## Fila e falhas
 
@@ -146,7 +146,7 @@ sequenceDiagram
 
 Se o processo cair antes de `finish`, o job permanece `processing` até o lease expirar; outro claim pode continuar a mesma tentativa. O heartbeat renova a posse durante `send`, mas a finalização sempre revalida token e prazo. Um worker atrasado não pode sobrescrever o resultado de um sucessor.
 
-A baixa pode ocorrer entre autorização e entrega. Ela bloqueia novas autorizações, mas conserva a tentativa já autorizada para reconciliação; por isso o diagrama não promete que uma baixa desfaz uma entrega em trânsito. A sequência e essa corrida têm casos em [`test_reminders.py`](../backend/tests/test_reminders.py), incluindo `test_lost_response_replays_same_attempt_after_provider_restart` e `test_payment_authorization_race_has_explicit_lock_order`.
+A quitação pode ocorrer entre autorização e entrega. Ela bloqueia novas autorizações, mas conserva a tentativa já autorizada para reconciliação. Uma parcela reduz o saldo usado pela próxima autorização e preserva o payload anterior. A sequência e essa corrida têm casos em [`test_reminders.py`](../backend/tests/test_reminders.py), incluindo `test_lost_response_replays_same_attempt_after_provider_restart` e `test_payment_authorization_race_has_explicit_lock_order`.
 
 ## Relógios, segurança e operação
 
@@ -187,3 +187,11 @@ A [prova de restauração](restore-proof.md) separa origem e destino em projetos
 | Relógios, segurança e operação                | [`clock.py`](../backend/src/gestao_recebiveis/clock.py)                                                                                                                                                           |
 | Riscos e verificação                          | [`test_financial.py`](../backend/src/gestao_recebiveis/../../tests/test_financial.py) · [`test_reminders.py`](../backend/src/gestao_recebiveis/../../tests/test_reminders.py)                                     |
 | Identidades do PostgreSQL e admissão de login | [`provision_database.py`](../backend/src/gestao_recebiveis/provision_database.py) · [`login_admission.py`](../backend/src/gestao_recebiveis/login_admission.py)                                                   |
+
+## Saldos e snapshots de relatório — 12/10/2026
+
+[`balances.py`](../backend/src/gestao_recebiveis/balances.py) concentra soma de recebimentos e saldo residual. Consultas agrupadas produzem uma linha por título antes dos joins, evitando N+1 financeiro e multiplicação por lembretes. Pagamento e autorização de lembrete calculam o saldo depois do lock do título. `send()` continua fora da transação financeira; uma tentativa unknown conserva seu payload anterior.
+
+[`database.py`](../backend/src/gestao_recebiveis/database.py) abre uma sessão específica para leituras com `REPEATABLE READ, READ ONLY` antes da primeira consulta. A sessão de autenticação é separada e o isolamento das escritas permanece inalterado. Totais, linhas, contagens e relógio comercial de uma resposta compartilham o snapshot; outras requisições, inclusive a página seguinte, podem observar alterações posteriores.
+
+A interface conserva uma intenção de pagamento congelada em sessionStorage por conta/título/versão. O fluxo de retry resolve o recebimento anterior antes de permitir outro valor. [Contrato e expiração local](evolucao-20261012.md).

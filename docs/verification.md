@@ -194,3 +194,36 @@ O [CI de `7607f9a`](https://github.com/arthurjoanes/gestao-recebiveis/actions/ru
 ## Código e evidências relacionados
 
 [workflow](../.github/workflows/ci.yml).
+
+## Pagamentos parciais, aging e extrato (12/10/2026)
+
+A execução `ec3bf363168b` validou o candidato sobre `6dcc674`, com alterações ainda não commitadas. O [manifesto](evidence/evolution-20261012/ec3bf363168b/manifest.json) registra o SHA-256 do diff, os hashes das 127 fontes copiadas para runtime privado, as imagens e os comandos realmente executados. Todas essas fontes permaneceram iguais até o encerramento dos testes; alterações posteriores na documentação não ampliam essa prova.
+
+| Conferência | Resultado local |
+| --- | --- |
+| Builds sequenciais `db`, `api`, `frontend`, `frontend-checks`, `e2e` | Cinco aprovados; frontend compilado em produção com Next.js 16.3.8 |
+| `run --rm test`, Python 3.13.15 | Ruff, formato, mypy, Alembic e **218 testes aprovados**, sem skips; dois avisos de depreciação visíveis |
+| Banco anterior → migração atual | **48 recebimentos legados** preservados e repetidos, incluindo IDs, timestamps e hashes; inconsistência, pagamento zero e downgrade destrutivo recusados; papéis provisionados três vezes |
+| `frontend-checks` | ESLint, Prettier, geração de tipos Next e TypeScript aprovados |
+| Chromium/Playwright 1.63.0 | **22 casos aprovados** em 41,8 s, um worker, zero retries e skips |
+| Guardas host e CLI de backup, Python 3.13 | **22 testes aprovados**; `prove_restore.py plan --allow-other-projects` retornou 0 |
+| Trivy 0.74.0, digest do CI | API, frontend e PostgreSQL: saída 0 e zero vulnerabilidades, todas as severidades, sem ignorefile de exceções |
+| `npm audit --omit=dev --json` na imagem de checks | Saída 0, zero vulnerabilidades de runtime |
+
+Os testes novos cobrem centavos e bigint, corridas de pagamento/cancelamento, hash legado e intenção explícita, reimportação após parcela, fronteiras do aging, filtros independentes e pagamento sincronizado entre consultas de um snapshot. As jornadas verificam resposta perdida após commit, rejeição definitiva após lookup, expiração local com diálogo aberto, isolamento/limpeza por conta, reader, retorno com filtros/páginas e impressão do extrato. A paginação impressa identifica o recorte exibido; seus totais abrangem todo o recorte consultado.
+
+Cada projeto Compose recebeu namespace, tags de imagens e credenciais descartáveis próprios, fora do Git. O E2E usou `compose.e2e.yaml`, sem portas do host e com banco em tmpfs. A limpeza inspecionou labels e removeu somente os projetos dessa execução. Logs publicáveis estão ligados por hash no manifesto; configurações, credenciais, traces de sessão e relatórios brutos permanecem no runtime privado.
+
+As tentativas anteriores continuam registradas. `45f004bb7360` passou backend e migração, mas teve 18/21 casos de navegador: overflow do menu em 768 px e dois seletores de teste foram corrigidos. Um erro de codificação do console do executor ocorreu depois de um build bem-sucedido; os builds restantes foram retomados. `e6a86186008a` passou 21/21 casos e revelou os advisories de zlib e Mako no Trivy. A execução final acima incorporou essas correções e o 22º caso, sem silenciar falhas. A primeira tentativa de restore, [091dc9f…](evidence/restore-proof/091dc9f332cf47b8a447f5869584337b/manifest.json), falhou com Docker indisponível antes de criar recursos.
+
+Não foram acrescentadas bibliotecas. Atualizações pontuais resolveram avisos encontrados: [sharp 0.35.5](https://github.com/advisories/GHSA-wq5f-xc86-pv6w), [source-map-js 1.2.2](https://github.com/advisories/GHSA-68fv-2mgg-jv7q), [Mako 1.4.2](https://github.com/sqlalchemy/mako/security/advisories/GHSA-5639-2j2p-m4mx) e [zlib 1.3.2-r1 no Alpine 3.24](https://secdb.alpinelinux.org/v3.24/main.json). Bases, digests, versões diretas e gates do CI foram preservados. O audit completo ainda informa **cinco achados high na cadeia de desenvolvimento de braces**, cujo [advisory não tem versão corrigida](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm); não foi aplicado o downgrade sugerido por `audit fix --force`. O Trivy também emitiu avisos de precisão de SBOM de terceiros e de metadados EOL do Alpine, preservados nos logs.
+
+A prova usa dados sintéticos, posição atual e FakeProvider. Não demonstra ledger histórico, snapshot entre páginas, conciliação bancária, envio externo, perda do host ou desempenho de produção. A revisão visual universal, leitor de tela e zoom nativo continuam pendentes; as verificações funcionais e de reflow não constituem certificação WCAG.
+
+A [restauração final `6e75361b…`](evidence/restore-proof/6e75361b018645ffa98bce7ad338d4d4/manifest.json) passou em **197,941 s**, em host compartilhado com 23 containers externos observados no início. O destino recebeu as mesmas 16 tabelas públicas e 12 sequências; os recebimentos de R$ 50 integral e R$ 25 parcial conservaram IDs e conteúdo. Repetir ambas as chaves não alterou o estado. A reconciliação conservou tentativa, payload autorizado de R$ 50 e a única entrega simulada. Corrupção, destino ocupado e modo incorreto foram recusados; origem e dump permaneceram intactos. A limpeza deixou zero recursos nos dois projetos próprios.
+
+As cinco [capturas da execução final](image-captures.md#evolução-de-12102026) mostram somente telas funcionais alteradas. Após a suíte principal, o único ajuste em fontes de execução foi no coletor: a primeira [restauração `1054efee…`](evidence/restore-proof/1054efee71e84949a4951d5f752c5be2/manifest.json) passou financeiramente em 192,785 s, mas capturou extrato e aging durante carregamento. O coletor agora espera totais e linhas visíveis e valida os relatórios pela API; sua sintaxe passou em `node --check`. A prova final congelou essa nova versão e passou novamente, com captura pronta e inspeção visual. Aplicação, migração, dependências e testes permaneceram iguais aos da suíte de 218/22 casos.
+
+A conferência adicional de Ruff nos dois scripts Python, sem indicar configuração, encontrou seis apontamentos e diferenças de formatação sob regras fora do gate versionado. Com `--config backend/pyproject.toml`, lint e formato passaram nos dois arquivos, sem alteração de código para essa conferência.
+
+Gitleaks 8.30.1 verificou os arquivos publicáveis com as regras padrão e a configuração do repositório. Os achados novos eram os SHA-256 de `auth.py` e `test_api.py` nos comandos de verificação de fontes dos dois manifestos de outubro. Os valores foram recalculados e conferidos contra as cópias congeladas. A exceção mantém `AND` entre caminhos exatos e fingerprints exatos; um controle com chave sintética no mesmo manifesto continuou sendo detectado. O [registro dos fingerprints](evidence/evolution-20261012/ec3bf363168b/secret-fingerprint-review.json) contém versões, hashes e resultados redigidos. A [varredura final de 254 arquivos](evidence/evolution-20261012/ec3bf363168b/secret-final-scan.json), incluindo os 21 logs públicos sanitizados, retornou zero achados. Esses logs conservam espaços e linhas produzidos pelos comandos; a conferência de whitespace do diff de fontes/documentação os exclui. O workflow de histórico completo permanece habilitado.
