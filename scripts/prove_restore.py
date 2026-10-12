@@ -108,13 +108,18 @@ def protect(directory: Path) -> dict:
             "verified_from_final_dacl": True,
         }
     directory.chmod(0o700)
-    return {"method": "POSIX mode", "directory_mode": "0700", "applied_before_secrets": True}
+    return {
+        "method": "POSIX mode",
+        "directory_mode": "0700",
+        "applied_before_secrets": True,
+    }
 
 
 def identities(root: Path) -> dict:
     listing = (
         subprocess.check_output(
-            ["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"], cwd=root
+            ["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"],
+            cwd=root,
         )
         .decode()
         .split("\0")
@@ -124,7 +129,13 @@ def identities(root: Path) -> dict:
         parts = Path(name).parts
         if not parts or not name:
             continue
-        if parts[0] not in {"backend", "frontend", "database", "data", "scripts"} and name not in {
+        if parts[0] not in {
+            "backend",
+            "frontend",
+            "database",
+            "data",
+            "scripts",
+        } and name not in {
             "compose.restore-proof.yaml",
             ".dockerignore",
         }:
@@ -173,9 +184,19 @@ def compare_states(first: dict, second: dict, reason: str) -> None:
 
 
 class Runner:
-    def __init__(self, root: Path, deadline_seconds: int = 1200):
-        require(300 <= deadline_seconds <= 1800, "Deadline must be between 300 and 1800 seconds")
+    def __init__(
+        self,
+        root: Path,
+        deadline_seconds: int = 1200,
+        *,
+        allow_other_projects: bool = False,
+    ):
+        require(
+            300 <= deadline_seconds <= 1800,
+            "Deadline must be between 300 and 1800 seconds",
+        )
         self.root = root
+        self.allow_other_projects = allow_other_projects
         self.run_id = uuid.uuid4().hex
         parent = Path(os.environ.get("LOCALAPPDATA", str(Path.home() / ".local" / "share")))
         parent = parent / "gestao-recebiveis-restore"
@@ -220,7 +241,10 @@ class Runner:
         except BaseException as error:
             # No credentials exist yet; retain a failed ACL/preflight attempt.
             self.record["status"] = "PREFLIGHT_FAILED"
-            self.record["failure"] = {"type": type(error).__name__, "message": str(error)}
+            self.record["failure"] = {
+                "type": type(error).__name__,
+                "message": str(error),
+            }
             self.record["docker_started"] = False
             self.record["credentials_generated"] = False
             save(
@@ -305,7 +329,12 @@ class Runner:
             ("networks", ["network", "ls", "-q"]),
         ):
             names = self.command(
-                ["docker", *cli, "--filter", f"label=com.docker.compose.project={contract.project}"]
+                [
+                    "docker",
+                    *cli,
+                    "--filter",
+                    f"label=com.docker.compose.project={contract.project}",
+                ]
             ).split()
             inspect = {
                 "containers": ["inspect"],
@@ -362,7 +391,8 @@ class Runner:
             )
         else:
             require(
-                record.get("status") == "rejected", "Negative control failed for another reason"
+                record.get("status") == "rejected",
+                "Negative control failed for another reason",
             )
         key = f"{role}-{name or phase}"
         require(key not in self.record["checks"], "Evidence phase repeated")
@@ -381,22 +411,33 @@ class Runner:
 
     def db_command(self, role, args, timeout=120):
         return self.command(
-            ["docker", "exec", "--user", "postgres", self.db_id(role), *args], timeout=timeout
+            ["docker", "exec", "--user", "postgres", self.db_id(role), *args],
+            timeout=timeout,
         )
 
     def private_snapshot(self, name):
         return json.loads((self.evidence / f"{name}.private.json").read_bytes())
 
     def freeze_and_build(self):
-        require(
-            not self.command(["docker", "ps", "-q"]).strip(),
-            "Active containers detected; run in an agreed quiet window",
-        )
+        active_count = len(self.command(["docker", "ps", "-q"]).split())
         self.record["host"] = {
             "python": sys.version.split()[0],
             "platform": sys.platform,
             "monotonic_clock": vars(time.get_clock_info("monotonic")),
+            "allow_other_projects": self.allow_other_projects,
+            "active_container_count_at_start": active_count,
+            "shared_host_at_start": active_count > 0,
+            "timing_caveat": (
+                "Other containers are active on this shared host; competing workloads may affect "
+                "measured durations. Container limits describe only this proof's resources."
+                if active_count
+                else "No active containers were observed at preflight; host workloads may still affect durations."
+            ),
         }
+        require(
+            not active_count or self.allow_other_projects,
+            "Active containers detected; run in an agreed quiet window or opt in with --allow-other-projects",
+        )
         sources = identities(self.root)
         for name in sources:
             target = self.source / name
@@ -417,7 +458,11 @@ class Runner:
                 str(self.source / "database" / "Dockerfile"),
                 str(self.source / "database"),
             ],
-            "backend": ["--file", str(self.source / "backend" / "Dockerfile"), str(self.source)],
+            "backend": [
+                "--file",
+                str(self.source / "backend" / "Dockerfile"),
+                str(self.source),
+            ],
             "frontend": [
                 "--target",
                 "runtime",
@@ -455,7 +500,10 @@ class Runner:
             + "; print(json.dumps({n:hashlib.sha256(open(n,'rb').read()).hexdigest() for n in p}))"
         )
         check_contract = self.contracts["src"]
-        labels = {**check_contract.labels, "com.docker.compose.project": check_contract.project}
+        labels = {
+            **check_contract.labels,
+            "com.docker.compose.project": check_contract.project,
+        }
         label_args = [
             argument for key, value in labels.items() for argument in ("--label", f"{key}={value}")
         ]
@@ -626,7 +674,8 @@ class Runner:
         dump = self.private / "source-cut.dump"
         self.command(["docker", "cp", f"{source_container}:/tmp/restore-cut.dump", str(dump)])
         require(
-            dump.read_bytes().startswith(b"PGDMP"), "Dump is not PostgreSQL custom binary format"
+            dump.read_bytes().startswith(b"PGDMP"),
+            "Dump is not PostgreSQL custom binary format",
         )
         backup = {
             "run_id": self.run_id,
@@ -659,12 +708,14 @@ class Runner:
             self.restore(corrupt, backup)
         except ProofRejected as error:
             require(
-                str(error) == "Backup checksum mismatch", "Corruption failed for another reason"
+                str(error) == "Backup checksum mismatch",
+                "Corruption failed for another reason",
             )
         else:
             raise ProofRejected("Corrupted backup was accepted")
         require(
-            self.fresh("dst") == before_target, "Corruption control created destination resources"
+            self.fresh("dst") == before_target,
+            "Corruption control created destination resources",
         )
         self.record["checks"]["corruption"] = {
             "rejected_before_destination_creation": True,
@@ -758,7 +809,9 @@ class Runner:
             before = self.inventory(contract)  # ownership checked before any destructive command
             if role in self.env_files and any(before.values()):
                 self.compose(
-                    role, ["down", "--volumes", "--remove-orphans", "--timeout", "15"], timeout=35
+                    role,
+                    ["down", "--volumes", "--remove-orphans", "--timeout", "15"],
+                    timeout=35,
                 )
             elif before["containers"]:
                 # Only the labeled image-source check can exist before env files are written.
@@ -793,7 +846,12 @@ class Runner:
         self.record["duration_seconds"] = time.monotonic() - self.started
         self.record["commands"] = self.calls
         self.record["private_artifacts"] = [
-            {"name": p.name, "sha256": sha(p), "bytes": p.stat().st_size, "published": False}
+            {
+                "name": p.name,
+                "sha256": sha(p),
+                "bytes": p.stat().st_size,
+                "published": False,
+            }
             for p in sorted(self.evidence.glob("*.json"))
         ]
         base = self.root / "docs" / "evidence" / "restore-proof" / self.run_id
@@ -845,7 +903,8 @@ class Runner:
                 "message": self.redact(str(error)),
             }
             print(
-                json.dumps({"run_id": self.run_id, "failure": self.record["failure"]}), flush=True
+                json.dumps({"run_id": self.run_id, "failure": self.record["failure"]}),
+                flush=True,
             )
         finally:
             try:
@@ -868,6 +927,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices=("plan", "execute"))
     parser.add_argument("--deadline-seconds", type=int, default=1200)
+    parser.add_argument(
+        "--allow-other-projects",
+        action="store_true",
+        help="Allow unrelated active containers; owned namespace and cleanup guards remain mandatory.",
+    )
     args = parser.parse_args()
     if args.action == "plan":
         print(
@@ -880,6 +944,9 @@ def main():
                     "peak_runtime_memory_limit_mib": 1280,
                     "memory_limit_scope": "Sum of active service/probe container limits; host browser and sequential builds are additional",
                     "builds": "Three sequential builds from frozen source; build resource use is reported separately",
+                    "allow_other_projects": args.allow_other_projects,
+                    "quiet_window_required": not args.allow_other_projects,
+                    "timing_caveat": "Shared host workloads may affect measured durations; resource limits cover only this proof.",
                     "deadline_seconds": args.deadline_seconds,
                     "private_dump": True,
                     "cleanup_budget": "75 seconds reserved; emergency cleanup can extend up to 60 seconds beyond operational deadline",
@@ -890,7 +957,9 @@ def main():
             )
         )
         return 0
-    return Runner(ROOT, args.deadline_seconds).execute()
+    return Runner(
+        ROOT, args.deadline_seconds, allow_other_projects=args.allow_other_projects
+    ).execute()
 
 
 if __name__ == "__main__":

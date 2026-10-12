@@ -2,6 +2,7 @@
 
 import hashlib
 import importlib.util
+import io
 import json
 import sys
 import tempfile
@@ -9,12 +10,12 @@ import unittest
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "backend" / "tests"))
-from prove_restore import Runner, check_owned, compare_states  # noqa: E402
+from prove_restore import Runner, check_owned, compare_states, main  # noqa: E402
 from restore_support import (  # noqa: E402
     MODE,
     Contract,
@@ -141,7 +142,10 @@ class RestoreGuards(unittest.TestCase):
             command.assert_not_called()
 
     def test_cleanup_requires_all_owner_labels_not_only_project(self):
-        labels = {**self.target.labels, "com.docker.compose.project": self.target.project}
+        labels = {
+            **self.target.labels,
+            "com.docker.compose.project": self.target.project,
+        }
         for kind in ("containers", "volumes", "networks"):
             item = {"Config": {"Labels": labels}} if kind == "containers" else {"Labels": labels}
             check_owned([item], self.target, kind)
@@ -152,6 +156,114 @@ class RestoreGuards(unittest.TestCase):
                 )
                 with self.subTest(kind=kind, key=key), self.assertRaises(ProofRejected):
                     check_owned([item], self.target, kind)
+
+    def host_runner(self, *, allow_other_projects=False):
+        runner = object.__new__(Runner)
+        runner.root = ROOT
+        runner.allow_other_projects = allow_other_projects
+        runner.record = {}
+        runner.contracts = {"src": self.source, "dst": self.target}
+        return runner
+
+    def test_busy_host_requires_opt_in_before_source_freeze(self):
+        runner = self.host_runner()
+        with (
+            patch.object(
+                runner,
+                "command",
+                return_value="PRIVATE-CONTAINER-ONE\nPRIVATE-CONTAINER-TWO\n",
+            ) as command,
+            patch("prove_restore.identities") as freeze,
+            patch.object(runner, "fresh") as fresh,
+            self.assertRaisesRegex(ProofRejected, "quiet window"),
+        ):
+            runner.freeze_and_build()
+        command.assert_called_once_with(["docker", "ps", "-q"])
+        freeze.assert_not_called()
+        fresh.assert_not_called()
+        self.assertFalse(runner.record["host"]["allow_other_projects"])
+        self.assertEqual(runner.record["host"]["active_container_count_at_start"], 2)
+        self.assertTrue(runner.record["host"]["shared_host_at_start"])
+        self.assertNotIn(b"PRIVATE-CONTAINER", canonical(runner.record))
+
+    def test_busy_host_opt_in_keeps_both_fresh_namespace_checks_before_build(self):
+        runner = self.host_runner(allow_other_projects=True)
+        # Stop at the mocked first build after proving that both real fresh()
+        # checks ran. No Docker daemon, copied sources or private setup is needed.
+        with (
+            patch.object(
+                runner,
+                "command",
+                side_effect=["PRIVATE-CONTAINER\n", ProofRejected("mock build stop")],
+            ) as command,
+            patch("prove_restore.identities", return_value={}),
+            patch("prove_restore.subprocess.check_output", return_value="a" * 40),
+            patch.object(
+                runner,
+                "inventory",
+                return_value={"containers": [], "volumes": [], "networks": []},
+            ) as inventory,
+            self.assertRaisesRegex(ProofRejected, "mock build stop"),
+        ):
+            runner.run_id = self.source.run_id
+            runner.source = ROOT
+            runner.freeze_and_build()
+        self.assertEqual(inventory.call_args_list, [call(self.source), call(self.target)])
+        self.assertEqual(command.call_args_list[0], call(["docker", "ps", "-q"]))
+        self.assertEqual(command.call_args_list[1].args[0][:2], ["docker", "build"])
+        self.assertEqual(runner.record["status"], "BUILDING")
+        self.assertTrue(runner.record["host"]["allow_other_projects"])
+        self.assertEqual(runner.record["host"]["active_container_count_at_start"], 1)
+        self.assertIn("competing workloads", runner.record["host"]["timing_caveat"])
+        self.assertNotIn(b"PRIVATE-CONTAINER", canonical(runner.record))
+
+    def test_busy_host_opt_in_still_refuses_generated_namespace_collision(self):
+        runner = self.host_runner(allow_other_projects=True)
+        with (
+            patch.object(runner, "command", return_value="PRIVATE-CONTAINER\n") as command,
+            patch("prove_restore.identities", return_value={}),
+            patch("prove_restore.subprocess.check_output", return_value="a" * 40),
+            patch.object(
+                runner,
+                "inventory",
+                return_value={
+                    "containers": ["owned-existing"],
+                    "volumes": [],
+                    "networks": [],
+                },
+            ) as inventory,
+            self.assertRaisesRegex(ProofRejected, "Generated project unexpectedly already exists"),
+        ):
+            runner.freeze_and_build()
+        inventory.assert_called_once_with(self.source)
+        command.assert_called_once_with(["docker", "ps", "-q"])
+        self.assertNotIn("status", runner.record)
+
+    def test_plan_is_read_only_and_reports_shared_host_opt_in(self):
+        for enabled in (False, True):
+            argv = ["prove_restore.py", "plan"] + (["--allow-other-projects"] if enabled else [])
+            with (
+                self.subTest(enabled=enabled),
+                patch.object(sys, "argv", argv),
+                patch("sys.stdout", new_callable=io.StringIO) as output,
+                patch("prove_restore.Runner") as runner,
+            ):
+                self.assertEqual(main(), 0)
+                plan = json.loads(output.getvalue())
+                self.assertEqual(plan["allow_other_projects"], enabled)
+                self.assertEqual(plan["quiet_window_required"], not enabled)
+                self.assertIn("Shared host workloads", plan["timing_caveat"])
+                runner.assert_not_called()
+
+    def test_execute_forwards_shared_host_opt_in_without_bypassing_runner(self):
+        with (
+            patch.object(sys, "argv", ["prove_restore.py", "execute", "--allow-other-projects"]),
+            patch("prove_restore.Runner") as runner,
+        ):
+            runner.return_value.execute.return_value = 0
+            self.assertEqual(main(), 0)
+        runner.assert_called_once_with(ROOT, 1200, allow_other_projects=True)
+        runner.return_value.execute.assert_called_once_with()
 
     def test_private_records_cannot_overwrite_or_escape(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -209,6 +321,43 @@ class RestoreGuards(unittest.TestCase):
         self.assertNotIn(b"DO_NOT_PUBLISH", rendered)
         self.assertNotIn(b"ALSO_PRIVATE", rendered)
         self.assertEqual(result["tables"]["sessions"]["rows"], 1)
+
+    def test_public_snapshot_uses_residual_and_keeps_canceled_nominal(self):
+        tables = {
+            name: []
+            for name in (
+                "receivables",
+                "payments",
+                "reminders",
+                "attempts",
+                "deliveries",
+                "provider_results",
+            )
+        }
+        tables["receivables"] = [
+            {
+                "id": 1,
+                "external_receivable_id": "PARTIAL",
+                "amount_cents": 7500,
+                "status": "open",
+            },
+            {
+                "id": 2,
+                "external_receivable_id": "CANCELED",
+                "amount_cents": 1000,
+                "status": "canceled",
+            },
+        ]
+        tables["payments"] = [
+            {"id": 1, "receivable_id": 1, "amount_cents": 2000},
+            {"id": 2, "receivable_id": 1, "amount_cents": 500},
+        ]
+        result = public_snapshot(
+            {"state": {"tables": tables, "sequences": {}}, "observed_at_utc": "now"}
+        )
+        self.assertEqual(result["open_cents"], 5000)
+        self.assertEqual(result["receivables"][0]["paid_cents"], 2500)
+        self.assertEqual(result["receivables"][1]["remaining_cents"], 1000)
 
     def test_cleanup_failure_cannot_produce_passed(self):
         runner = object.__new__(Runner)

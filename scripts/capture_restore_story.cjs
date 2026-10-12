@@ -65,12 +65,17 @@ async function main() {
       await expect(panel.getByText('RESTORE-PAID', {exact: true})).toBeVisible();
       if (expected === 'rejected') await expect(panel.getByText('existing_conflict', {exact: true})).toBeVisible();
       await panel.scrollIntoViewIfNeeded();
-      await shot(expected === 'confirmed' ? '01-lote-confirmado.png' : '02-conflito-sem-alteracao-financeira.png');
+      // The import UI is unchanged in this candidate; retain read-only oracles.
     } else {
-      requireCondition(overview.open_cents === '7500' && overview.received_cents === '5000' && overview.open_count === 1,
+      requireCondition(overview.open_cents === '5000' && overview.received_cents === '7500' && overview.open_count === 1,
         'Recovered financial oracle differs');
       const job = await get('/reminders/' + config.cut.reminder_id);
       const title = await get('/receivables/' + config.fixture.title_ids['RESTORE-PAID']);
+      const partial = await get('/receivables/' + config.fixture.title_ids['RESTORE-UNKNOWN']);
+      requireCondition(partial.status === 'open' && partial.payment_state === 'partial' &&
+        partial.paid_cents === '2500' && partial.remaining_cents === '5000' &&
+        partial.payments.length === 1 && partial.payments[0].id === config.cut.partial_id &&
+        job.attempts[0].authorized_remaining_cents === '5000', 'Partial/restored authorization oracle differs');
       requireCondition(job.status === 'sent' && job.attempts.length === 1 && job.attempts[0].id === config.cut.attempt_id &&
         job.attempts[0].outcome === 'success' && job.delivery && job.delivery.id === config.cut.delivery_id,
         'Recovered reminder/attempt/delivery identity differs');
@@ -88,8 +93,39 @@ async function main() {
       await nav.getByRole('button', {name: 'Títulos', exact: true}).click();
       await page.getByRole('button', {name: 'RESTORE-PAID', exact: true}).click();
       await expect(page.getByRole('heading', {name: 'RESTORE-PAID', exact: true})).toBeVisible();
-      await expect(page.getByRole('region', {name: 'Dados do título'}).getByText('Pagamento integral', {exact: true})).toBeVisible();
+      await expect(page.getByRole('heading', {name: 'Recebimentos (1)', exact: true})).toBeVisible();
       await shot('04-mesma-baixa-preservada.png');
+      await page.getByRole('button', {name: 'Voltar para títulos', exact: true}).click();
+      await page.getByRole('button', {name: 'RESTORE-UNKNOWN', exact: true}).click();
+      await expect(page.getByRole('heading', {name: 'RESTORE-UNKNOWN', exact: true})).toBeVisible();
+      await expect(page.getByRole('region', {name: 'Dados do título'}).getByText('Parcial', {exact: true})).toBeVisible();
+      await shot('05-parcela-saldo-preservados.png');
+      await page.getByRole('button', {name: 'Extrato do cliente', exact: true}).click();
+      await expect(page.getByRole('heading', {name: 'Extrato operacional', exact: true})).toBeVisible();
+      const statement = await get('/customers/' + partial.customer_id + '/statement');
+      requireCondition(statement.totals.amount_cents === '12500' && statement.totals.paid_cents === '7500' &&
+        statement.totals.open_cents === '5000' && statement.totals.received_cents === '7500' &&
+        statement.titles.total === 2 && statement.payments.total === 2, 'Statement oracle differs');
+      await expect(page.getByRole('heading', {name: 'Totais de todo o recorte', exact: true})).toBeVisible();
+      const statementTitles = page.getByRole('region', {name: 'Títulos do relatório', exact: true});
+      await expect(statementTitles.getByRole('button', {name: 'RESTORE-PAID', exact: true})).toBeVisible();
+      await expect(statementTitles.getByRole('button', {name: 'RESTORE-UNKNOWN', exact: true})).toBeVisible();
+      await expect(page.getByRole('button', {name: 'Imprimir extrato', exact: true})).toBeEnabled();
+      record.observations.statement = {customer_id: partial.customer_id, totals: statement.totals,
+        title_count: statement.titles.total, payment_count: statement.payments.total};
+      await shot('06-extrato-operacional.png');
+      await nav.getByRole('button', {name: 'Aging', exact: true}).click();
+      await expect(page.getByRole('heading', {name: 'Aging da carteira', exact: true})).toBeVisible();
+      const aging = await get('/reports/aging');
+      requireCondition(aging.open_cents === '5000' && aging.title_count === 1 &&
+        aging.buckets.reduce((sum, bucket) => sum + BigInt(bucket.remaining_cents), 0n) === 5000n,
+        'Aging residual oracle differs');
+      await expect(page.getByRole('heading', {name: 'Carteira no recorte', exact: true})).toBeVisible();
+      await expect(page.getByRole('heading', {name: 'Títulos do aging', exact: true})).toBeVisible();
+      await expect(page.getByRole('region', {name: 'Títulos do relatório', exact: true})
+        .getByRole('button', {name: 'RESTORE-UNKNOWN', exact: true})).toBeVisible();
+      record.observations.aging = {open_cents: aging.open_cents, title_count: aging.title_count, buckets: aging.buckets};
+      await shot('07-aging-residual.png');
     }
     record.finished_at = new Date().toISOString();
     record.scope = 'Actual rendered pages; post-login read-only HTTP checks; no DOM replacements, seeding or financial UI writes.';
