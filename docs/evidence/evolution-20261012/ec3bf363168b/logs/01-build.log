@@ -1,0 +1,42 @@
+#1 [internal] load local bake definitions
+#1 reading from stdin 778B 0.0s done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 646B 0.0s done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/postgres:18.6-alpine3.24@sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873
+#3 DONE 1.1s
+
+#4 [internal] load .dockerignore
+#4 transferring context:
+#4 transferring context: 2B done
+#4 DONE 0.2s
+
+#5 [1/2] FROM docker.io/library/postgres:18.6-alpine3.24@sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873
+#5 resolve docker.io/library/postgres:18.6-alpine3.24@sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873 0.0s done
+#5 CACHED
+
+#6 [2/2] RUN apk add --no-cache --upgrade su-exec=0.3-r0 nghttp2-libs=1.70.0-r0 zlib=1.3.2-r1     && rm /usr/local/bin/gosu     && sed -i 's/exec gosu postgres/exec su-exec postgres/' /usr/local/bin/docker-entrypoint.sh     && test "$(su-exec postgres id -u)" = "$(id -u postgres)"     && ! grep -q 'exec gosu' /usr/local/bin/docker-entrypoint.sh
+#6 0.806 (1/3) Upgrading zlib (1.3.2-r0 -> 1.3.2-r1)
+#6 0.824 (2/3) Upgrading nghttp2-libs (1.69.0-r0 -> 1.70.0-r0)
+#6 0.840 (3/3) Installing su-exec (0.3-r0)
+#6 0.853 Executing busybox-1.37.0-r31.trigger
+#6 0.863 OK: 229.4 MiB in 54 packages
+#6 DONE 0.9s
+
+#7 exporting to image
+#7 exporting layers 0.1s done
+#7 exporting manifest sha256:c466a574eb3a765dadeae7fe62a6b49fb036a4aa01cffe7cfcbad2ce02830c49 0.0s done
+#7 exporting config sha256:8613f078a51ffbc220b75e08ec2b66e5866d605b565c899455e78ec26b16aa37 0.0s done
+#7 exporting attestation manifest sha256:75ea9b75f84585791db817f11ec9a4398964a3d85fce92573c4fe245638d2e3f 0.0s done
+#7 exporting manifest list sha256:045cc691b0f7061c6b55aa16598b1b8847b6cda517091340eae1d6599238de44 0.0s done
+#7 naming to docker.io/library/gr-evolucao-database:ec3bf363168b done
+#7 unpacking to docker.io/library/gr-evolucao-database:ec3bf363168b 0.0s done
+#7 DONE 0.3s
+
+#8 resolving provenance for metadata file
+#8 DONE 0.0s
+ Image gr-evolucao-database:ec3bf363168b Building 
+ Image gr-evolucao-database:ec3bf363168b Built 

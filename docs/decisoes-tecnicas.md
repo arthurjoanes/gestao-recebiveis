@@ -38,13 +38,13 @@ A chave de negócio é `(source_system, external_receivable_id)`, com unique con
 
 Antes de gravar, `pay` pega um `pg_advisory_xact_lock` derivado da `idempotency_key`, o que serializa a mesma chave mesmo em títulos diferentes. Se já existe pagamento com aquela chave, comparo o `request_hash`: conteúdo igual devolve o mesmo pagamento, conteúdo diferente levanta conflito (409). Repetir a chamada não cria outra baixa. Ver `receivables.py` (função `pay`) e `models.py` (`Payment.idempotency_key`, `request_hash`).
 
-## Por que o pagamento é sempre integral?
+## Como parcelas conservam o valor original?
 
-O valor vem do título bloqueado (`title.amount_cents`), não do corpo da requisição. A rota rejeita `amount_cents`, `amount_brl` ou qualquer campo extra com 422, então não há como registrar baixa parcial. Isso mantém o escopo de portfólio em pagamento integral. Ver `receivables.py` (`pay`) e `docs/api-contract.md` (seção de pagamento).
+Cada recebimento é um registro positivo ligado ao título. O saldo é calculado a partir da soma, sem cache. Sob lock do título, `pay` permite apenas valor até o saldo; sem valor explícito, quita o restante. Uma parcela mantém `open`, e somente saldo zero passa a `paid`. O hash sem valor conserva a receita legada; o hash com valor inclui seus centavos canônicos. Cancelamento exige ausência de recebimentos, sem representar desconto ou estorno. Ver `receivables.py`, `balances.py` e [contrato](api-contract.md).
 
 ## Como o pagamento mexe em lembretes já planejados?
 
-O `pay` chama `cancel_pending` na mesma transação, depois de bloquear o título. Os jobs ativos passam a `canceled` ou, se havia tentativa com resposta desconhecida, ficam marcados para reconciliar antes de encerrar. Uma baixa confirmada impede novas autorizações; uma autorização anterior pode já estar em trânsito e continua rastreável, sem promessa de desfazer. Ver `receivables.py` (`pay`) e `reminders/service.py` (`cancel_pending` e a checagem `title.status != "open"` em `authorize`).
+Na quitação, `pay` chama `cancel_pending` na mesma transação, depois de bloquear o título; parcelas conservam as etapas. Os jobs ativos passam a `canceled` ou, se havia tentativa com resposta desconhecida, ficam marcados para reconciliar antes de encerrar. A quitação confirmada impede novas autorizações; uma autorização anterior pode já estar em trânsito e continua rastreável. Ver `receivables.py` (`pay`) e `reminders/service.py` (`cancel_pending` e a checagem `title.status != "open"` em `authorize`).
 
 ## O que acontece em cada ponto de falha (retry, lease, reconciliação, restart)?
 
@@ -81,3 +81,7 @@ As contas de administração e migração precisam alterar a estrutura; API e wo
 ## Código e evidências relacionados
 
 [modelos](../backend/src/gestao_recebiveis/models.py) · [importação](../backend/src/gestao_recebiveis/imports.py) · [baixa](../backend/src/gestao_recebiveis/receivables.py) · [fila](../backend/src/gestao_recebiveis/reminders/service.py).
+
+## Por que o extrato representa a posição atual?
+
+Não há data financeira de emissão nem ledger que reconstrua a carteira passada. O extrato mostra original, recebido acumulado e saldo atual; o filtro de recebimento seleciona a seção de recebimentos sem remover parcelas anteriores da soma. Vencimento e situação recortam títulos independentemente. A transação de leitura curta mantém consistência dentro da resposta e limita páginas a 100 linhas. Um ledger histórico permanece uma evolução separada.

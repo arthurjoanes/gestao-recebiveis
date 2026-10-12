@@ -26,3 +26,15 @@ regexTarget = "line"
 regexes = [
   '''^\n?[ \t]*"frontend/src/lib/api\.ts":[ \t]*"c0beb7ccf5520c874b546d82e94dbfd88ac00ecd0f51b78f292b1194ba5161fa",?[ \t]*\r?$''',
 ]
+
+[[rules.allowlists]]
+description = "Verified source SHA-256 in two October restore commands; exact fingerprint and manifest paths"
+condition = "AND"
+paths = [
+  '''^docs/evidence/restore-proof/(1054efee71e84949a4951d5f752c5be2|6e75361b018645ffa98bce7ad338d4d4)/manifest\.json$''',
+]
+regexTarget = "match"
+regexes = [
+  '''auth\.py': '99cb7e1939e8f9266efd4ee9444631acfdf82779a46711318f3f91938632a323''',
+  '''test_api\.py': '50ded1755f33a2219a5a3b49976563135d09a7cc6763e21d530ec944cbf5a994''',
+]

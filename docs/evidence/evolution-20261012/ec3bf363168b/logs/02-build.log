@@ -1,0 +1,157 @@
+#1 [internal] load local bake definitions
+#1 reading from stdin 2.80kB 0.0s done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 30B
+#2 transferring dockerfile: 1.55kB done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/python:3.13.15-alpine3.24@sha256:79e7a9b9ff1cbceff819f856fb374477792a5967759d94df266de7b7b4120e6f
+#3 ...
+
+#4 [internal] load metadata for ghcr.io/astral-sh/uv:0.9.18@sha256:5713fa8217f92b80223bc83aac7db36ec80a84437dbc0d04bbc659cae030d8c9
+#4 DONE 0.8s
+
+#3 [internal] load metadata for docker.io/library/python:3.13.15-alpine3.24@sha256:79e7a9b9ff1cbceff819f856fb374477792a5967759d94df266de7b7b4120e6f
+#3 DONE 1.0s
+
+#5 [internal] load .dockerignore
+#5 transferring context: 213B done
+#5 DONE 0.0s
+
+#6 [dependencies 1/6] FROM docker.io/library/python:3.13.15-alpine3.24@sha256:79e7a9b9ff1cbceff819f856fb374477792a5967759d94df266de7b7b4120e6f
+#6 resolve docker.io/library/python:3.13.15-alpine3.24@sha256:79e7a9b9ff1cbceff819f856fb374477792a5967759d94df266de7b7b4120e6f 0.0s done
+#6 CACHED
+
+#7 [uv 1/1] FROM ghcr.io/astral-sh/uv:0.9.18@sha256:5713fa8217f92b80223bc83aac7db36ec80a84437dbc0d04bbc659cae030d8c9
+#7 resolve ghcr.io/astral-sh/uv:0.9.18@sha256:5713fa8217f92b80223bc83aac7db36ec80a84437dbc0d04bbc659cae030d8c9 0.0s done
+#7 CACHED
+
+#8 [internal] load build context
+#8 transferring context: 463.35kB 0.0s done
+#8 DONE 0.1s
+
+#9 [dependencies 2/6] RUN apk add --no-cache --upgrade zlib=1.3.2-r1
+#9 0.670 (1/1) Upgrading zlib (1.3.2-r0 -> 1.3.2-r1)
+#9 0.692 OK: 11.4 MiB in 29 packages
+#9 DONE 0.7s
+
+#10 [stage-2 3/8] WORKDIR /app
+#10 DONE 0.1s
+
+#11 [dependencies 3/6] COPY --from=uv /uv /bin/uv
+#11 DONE 0.1s
+
+#12 [dependencies 4/6] WORKDIR /app
+#12 DONE 0.1s
+
+#13 [dependencies 5/6] COPY backend/pyproject.toml backend/uv.lock ./
+#13 DONE 0.1s
+
+#14 [dependencies 6/6] RUN --mount=type=cache,target=/root/.cache/uv UV_LINK_MODE=copy uv sync --frozen --no-install-project --no-build
+#14 0.550 Using CPython 3.13.15 interpreter at: /usr/local/bin/python3
+#14 0.550 Creating virtual environment at: .venv
+#14 0.763 Downloading ruff (10.2MiB)
+#14 0.763 Downloading greenlet (1.6MiB)
+#14 0.765 Downloading pygments (1.2MiB)
+#14 0.769 Downloading pydantic-core (2.2MiB)
+#14 0.772 Downloading psycopg-binary (4.1MiB)
+#14 0.779 Downloading swagger-ui-bundle (2.5MiB)
+#14 1.025 Downloading uvloop (4.0MiB)
+#14 1.026 Downloading sqlalchemy (3.2MiB)
+#14 1.027 Downloading mypy (14.3MiB)
+#14 1.465  Downloaded pygments
+#14 1.550  Downloaded greenlet
+#14 1.783  Downloaded pydantic-core
+#14 1.921  Downloaded swagger-ui-bundle
+#14 2.203  Downloaded sqlalchemy
+#14 2.222  Downloaded psycopg-binary
+#14 2.394  Downloaded uvloop
+#14 2.980  Downloaded ruff
+#14 3.913  Downloaded mypy
+#14 3.913 Prepared 50 packages in 3.35s
+#14 4.189 Installed 50 packages in 275ms
+#14 4.189  + alembic==1.20.0
+#14 4.189  + annotated-doc==0.0.5
+#14 4.189  + annotated-types==0.8.0
+#14 4.189  + anyio==4.15.1
+#14 4.189  + argon2-cffi==25.1.0
+#14 4.190  + argon2-cffi-bindings==26.1.0
+#14 4.190  + certifi==2026.7.22
+#14 4.190  + cffi==2.1.1
+#14 4.190  + click==8.5.0
+#14 4.190  + dnspython==2.8.0
+#14 4.190  + email-validator==2.3.0
+#14 4.190  + fastapi==0.141.1
+#14 4.191  + greenlet==3.5.6
+#14 4.191  + h11==0.16.0
+#14 4.191  + httpcore==1.0.9
+#14 4.191  + httptools==0.8.0
+#14 4.191  + httpx==0.28.1
+#14 4.191  + idna==3.20
+#14 4.191  + iniconfig==2.3.0
+#14 4.191  + jinja2==3.1.6
+#14 4.192  + librt==0.15.0
+#14 4.192  + mako==1.4.2
+#14 4.192  + markupsafe==3.0.3
+#14 4.192  + mypy==1.20.2
+#14 4.192  + mypy-extensions==1.1.0
+#14 4.192  + packaging==26.3
+#14 4.192  + pathspec==1.1.1
+#14 4.192  + pluggy==1.6.0
+#14 4.192  + psycopg==3.3.6
+#14 4.192  + psycopg-binary==3.3.6
+#14 4.192  + pwdlib==0.3.1
+#14 4.193  + pycparser==3.0
+#14 4.193  + pydantic==2.13.5
+#14 4.193  + pydantic-core==2.46.5
+#14 4.193  + pydantic-settings==2.15.0
+#14 4.193  + pygments==2.21.0
+#14 4.193  + pytest==9.1.1
+#14 4.193  + python-dotenv==1.2.3
+#14 4.193  + python-multipart==0.0.32
+#14 4.193  + pyyaml==6.0.3
+#14 4.193  + ruff==0.16.8
+#14 4.193  + sqlalchemy==2.0.54
+#14 4.194  + starlette==1.6.0
+#14 4.194  + swagger-ui-bundle==1.1.0
+#14 4.194  + typing-extensions==4.16.0
+#14 4.194  + typing-inspection==0.4.4
+#14 4.194  + uvicorn==0.53.0
+#14 4.195  + uvloop==0.22.1
+#14 4.195  + watchfiles==1.2.0
+#14 4.195  + websockets==17.1
+#14 DONE 4.5s
+
+#15 [stage-2 4/8] COPY --from=dependencies /app/.venv /app/.venv
+#15 DONE 1.0s
+
+#16 [stage-2 5/8] COPY backend/ ./
+#16 DONE 0.1s
+
+#17 [stage-2 6/8] COPY data/ /data/
+#17 DONE 0.0s
+
+#18 [stage-2 7/8] COPY scripts/check-backend.sh /scripts/check-backend.sh
+#18 DONE 0.0s
+
+#19 [stage-2 8/8] RUN addgroup -g 10001 gestao_recebiveis     && adduser -D -H -u 10001 -G gestao_recebiveis gestao_recebiveis     && chown -R gestao_recebiveis:gestao_recebiveis /app     && rm -rf /usr/local/lib/python3.13/site-packages/pip         /usr/local/lib/python3.13/site-packages/pip-*.dist-info         /usr/local/lib/python3.13/ensurepip     && rm -f /usr/local/bin/pip*
+#19 DONE 9.2s
+
+#20 exporting to image
+#20 exporting layers
+#20 exporting layers 6.3s done
+#20 exporting manifest sha256:b5dec38ccf21458cbbc50da5aa291fe0d199fded8ef5538799b9d5d609fbab50 0.0s done
+#20 exporting config sha256:8185873ea686cc5e41f606846c9b4487ad0add206a2ce7944c99357e62009f0b 0.0s done
+#20 exporting attestation manifest sha256:da13cc38651b600d0216a16747696674b2a24e838851a09076a4c2df41cb9689 0.0s done
+#20 exporting manifest list sha256:6fb12655e2977eb5a7691ad0f8158872b6d905211a8dc34b90e6526b21952592 0.0s done
+#20 naming to docker.io/library/gr-evolucao-backend:ec3bf363168b done
+#20 unpacking to docker.io/library/gr-evolucao-backend:ec3bf363168b
+#20 unpacking to docker.io/library/gr-evolucao-backend:ec3bf363168b 3.5s done
+#20 DONE 9.9s
+
+#21 resolving provenance for metadata file
+#21 DONE 0.0s
+ Image gr-evolucao-backend:ec3bf363168b Building 
+ Image gr-evolucao-backend:ec3bf363168b Built 

@@ -1,0 +1,49 @@
+#1 [internal] load local bake definitions
+#1 reading from stdin 4.26kB 0.0s done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile.e2e
+#2 transferring dockerfile: 275B done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for mcr.microsoft.com/playwright:v1.63.0-noble
+#3 DONE 0.5s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 116B done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 2.36kB done
+#5 DONE 0.0s
+
+#6 [stage-0 1/5] FROM mcr.microsoft.com/playwright:v1.63.0-noble@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27
+#6 resolve mcr.microsoft.com/playwright:v1.63.0-noble@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27 0.0s done
+#6 DONE 0.0s
+
+#7 [stage-0 2/5] WORKDIR /app
+#7 CACHED
+
+#8 [stage-0 3/5] COPY package.json package-lock.json ./
+#8 CACHED
+
+#9 [stage-0 4/5] RUN --mount=type=cache,id=pf-gestao-recebiveis-e2e-npm,target=/root/.npm npm ci
+#9 CACHED
+
+#10 [stage-0 5/5] COPY . .
+#10 DONE 0.6s
+
+#11 exporting to image
+#11 exporting layers 0.1s done
+#11 exporting manifest sha256:45cdeb9dc25e9b8470fd60cf3ca87aaa57d2d89103a71ad08a5df7a29c748a10 0.0s done
+#11 exporting config sha256:df2b5a89ddc2b3a9eca84f2bfa628982511b0c60d5e8ef0dbc05b95c37a26e6b 0.0s done
+#11 exporting attestation manifest sha256:13071cf9f8ad143b18cc98c2d5be2d318c5e981b33fda644afbec51feb936768 0.0s done
+#11 exporting manifest list sha256:1831d6444b5aea75e24203efc799e0249621218405eb33d6234a776ee3b2867a 0.0s done
+#11 naming to docker.io/library/gr-evolucao-e2e:ec3bf363168b done
+#11 unpacking to docker.io/library/gr-evolucao-e2e:ec3bf363168b 0.0s done
+#11 DONE 0.3s
+
+#12 resolving provenance for metadata file
+#12 DONE 0.0s
+ Image gr-evolucao-e2e:ec3bf363168b Building 
+ Image gr-evolucao-e2e:ec3bf363168b Built 
