@@ -5,6 +5,7 @@ from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
 from gestao_recebiveis.audit import record
+from gestao_recebiveis.balances import get_balance
 from gestao_recebiveis.clock import business_now
 from gestao_recebiveis.errors import DomainError
 from gestao_recebiveis.models import Payment, Receivable
@@ -23,10 +24,21 @@ def locked_title(session: Session, receivable_id: int) -> Receivable:
     return title
 
 
-def pay(session: Session, receivable_id: int, key: str, note: str, actor_id: int) -> Payment:
-    digest = hashlib.sha256(
-        json.dumps({"receivable_id": receivable_id, "note": note}, sort_keys=True).encode()
-    ).hexdigest()
+def pay(
+    session: Session,
+    receivable_id: int,
+    key: str,
+    note: str,
+    actor_id: int,
+    amount_cents: str | None = None,
+) -> Payment:
+    note = note.strip()
+    content: dict[str, int | str] = {"receivable_id": receivable_id, "note": note}
+    if amount_cents is not None:
+        # The omitted request retains the exact legacy hash recipe. Explicit
+        # requests include their canonical value, even if it equals the balance.
+        content["amount_cents"] = str(int(amount_cents))
+    digest = hashlib.sha256(json.dumps(content, sort_keys=True).encode()).hexdigest()
     # Serialize equal idempotency keys even when they target different titles.
     lock_id = int.from_bytes(hashlib.sha256(key.encode()).digest()[:8], "big", signed=True)
     session.execute(text("SELECT pg_advisory_xact_lock(:key)"), {"key": lock_id})
@@ -40,25 +52,33 @@ def pay(session: Session, receivable_id: int, key: str, note: str, actor_id: int
     title = locked_title(session, receivable_id)
     if title.status != "open":
         raise DomainError("invalid_transition", "Somente títulos em aberto aceitam baixa.")
+    balance = get_balance(session, title)
+    amount = balance.remaining_cents if amount_cents is None else int(amount_cents)
+    if amount <= 0 or amount > balance.remaining_cents:
+        raise DomainError(
+            "invalid_payment_amount", "O recebimento deve ser positivo e não pode exceder o saldo."
+        )
     payment = Payment(
         receivable_id=title.id,
         idempotency_key=key,
         request_hash=digest,
-        amount_cents=title.amount_cents,
+        amount_cents=amount,
         note=note,
         actor_id=actor_id,
         paid_at=business_now(session),
     )
     session.add(payment)
-    title.status = "paid"
-    cancel_pending(session, title.id, "Título pago.")
+    remaining = balance.remaining_cents - amount
+    if remaining == 0:
+        title.status = "paid"
+        cancel_pending(session, title.id, "Título pago.")
     record(
         session,
         "payment_recorded",
-        "Pagamento integral registrado.",
+        "Pagamento integral registrado." if remaining == 0 else "Pagamento parcial registrado.",
         title.id,
         actor_id,
-        {"amount_cents": str(title.amount_cents), "note": note},
+        {"amount_cents": str(amount), "note": note},
     )
     session.flush()
     return payment
@@ -70,6 +90,10 @@ def cancel(session: Session, receivable_id: int, reason: str, actor_id: int) -> 
         return title
     if title.status != "open":
         raise DomainError("invalid_transition", "Título pago não pode ser cancelado.")
+    if get_balance(session, title).paid_cents > 0:
+        raise DomainError(
+            "invalid_transition", "Título com recebimentos parciais não pode ser cancelado."
+        )
     title.status = "canceled"
     cancel_pending(session, title.id, "Título cancelado.")
     record(

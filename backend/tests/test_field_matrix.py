@@ -199,12 +199,12 @@ def test_resource_identifiers_reject_outside_database_range(
         {"idempotency_key": " " * 10},
         {"idempotency_key": "x" * 101},
         {"idempotency_key": "matrix-key", "note": "x" * 501},
-        {"idempotency_key": "matrix-key", "amount_cents": "1"},
+        {"idempotency_key": "matrix-key", "amount_cents": "0"},
         {"idempotency_key": "matrix-key", "amount_brl": "0.01"},
         {"idempotency_key": "matrix-key", "note": None},
     ],
 )
-def test_invalid_or_partial_payment_has_no_financial_effect(
+def test_invalid_payment_has_no_financial_effect(
     client: TestClient, db: Session, payload: dict[str, Any]
 ) -> None:
     load(db)
@@ -213,12 +213,75 @@ def test_invalid_or_partial_payment_has_no_financial_effect(
     before = client.get("/api/v1/overview").json()
     response = client.post("/api/v1/receivables/3/payments", json=payload, headers=headers)
     assert response.status_code == 422, response.text
-    assert client.get("/api/v1/overview").json() == before
+    after = client.get("/api/v1/overview").json()
+    # Only the generation instant may vary; every position field must remain equal.
+    assert after == {**before, "generated_at": after["generated_at"]}
     assert db.scalar(select(func.count(Payment.id))) == 0
     assert (
         db.scalar(select(func.count(AuditEvent.id)).where(AuditEvent.type == "payment_recorded"))
         == 0
     )
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        1,
+        True,
+        False,
+        None,
+        "",
+        "0",
+        "-1",
+        "+1",
+        "01",
+        " 1",
+        "1 ",
+        "1.0",
+        "1,00",
+        "1e2",
+        "9223372036854775808",
+    ],
+)
+def test_payment_amount_is_a_strict_positive_cents_string(
+    client: TestClient, db: Session, value: Any
+) -> None:
+    load(db)
+    db.commit()
+    headers = login(client)
+    response = client.post(
+        "/api/v1/receivables/3/payments",
+        json={"idempotency_key": "strict-payment-value", "amount_cents": value},
+        headers=headers,
+    )
+    assert response.status_code == 422, response.text
+    assert db.scalar(select(func.count(Payment.id))) == 0
+    assert (
+        db.scalar(select(func.count(AuditEvent.id)).where(AuditEvent.type == "payment_recorded"))
+        == 0
+    )
+
+
+def test_one_cent_partial_request_exposes_residual_and_preserves_original(
+    client: TestClient, db: Session
+) -> None:
+    load(db)
+    db.commit()
+    headers = login(client)
+    response = client.post(
+        "/api/v1/receivables/3/payments",
+        json={"idempotency_key": "one-cent-partial-request", "amount_cents": "1"},
+        headers=headers,
+    )
+    assert response.status_code == 200 and response.json()["amount_cents"] == "1"
+    title = client.get("/api/v1/receivables/3").json()
+    assert (title["amount_cents"], title["paid_cents"], title["remaining_cents"]) == (
+        "1020",
+        "1",
+        "1019",
+    )
+    assert title["status"] == "open" and title["payment_state"] == "partial"
+    assert len(title["payments"]) == 1 and title["payment"] == title["payments"][0]
 
 
 def test_integral_payment_accepts_boundaries_and_replays_trimmed_note(
@@ -303,4 +366,5 @@ def test_overview_invalid_period_returns_422_without_mutation(
     login(client)
     before = client.get("/api/v1/overview").json()
     assert client.get("/api/v1/overview", params=params).status_code == 422
-    assert client.get("/api/v1/overview").json() == before
+    after = client.get("/api/v1/overview").json()
+    assert after == {**before, "generated_at": after["generated_at"]}

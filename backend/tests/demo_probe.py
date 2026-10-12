@@ -65,7 +65,9 @@ def main() -> None:
             batch = import_file(filename)
             assert batch["report"]["existing_count"] == 3
             assert client.post(f"/imports/{batch['id']}/confirm").json()["report"]["new_count"] == 0
-            assert client.get("/overview").json() == after_import
+            after_repeat = client.get("/overview").json()
+            # Generation metadata varies while the full financial position stays fixed.
+            assert after_repeat == {**after_import, "generated_at": after_repeat["generated_at"]}
 
         title_one = client.get("/receivables", params={"q": "DEMO-001"}).json()["items"][0]
         client.post(
@@ -98,7 +100,8 @@ def main() -> None:
         conflicting = import_file("conflicting.csv")
         assert conflicting["report"]["errors"]
         assert client.post(f"/imports/{conflicting['id']}/confirm").json()["status"] == "rejected"
-        assert client.get("/overview").json() == before_conflict
+        after_conflict = client.get("/overview").json()
+        assert after_conflict == {**before_conflict, "generated_at": after_conflict["generated_at"]}
         assert client.get("/receivables", params={"q": "DEMO-004"}).json()["total"] == 0
         print(
             json.dumps(

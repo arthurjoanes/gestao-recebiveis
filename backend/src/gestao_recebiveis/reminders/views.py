@@ -1,24 +1,37 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from gestao_recebiveis.balances import get_balance
 from gestao_recebiveis.models import Attempt, Customer, Delivery, Receivable, Reminder
 
 
 def reminder_view(
-    session: Session, reminder: Reminder, *, detail: bool = False
+    session: Session,
+    reminder: Reminder,
+    *,
+    detail: bool = False,
+    paid_cents: int | None = None,
+    title: Receivable | None = None,
+    customer: Customer | None = None,
 ) -> dict[str, object]:
-    title = session.get(Receivable, reminder.receivable_id)
+    if title is None:
+        title = session.get(Receivable, reminder.receivable_id)
     if title is None:
         raise RuntimeError("Título do lembrete não encontrado.")
-    customer = session.get(Customer, title.customer_id)
+    if customer is None:
+        customer = session.get(Customer, title.customer_id)
     if customer is None:
         raise RuntimeError("Cliente do título não encontrado.")
+    if paid_cents is None:
+        paid_cents = get_balance(session, title).paid_cents
     result: dict[str, object] = {
         "id": reminder.id,
         "receivable_id": reminder.receivable_id,
         "external_receivable_id": title.external_receivable_id,
         "customer_name": customer.name,
         "amount_cents": str(title.amount_cents),
+        "paid_cents": str(paid_cents),
+        "remaining_cents": str(title.amount_cents - paid_cents),
         "stage": reminder.stage,
         "status": reminder.status,
         "attempts_count": reminder.attempts_count,
@@ -41,6 +54,7 @@ def reminder_view(
                 "error": attempt.error,
                 "authorized_at": attempt.authorized_at,
                 "finished_at": attempt.finished_at,
+                "authorized_remaining_cents": attempt.payload["amount_cents"],
             }
             for attempt in attempts
         ]

@@ -1,7 +1,8 @@
+import re
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, StrictBool
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr, field_validator
 
 
 class Input(BaseModel):
@@ -18,6 +19,27 @@ class LoginInput(Input):
 class PaymentInput(Input):
     idempotency_key: str = Field(min_length=8, max_length=100)
     note: str = Field(default="", max_length=500)
+    amount_cents: StrictStr | None = Field(
+        default=None,
+        pattern=r"^[1-9][0-9]{0,18}$",
+        description=(
+            "Centavos positivos como string canônica, até 9223372036854775807; "
+            "omitir quita o saldo restante. null explícito é inválido."
+        ),
+    )
+
+    @field_validator("amount_cents", mode="before")
+    @classmethod
+    def strict_positive_cents(cls, value: object) -> str:
+        # Check the raw field before Input's whitespace normalization. An explicit
+        # null is not the same request as omitting the amount.
+        if (
+            not isinstance(value, str)
+            or re.fullmatch(r"[1-9][0-9]{0,18}", value) is None
+            or int(value) > 9223372036854775807
+        ):
+            raise ValueError("Informe centavos positivos como string, até 9223372036854775807.")
+        return value
 
 
 class CancelInput(Input):

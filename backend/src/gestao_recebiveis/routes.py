@@ -14,8 +14,10 @@ from gestao_recebiveis.auth import (
     check_origin,
     create_login,
 )
+from gestao_recebiveis.balances import expressions, payment_totals
 from gestao_recebiveis.clock import business_date, business_now
 from gestao_recebiveis.config import get_settings
+from gestao_recebiveis.database import ReadDb
 from gestao_recebiveis.errors import DomainError
 from gestao_recebiveis.import_csv import MAX_BYTES
 from gestao_recebiveis.login_admission import admit_login, release_success
@@ -30,7 +32,10 @@ from gestao_recebiveis.models import (
 )
 from gestao_recebiveis.reminders.views import reminder_view
 from gestao_recebiveis.responses import (
+    AgingBucket,
+    AgingResponse,
     AuthResponse,
+    CustomerStatementResponse,
     DemoResponse,
     ImportBatchResponse,
     ImportBatchSummaryResponse,
@@ -51,13 +56,14 @@ from gestao_recebiveis.schemas import (
     ScenarioInput,
     WorkerInput,
 )
-from gestao_recebiveis.views import batch_view, payment_view, title_detail, title_view
+from gestao_recebiveis.views import batch_view, payment_view, title_detail
 
 router = APIRouter(prefix="/api/v1")
 ResourceId = Annotated[int, Path(ge=1, le=2147483647)]
 Page = Annotated[int, Query(ge=1, le=10_000)]
 PageSize = Annotated[int, Query(ge=1, le=100)]
 Search = Annotated[str, Query(max_length=200)]
+CustomerFilter = Annotated[int | None, Query(ge=1, le=2147483647)]
 ReminderStatus = Literal[
     "pending", "processing", "retry_scheduled", "sent", "failed", "canceled", "superseded"
 ]
@@ -68,6 +74,13 @@ def session_view(user: User, csrf: str) -> dict[str, Any]:
         "user": {"id": user.id, "email": user.email, "name": user.name, "role": user.role},
         "csrf_token": csrf,
     }
+
+
+def report_query(request: Request, allowed: set[str]) -> None:
+    if set(request.query_params) - allowed:
+        raise DomainError(
+            "invalid_filter", "Filtro não suportado. O relatório apresenta a posição atual.", 422
+        )
 
 
 @router.post("/auth/login", response_model=AuthResponse)
@@ -106,38 +119,26 @@ def logout(request: Request, response: Response, session: Db, user: CurrentUser)
 
 @router.get("/receivables", response_model=PageResponse[ReceivableResponse])
 def titles(
-    session: Db,
+    session: ReadDb,
     user: CurrentUser,
     q: Search = "",
     status: str | None = None,
     due_from: date | None = None,
     due_to: date | None = None,
+    customer_id: CustomerFilter = None,
+    aging_bucket: AgingBucket | None = None,
     page: Page = 1,
     page_size: PageSize = 20,
 ) -> dict[str, Any]:
     today = business_date(session)
-    conditions = reporting.title_filters(q, status, due_from, due_to, today)
-    query = (
-        select(Receivable, Customer)
-        .join(Customer, Receivable.customer_id == Customer.id)
-        .where(*conditions)
+    conditions = reporting.title_filters(
+        q, status, due_from, due_to, today, customer_id, aging_bucket
     )
-    total = session.scalar(select(func.count()).select_from(query.subquery()))
-    rows = session.execute(
-        query.order_by(Receivable.due_date, Receivable.id)
-        .offset((page - 1) * page_size)
-        .limit(page_size)
-    )
-    return {
-        "items": [title_view(title, customer, today) for title, customer in rows],
-        "total": total,
-        "page": page,
-        "page_size": page_size,
-    }
+    return reporting.list_titles(session, today, conditions, page, page_size)
 
 
 @router.get("/receivables/{receivable_id}", response_model=ReceivableDetailResponse)
-def title(receivable_id: ResourceId, session: Db, user: CurrentUser) -> dict[str, Any]:
+def title(receivable_id: ResourceId, session: ReadDb, user: CurrentUser) -> dict[str, Any]:
     item = session.get(Receivable, receivable_id)
     if not item:
         raise DomainError("not_found", "Título não encontrado.", 404)
@@ -149,7 +150,9 @@ def pay(
     receivable_id: ResourceId, body: PaymentInput, session: Db, user: Operator
 ) -> dict[str, Any]:
     return payment_view(
-        receivables.pay(session, receivable_id, body.idempotency_key, body.note, user.id)
+        receivables.pay(
+            session, receivable_id, body.idempotency_key, body.note, user.id, body.amount_cents
+        )
     )
 
 
@@ -164,7 +167,7 @@ def cancel(
 
 @router.get("/overview", response_model=OverviewResponse)
 def overview(
-    session: Db,
+    session: ReadDb,
     user: CurrentUser,
     q: Search = "",
     due_from: date | None = None,
@@ -173,6 +176,71 @@ def overview(
     received_to: date | None = None,
 ) -> dict[str, Any]:
     return reporting.overview(session, q, due_from, due_to, received_from, received_to)
+
+
+@router.get("/reports/aging", response_model=AgingResponse)
+def aging(
+    request: Request,
+    session: ReadDb,
+    user: CurrentUser,
+    q: Search = "",
+    customer_id: CustomerFilter = None,
+    due_from: date | None = None,
+    due_to: date | None = None,
+    bucket: AgingBucket | None = None,
+    page: Page = 1,
+    page_size: PageSize = 20,
+) -> dict[str, Any]:
+    report_query(request, {"q", "customer_id", "due_from", "due_to", "bucket", "page", "page_size"})
+    return reporting.aging(session, q, customer_id, due_from, due_to, bucket, page, page_size)
+
+
+@router.get("/customers/{customer_id}/statement", response_model=CustomerStatementResponse)
+def customer_statement(
+    customer_id: ResourceId,
+    request: Request,
+    session: ReadDb,
+    user: CurrentUser,
+    q: Search = "",
+    status: str | None = None,
+    due_from: date | None = None,
+    due_to: date | None = None,
+    received_from: date | None = None,
+    received_to: date | None = None,
+    page: Page = 1,
+    page_size: PageSize = 20,
+    payment_page: Page = 1,
+    payment_page_size: PageSize = 20,
+) -> dict[str, Any]:
+    report_query(
+        request,
+        {
+            "q",
+            "status",
+            "due_from",
+            "due_to",
+            "received_from",
+            "received_to",
+            "page",
+            "page_size",
+            "payment_page",
+            "payment_page_size",
+        },
+    )
+    return reporting.customer_statement(
+        session,
+        customer_id,
+        q,
+        status,
+        due_from,
+        due_to,
+        received_from,
+        received_to,
+        page,
+        page_size,
+        payment_page,
+        payment_page_size,
+    )
 
 
 @router.post("/imports", response_model=ImportBatchResponse)
@@ -230,21 +298,28 @@ def reminders(
     page: Page = 1,
     page_size: PageSize = 20,
 ) -> dict[str, Any]:
+    totals = payment_totals()
+    paid, _ = expressions(totals)
     query = (
-        select(Reminder)
+        select(Reminder, Receivable, Customer, paid)
+        .select_from(Reminder)
         .join(Receivable, Receivable.id == Reminder.receivable_id)
         .join(Customer, Customer.id == Receivable.customer_id)
+        .outerjoin(totals, totals.c.receivable_id == Receivable.id)
     )
     if status:
         query = query.where(Reminder.status == status)
     if q:
         query = query.where(reporting.search_filter(q))
     total = session.scalar(select(func.count()).select_from(query.subquery()))
-    jobs = session.scalars(
+    jobs = session.execute(
         query.order_by(Reminder.id.desc()).offset((page - 1) * page_size).limit(page_size)
     )
     return {
-        "items": [reminder_view(session, job) for job in jobs],
+        "items": [
+            reminder_view(session, job, paid_cents=int(paid), title=title, customer=customer)
+            for job, title, customer, paid in jobs
+        ],
         "total": total,
         "page": page,
         "page_size": page_size,

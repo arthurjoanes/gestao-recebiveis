@@ -38,6 +38,7 @@ def test_api_vertical_flow(client: TestClient) -> None:
     titles = client.get("/api/v1/receivables?q=Centavo").json()
     assert titles["total"] == 2
     item = titles["items"][0]
+    assert item["payments"] == []
     payment = client.post(
         f"/api/v1/receivables/{item['id']}/payments",
         headers=headers,
@@ -48,6 +49,61 @@ def test_api_vertical_flow(client: TestClient) -> None:
     assert detail["status"] == "paid"
     assert any(event["type"] == "payment_recorded" for event in detail["events"])
     assert client.get("/api/v1/overview").json()["received_cents"] == "1"
+
+
+def test_api_partial_history_and_replay_remain_immutable(client: TestClient) -> None:
+    headers = login(client)
+    batch = client.post(
+        "/api/v1/imports",
+        headers=headers,
+        files={"file": ("partial.csv", (HEADER + LINES[2]).encode(), "text/csv")},
+    ).json()
+    assert client.post(f"/api/v1/imports/{batch['id']}/confirm", headers=headers).status_code == 200
+    item = client.get("/api/v1/receivables").json()["items"][0]
+    path = f"/api/v1/receivables/{item['id']}/payments"
+    first_body = {"idempotency_key": "api-partial-first", "amount_cents": "1", "note": "Primeiro"}
+    first = client.post(path, headers=headers, json=first_body)
+    assert first.status_code == 200, first.text
+    detail = client.get(f"/api/v1/receivables/{item['id']}").json()
+    assert (detail["amount_cents"], detail["paid_cents"], detail["remaining_cents"]) == (
+        "1020",
+        "1",
+        "1019",
+    )
+    assert detail["status"] == "open" and detail["payment_state"] == "partial"
+    assert detail["payment"] == first.json() and detail["payments"] == [first.json()]
+    listed = client.get("/api/v1/receivables").json()["items"][0]
+    assert listed["remaining_cents"] == "1019" and listed["payment_state"] == "partial"
+    assert listed["payments"] == [first.json()]
+    aging = client.get("/api/v1/reports/aging").json()["items"][0]
+    assert aging["payments"] == [first.json()]
+    statement = client.get(f"/api/v1/customers/{item['customer_id']}/statement").json()
+    assert statement["titles"]["items"][0]["payments"] == [first.json()]
+    assert client.get("/api/v1/overview").json()["open_cents"] == "1019"
+    second = client.post(path, headers=headers, json={"idempotency_key": "api-partial-second"})
+    assert second.status_code == 200 and second.json()["amount_cents"] == "1019"
+    detail = client.get(f"/api/v1/receivables/{item['id']}").json()
+    assert detail["payment"] is None
+    assert detail["payments"] == [first.json(), second.json()]
+    assert client.get("/api/v1/receivables").json()["items"][0]["payments"] == detail["payments"]
+    assert (
+        client.get(f"/api/v1/customers/{item['customer_id']}/statement").json()["titles"]["items"][
+            0
+        ]["payments"]
+        == detail["payments"]
+    )
+    assert detail["remaining_cents"] == "0" and detail["payment_state"] == "paid"
+    assert client.post(path, headers=headers, json=first_body).json() == first.json()
+    assert (
+        client.post(path, headers=headers, json={**first_body, "amount_cents": "2"}).status_code
+        == 409
+    )
+    assert (
+        client.post(
+            path, headers=headers, json={"idempotency_key": "api-partial-first", "note": "Primeiro"}
+        ).status_code
+        == 409
+    )
 
 
 def test_reader_cannot_mutate(client: TestClient) -> None:
@@ -69,6 +125,7 @@ def test_reader_cannot_mutate(client: TestClient) -> None:
         == 403
     )
     assert client.get("/api/v1/overview").status_code == 200
+    assert client.get("/api/v1/reports/aging").status_code == 200
 
 
 def test_csrf_origin_logout_and_session_expiry(client: TestClient, db: Session) -> None:
@@ -201,6 +258,11 @@ def test_import_history_returns_only_summary_and_detail_preserves_report(
         "/api/v1/imports?page_size=101",
         "/api/v1/reminders?status=typo",
         "/api/v1/overview?q=" + "a" * 201,
+        "/api/v1/reports/aging?bucket=typo",
+        "/api/v1/reports/aging?page_size=101",
+        "/api/v1/reports/aging?customer_id=0",
+        "/api/v1/receivables?aging_bucket=1_30&status=paid",
+        "/api/v1/customers/1/statement?payment_page_size=101",
     ],
 )
 def test_invalid_filters_return_validation_errors(client: TestClient, path: str) -> None:
