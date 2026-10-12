@@ -22,8 +22,11 @@ FIXTURE = {
     "titles": {"RESTORE-PAID": 5000, "RESTORE-UNKNOWN": 7500},
     "total_cents": 12500,
     "payment_cents": 5000,
-    "open_cents_at_cut": 7500,
+    "partial_cents": 2500,
+    "received_cents_at_cut": 7500,
+    "open_cents_at_cut": 5000,
     "payment_note": "Baixa sintética antes do backup.",
+    "partial_note": "Parcela sintética antes do backup.",
     "conflicting_import": {
         "RESTORE-PAID": 5100,
         "RESTORE-SHOULD-NOT-EXIST": 9900,
@@ -148,6 +151,10 @@ def public_snapshot(snapshot: dict) -> dict:
     tables = state["tables"]
     titles = tables["receivables"]
     payments = tables["payments"]
+    paid_by_title = {}
+    for payment in payments:
+        title_id = payment["receivable_id"]
+        paid_by_title[title_id] = paid_by_title.get(title_id, 0) + payment["amount_cents"]
     return {
         "observed_at_utc": snapshot["observed_at_utc"],
         "state_sha256": digest(state),
@@ -158,11 +165,22 @@ def public_snapshot(snapshot: dict) -> dict:
         "sequence_count": len(state["sequences"]),
         "sequences_sha256": digest(state["sequences"]),
         "receivables": [
-            {key: row[key] for key in ("id", "external_receivable_id", "amount_cents", "status")}
+            {
+                **{
+                    key: row[key]
+                    for key in ("id", "external_receivable_id", "amount_cents", "status")
+                },
+                "paid_cents": paid_by_title.get(row["id"], 0),
+                "remaining_cents": row["amount_cents"] - paid_by_title.get(row["id"], 0),
+            }
             for row in titles
         ],
         "amount_cents": sum(row["amount_cents"] for row in titles),
-        "open_cents": sum(row["amount_cents"] for row in titles if row["status"] == "open"),
+        "open_cents": sum(
+            row["amount_cents"] - paid_by_title.get(row["id"], 0)
+            for row in titles
+            if row["status"] == "open"
+        ),
         "payments": [
             {key: row[key] for key in ("id", "receivable_id", "amount_cents")} for row in payments
         ],

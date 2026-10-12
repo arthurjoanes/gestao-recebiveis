@@ -4,6 +4,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from gestao_recebiveis.balances import balance_from_paid
 from gestao_recebiveis.clock import business_date
 from gestao_recebiveis.models import (
     AuditEvent,
@@ -21,10 +22,14 @@ def payment_view(payment: Payment) -> dict[str, Any]:
         "amount_cents": str(payment.amount_cents),
         "paid_at": payment.paid_at.astimezone(UTC),
         "recorded_at": payment.recorded_at,
+        "note": payment.note,
     }
 
 
-def title_view(title: Receivable, customer: Customer, today: date) -> dict[str, Any]:
+def title_view(
+    title: Receivable, customer: Customer, today: date, paid_cents: int
+) -> dict[str, Any]:
+    balance = balance_from_paid(title, paid_cents)
     return {
         "id": title.id,
         "source_system": title.source_system,
@@ -34,6 +39,9 @@ def title_view(title: Receivable, customer: Customer, today: date) -> dict[str, 
         "customer_email": customer.email,
         "description": title.description,
         "amount_cents": str(title.amount_cents),
+        "paid_cents": str(balance.paid_cents),
+        "remaining_cents": str(balance.remaining_cents),
+        "payment_state": balance.payment_state,
         "due_date": title.due_date,
         "status": title.status,
         "overdue": title.status == "open" and title.due_date < today,
@@ -46,11 +54,17 @@ def title_detail(session: Session, title: Receivable) -> dict[str, Any]:
 
     customer = session.get(Customer, title.customer_id)
     assert customer is not None
-    result = title_view(title, customer, business_date(session))
-    payment = session.scalar(select(Payment).where(Payment.receivable_id == title.id))
-    result["payment"] = payment_view(payment) if payment else None
+    payments = session.scalars(
+        select(Payment)
+        .where(Payment.receivable_id == title.id)
+        .order_by(Payment.paid_at, Payment.id)
+    ).all()
+    paid = sum(payment.amount_cents for payment in payments)
+    result = title_view(title, customer, business_date(session), paid)
+    result["payments"] = [payment_view(payment) for payment in payments]
+    result["payment"] = payment_view(payments[0]) if len(payments) == 1 else None
     result["reminders"] = [
-        reminder_view(session, job, detail=True)
+        reminder_view(session, job, detail=True, paid_cents=paid, title=title, customer=customer)
         for job in session.scalars(
             select(Reminder).where(Reminder.receivable_id == title.id).order_by(Reminder.id.desc())
         )

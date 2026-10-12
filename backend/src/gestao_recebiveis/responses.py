@@ -34,6 +34,7 @@ class PaymentResponse(BaseModel):
     amount_cents: Cents
     paid_at: AwareDatetime
     recorded_at: AwareDatetime
+    note: str
 
 
 class ReceivableResponse(BaseModel):
@@ -45,6 +46,10 @@ class ReceivableResponse(BaseModel):
     customer_email: str
     description: str
     amount_cents: Cents
+    paid_cents: Cents
+    remaining_cents: Cents
+    payment_state: Literal["unpaid", "partial", "paid"]
+    payments: list[PaymentResponse]
     due_date: date
     status: Literal["open", "paid", "canceled"]
     overdue: bool
@@ -57,6 +62,7 @@ class AttemptResponse(BaseModel):
     outcome: Literal["unknown", "success", "transient", "permanent"]
     error: str | None
     authorized_at: AwareDatetime
+    authorized_remaining_cents: Cents
     finished_at: AwareDatetime | None
 
 
@@ -72,6 +78,8 @@ class ReminderResponse(BaseModel):
     external_receivable_id: str
     customer_name: str
     amount_cents: Cents
+    paid_cents: Cents
+    remaining_cents: Cents
     stage: Literal[-3, 0, 3, 7]
     status: Literal[
         "pending", "processing", "retry_scheduled", "sent", "failed", "canceled", "superseded"
@@ -168,6 +176,8 @@ class OverviewResponse(BaseModel):
     paid_count: int = Field(ge=0)
     canceled_count: int = Field(ge=0)
     business_date: date
+    generated_at: AwareDatetime
+    business_now: AwareDatetime
     received_from: date
     received_to: date
 
@@ -177,3 +187,73 @@ class Page[T](BaseModel):
     total: int = Field(ge=0)
     page: int = Field(ge=1)
     page_size: int = Field(ge=1, le=100)
+
+
+AgingBucket = Literal["current", "1_30", "31_60", "61_90", "over_90"]
+
+
+class AgingTitleResponse(ReceivableResponse):
+    aging_bucket: AgingBucket
+    days_overdue: int = Field(ge=0)
+
+
+class AgingBucketResponse(BaseModel):
+    key: AgingBucket
+    label: str
+    title_count: int = Field(ge=0)
+    remaining_cents: Cents
+
+
+class AgingResponse(Page[AgingTitleResponse]):
+    generated_at: AwareDatetime
+    business_now: AwareDatetime
+    business_date: date
+    q: str
+    customer_id: int | None
+    due_from: date | None
+    due_to: date | None
+    bucket: AgingBucket | None
+    open_cents: Cents
+    title_count: int = Field(ge=0)
+    buckets: list[AgingBucketResponse]
+
+
+class CustomerResponse(BaseModel):
+    id: int = Field(gt=0)
+    source_system: str
+    external_customer_id: str
+    name: str
+    email: str
+
+
+class StatementPaymentResponse(PaymentResponse):
+    receivable_id: int = Field(gt=0)
+    source_system: str
+    external_receivable_id: str
+
+
+class StatementTotalsResponse(BaseModel):
+    amount_cents: Cents
+    paid_cents: Cents
+    remaining_cents: Cents
+    open_cents: Cents
+    canceled_remaining_cents: Cents
+    title_count: int = Field(ge=0)
+    received_cents: Cents
+    paid_count: int = Field(ge=0)
+
+
+class CustomerStatementResponse(BaseModel):
+    generated_at: AwareDatetime
+    business_now: AwareDatetime
+    business_date: date
+    customer: CustomerResponse
+    q: str
+    status: Literal["open", "paid", "canceled", "overdue", "current"] | None
+    due_from: date | None
+    due_to: date | None
+    received_from: date
+    received_to: date
+    totals: StatementTotalsResponse
+    titles: Page[ReceivableResponse]
+    payments: Page[StatementPaymentResponse]

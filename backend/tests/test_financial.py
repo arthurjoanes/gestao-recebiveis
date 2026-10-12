@@ -1,3 +1,5 @@
+import hashlib
+import json
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from threading import Barrier
@@ -6,6 +8,7 @@ import pytest
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, sessionmaker
 
+from gestao_recebiveis.balances import get_balance
 from gestao_recebiveis.errors import DomainError
 from gestao_recebiveis.import_csv import cents
 from gestao_recebiveis.imports import confirm_batch, create_preview
@@ -310,3 +313,237 @@ def test_import_validation_explains_invalid_field_in_portuguese(
     result = confirm_batch(db, batch_id, 1)
     assert result.status == "rejected"
     assert "inválid" in result.report["errors"][0]["message"]
+
+
+def test_partial_then_settlement_replays_original_immutable_receipt(db: Session) -> None:
+    load(db)
+    first = pay(db, 3, "first-partial-receipt", "  Parcela 1  ", 1, "1")
+    first_snapshot = (
+        first.id,
+        first.amount_cents,
+        first.paid_at,
+        first.recorded_at,
+        first.request_hash,
+        first.note,
+    )
+    title = db.get(Receivable, 3)
+    assert title is not None and title.status == "open"
+    assert get_balance(db, title).payment_state == "partial"
+    assert get_balance(db, title).remaining_cents == 1019
+    final = pay(db, 3, "remaining-balance-receipt", "Quitação", 1)
+    assert final.amount_cents == 1019 and title.status == "paid"
+    assert get_balance(db, title).paid_cents == 1020
+    assert get_balance(db, title).payment_state == "paid"
+    replay = pay(db, 3, "first-partial-receipt", "Parcela 1", 1, "1")
+    assert (
+        replay.id,
+        replay.amount_cents,
+        replay.paid_at,
+        replay.recorded_at,
+        replay.request_hash,
+        replay.note,
+    ) == first_snapshot
+    assert pay(db, 3, "remaining-balance-receipt", "Quitação", 1).id == final.id
+    assert title.amount_cents == 1020
+    assert db.scalar(select(func.count(Payment.id))) == 2
+    assert (
+        db.scalar(select(func.count(AuditEvent.id)).where(AuditEvent.type == "payment_recorded"))
+        == 2
+    )
+
+
+@pytest.mark.parametrize("first_explicit", [True, False])
+def test_explicit_and_omitted_amounts_are_distinct_idempotent_intentions(
+    db: Session, first_explicit: bool
+) -> None:
+    load(db)
+    first_amount = "1020" if first_explicit else None
+    next_amount = None if first_explicit else "1020"
+    receipt = pay(db, 3, "explicit-or-omitted-key", "Mesmo valor", 1, first_amount)
+    with pytest.raises(DomainError) as rejection:
+        pay(db, 3, "explicit-or-omitted-key", "Mesmo valor", 1, next_amount)
+    assert rejection.value.code == "idempotency_conflict"
+    assert pay(db, 3, "explicit-or-omitted-key", "Mesmo valor", 1, first_amount).id == receipt.id
+    assert db.scalar(select(func.count(Payment.id))) == 1
+
+
+def test_omitted_amount_keeps_exact_legacy_request_hash(db: Session) -> None:
+    load(db)
+    receipt = pay(db, 1, "legacy-hash-preservation", "  Conferência  ", 1)
+    expected = hashlib.sha256(
+        json.dumps({"receivable_id": 1, "note": "Conferência"}, sort_keys=True).encode()
+    ).hexdigest()
+    assert receipt.request_hash == expected
+
+
+def test_overpayment_and_cancel_partial_have_no_financial_or_reminder_effect(db: Session) -> None:
+    from gestao_recebiveis.models import Reminder
+    from gestao_recebiveis.reminders.service import schedule
+
+    load(db)
+    schedule(db)
+    pay(db, 3, "valid-partial-before-rejections", "", 1, "100")
+    db.flush()
+    before_events = db.scalar(select(func.count(AuditEvent.id)))
+    before_jobs = [
+        (job.id, job.status, job.cancel_requested, job.attempts_count)
+        for job in db.scalars(select(Reminder).order_by(Reminder.id))
+    ]
+    for amount in ("921", "0", "-1"):
+        with pytest.raises(DomainError) as rejection:
+            pay(db, 3, f"invalid-payment-{amount}", "", 1, amount)
+        assert rejection.value.code == "invalid_payment_amount"
+    with pytest.raises(DomainError, match="parciais"):
+        cancel(db, 3, "Cancelamento de título parcial", 1)
+    assert db.scalar(select(func.count(Payment.id))) == 1
+    assert db.scalar(select(func.count(AuditEvent.id))) == before_events
+    assert [
+        (job.id, job.status, job.cancel_requested, job.attempts_count)
+        for job in db.scalars(select(Reminder).order_by(Reminder.id))
+    ] == before_jobs
+    title = db.get(Receivable, 3)
+    assert title is not None and title.status == "open"
+    assert get_balance(db, title).remaining_cents == 920
+
+
+def test_identical_reimport_preserves_partial_title_and_receipts(db: Session) -> None:
+    load(db)
+    receipt = pay(db, 3, "partial-before-reimport", "Parcela", 1, "19")
+    title = db.get(Receivable, 3)
+    assert title is not None
+    snapshot = (title.customer_id, title.due_date, title.amount_cents, title.created_at)
+    load(db, HEADER + "".join(reversed(LINES)))
+    assert (title.customer_id, title.due_date, title.amount_cents, title.created_at) == snapshot
+    assert title.status == "open" and get_balance(db, title).remaining_cents == 1001
+    assert db.scalars(select(Payment)).one().id == receipt.id
+    assert db.scalar(select(func.count(Receivable.id))) == 3
+
+
+def test_bigint_receipts_and_totals_remain_exact_above_javascript_safe_integer(db: Session) -> None:
+    maximum = 9223372036854775807
+    lines = [
+        line.replace("10.20", "92233720368547758.07").replace(",C,", f",BIG-{index},")
+        for index, line in enumerate([LINES[2], LINES[2]])
+    ]
+    load(db, HEADER + "".join(lines))
+    pay(db, 1, "bigint-partial-above-safe", "", 1, "9007199254740993")
+    pay(db, 2, "bigint-one-cent", "", 1, "1")
+    totals = overview(db, "", None, None, None, None)
+    assert totals["received_cents"] == "9007199254740994"
+    assert totals["open_cents"] == str(maximum * 2 - 9007199254740994)
+    assert totals["paid_count"] == 2
+    final = pay(db, 2, "bigint-rest-of-balance", "", 1)
+    assert final.amount_cents == maximum - 1
+    assert pay(db, 2, "bigint-one-cent", "", 1, "1").amount_cents == 1
+    # The maximum single receipt is supported independently of aggregate totals.
+    fresh = LINES[2].replace("10.20", "92233720368547758.07").replace(",C,", ",BIG-2,")
+    load(db, HEADER + fresh)
+    assert pay(db, 3, "bigint-maximum-single", "", 1, str(maximum)).amount_cents == maximum
+
+
+@pytest.mark.parametrize(
+    "amounts,expected", [(("3", "7"), ["ok", "ok"]), (("6", "6"), ["conflict", "ok"])]
+)
+def test_concurrent_distinct_partial_keys_check_updated_balance_atomically(
+    session_factory: sessionmaker[Session], amounts: tuple[str, str], expected: list[str]
+) -> None:
+    with session_factory.begin() as session:
+        load(session)
+    barrier = Barrier(2)
+
+    def task(pair: tuple[int, str]) -> str:
+        index, amount = pair
+        try:
+            with session_factory.begin() as session:
+                # Both identity maps see the original title before either writer.
+                assert session.get(Receivable, 2).status == "open"
+                barrier.wait(timeout=10)
+                pay(session, 2, f"concurrent-partial-{index}", "", 1, amount)
+            return "ok"
+        except DomainError as error:
+            assert error.code == "invalid_payment_amount"
+            return "conflict"
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        assert sorted(pool.map(task, enumerate(amounts))) == expected
+    with session_factory() as session:
+        title = session.get(Receivable, 2)
+        assert title is not None
+        balance = get_balance(session, title)
+        assert balance.paid_cents == (10 if expected == ["ok", "ok"] else 6)
+        assert title.status == ("paid" if balance.remaining_cents == 0 else "open")
+        assert session.scalar(select(func.count(Payment.id))) == expected.count("ok")
+        assert session.scalar(
+            select(func.count(AuditEvent.id)).where(AuditEvent.type == "payment_recorded")
+        ) == expected.count("ok")
+
+
+def test_concurrent_same_key_different_partial_values_has_one_winner(
+    session_factory: sessionmaker[Session],
+) -> None:
+    with session_factory.begin() as session:
+        load(session)
+    barrier = Barrier(2)
+
+    def task(amount: str) -> str:
+        barrier.wait(timeout=10)
+        try:
+            with session_factory.begin() as session:
+                pay(session, 2, "same-key-different-partials", "", 1, amount)
+            return "ok"
+        except DomainError as error:
+            assert error.code == "idempotency_conflict"
+            return "conflict"
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        assert sorted(pool.map(task, ["3", "4"])) == ["conflict", "ok"]
+    with session_factory() as session:
+        assert session.scalar(select(func.count(Payment.id))) == 1
+        assert session.scalar(select(Payment.amount_cents)) in (3, 4)
+        assert (
+            session.scalar(
+                select(func.count(AuditEvent.id)).where(AuditEvent.type == "payment_recorded")
+            )
+            == 1
+        )
+
+
+@pytest.mark.parametrize("amount", ["3", "10"])
+def test_concurrent_cancel_and_partial_or_settlement_is_one_atomic_transition(
+    session_factory: sessionmaker[Session], amount: str
+) -> None:
+    with session_factory.begin() as session:
+        load(session)
+    barrier = Barrier(2)
+
+    def task(action: str) -> str:
+        barrier.wait(timeout=10)
+        try:
+            with session_factory.begin() as session:
+                if action == "pay":
+                    pay(session, 2, "partial-or-settlement-cancel-race", "", 1, amount)
+                else:
+                    cancel(session, 2, "Cancelamento concorrente", 1)
+            return "ok"
+        except DomainError:
+            return "conflict"
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        assert sorted(pool.map(task, ["pay", "cancel"])) == ["conflict", "ok"]
+    with session_factory() as session:
+        title = session.get(Receivable, 2)
+        assert title is not None
+        financial = session.scalars(
+            select(AuditEvent).where(
+                AuditEvent.receivable_id == 2,
+                AuditEvent.type.in_(("payment_recorded", "receivable_canceled")),
+            )
+        ).all()
+        assert len(financial) == 1
+        if title.status == "canceled":
+            assert get_balance(session, title).paid_cents == 0
+            assert financial[0].type == "receivable_canceled"
+        else:
+            assert title.status == ("paid" if amount == "10" else "open")
+            assert get_balance(session, title).paid_cents == int(amount)
+            assert financial[0].type == "payment_recorded"

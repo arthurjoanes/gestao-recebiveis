@@ -115,7 +115,7 @@ class ImportLine(Base):
 class Payment(Base):
     __tablename__ = "payments"
     id: Mapped[int] = mapped_column(primary_key=True)
-    receivable_id: Mapped[int] = mapped_column(ForeignKey("receivables.id"), unique=True)
+    receivable_id: Mapped[int] = mapped_column(ForeignKey("receivables.id"))
     idempotency_key: Mapped[str] = mapped_column(String(100), unique=True)
     request_hash: Mapped[str] = mapped_column(String(64))
     amount_cents: Mapped[int] = mapped_column(BigInteger)
@@ -123,6 +123,10 @@ class Payment(Base):
     actor_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     paid_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     recorded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    __table_args__ = (
+        CheckConstraint("amount_cents > 0", name="ck_payments_amount_positive"),
+        Index("ix_payments_receivable_paid", "receivable_id", "paid_at", "id"),
+    )
 
 
 class Reminder(Base):

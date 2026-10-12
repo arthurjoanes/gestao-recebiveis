@@ -30,6 +30,7 @@ from gestao_recebiveis.reminders.service import (
     renew,
     schedule,
 )
+from gestao_recebiveis.reminders.views import reminder_view
 from gestao_recebiveis.worker import run_once
 
 
@@ -516,6 +517,150 @@ def test_previous_authorization_remains_reconcilable_after_payment(
         assert session.scalar(select(func.count(Delivery.id))) == 1
         job = session.scalar(select(Reminder))
         assert job is not None and job.cancel_requested
+
+
+def test_partial_before_authorization_uses_residual_without_cancel_or_extra_stage(
+    session_factory: sessionmaker[Session], infrastructure_clock: FixedClock
+) -> None:
+    title_id = create_title(session_factory)
+    with session_factory.begin() as session:
+        assert schedule(session, clock=infrastructure_clock) == 1
+    with session_factory.begin() as session:
+        possession = claim(session, clock=infrastructure_clock)
+        assert possession is not None
+    with session_factory.begin() as session:
+        pay(session, title_id, "partial-before-reminder-authorization", "", 1, "1234")
+        assert schedule(session, clock=infrastructure_clock) == 0
+        job = session.scalar(select(Reminder))
+        assert job is not None and not job.cancel_requested and job.status == "processing"
+        assert session.scalar(select(func.count(Reminder.id))) == 1
+    with session_factory.begin() as session:
+        attempt = authorize(session, possession, clock=infrastructure_clock)
+        assert attempt is not None and attempt.payload["amount_cents"] == "11111"
+        assert "R$ 111,11" in attempt.payload["message"]
+        original_payload = dict(attempt.payload)
+        original_authorized_at = attempt.authorized_at
+        attempt_id = attempt.id
+    with session_factory.begin() as session:
+        pay(session, title_id, "partial-after-reminder-authorization", "", 1, "5678")
+    with session_factory() as session:
+        attempt = session.get(Attempt, attempt_id)
+        assert attempt is not None and attempt.payload == original_payload
+        assert attempt.authorized_at == original_authorized_at
+        job = session.scalar(select(Reminder))
+        assert job is not None
+        view = reminder_view(session, job, detail=True)
+        assert view["amount_cents"] == "12345"
+        assert view["paid_cents"] == "6912" and view["remaining_cents"] == "5433"
+        assert view["attempts"][0]["authorized_remaining_cents"] == "11111"
+        assert view["attempts"][0]["authorized_at"] == original_authorized_at
+
+
+def test_unknown_partial_snapshot_survives_settlement_and_confirms_one_delivery(
+    session_factory: sessionmaker[Session], infrastructure_clock: FixedClock
+) -> None:
+    title_id = create_title(session_factory, scenario="response_lost")
+    with session_factory.begin() as session:
+        pay(session, title_id, "partial-before-unknown-snapshot", "", 1, "45")
+        schedule(session, clock=infrastructure_clock)
+    possession, attempt_id = take_job(session_factory, infrastructure_clock)
+    with session_factory() as session:
+        attempt = session.get(Attempt, attempt_id)
+        assert attempt is not None and attempt.payload["amount_cents"] == "12300"
+        snapshot = dict(attempt.payload)
+        authorized_at = attempt.authorized_at
+    with pytest.raises(ResponseLost):
+        FakeProvider(session_factory, infrastructure_clock).send(attempt_id)
+    with session_factory.begin() as session:
+        assert finish(
+            session,
+            possession,
+            attempt_id,
+            SendResult("unknown", "resposta perdida"),
+            clock=infrastructure_clock,
+        )
+        pay(session, title_id, "settlement-after-unknown-authorization", "", 1)
+    infrastructure_clock.instant += timedelta(seconds=1)
+    assert run_once(session_factory, clock=infrastructure_clock)
+    assert job_state(session_factory) == ("sent", 1)
+    with session_factory() as session:
+        attempt = session.scalars(select(Attempt)).one()
+        assert attempt.id == attempt_id and attempt.payload == snapshot
+        assert attempt.authorized_at == authorized_at
+        delivery = session.scalars(select(Delivery)).one()
+        assert delivery.message == snapshot["message"] and "R$ 123,00" in delivery.message
+        assert session.scalar(select(func.count(ProviderResult.attempt_id))) == 1
+        job = session.scalar(select(Reminder))
+        assert job is not None and job.cancel_requested
+        detail = reminder_view(session, job, detail=True)
+        assert detail["remaining_cents"] == "0"
+        assert detail["attempts"][0]["authorized_remaining_cents"] == "12300"
+    assert not run_once(session_factory, clock=infrastructure_clock)
+
+
+def test_confirmed_transient_retry_may_authorize_updated_partial_balance(
+    session_factory: sessionmaker[Session], infrastructure_clock: FixedClock
+) -> None:
+    title_id = create_title(session_factory, scenario="transient")
+    assert run_once(session_factory, clock=infrastructure_clock)
+    with session_factory.begin() as session:
+        first = session.scalars(select(Attempt)).one()
+        assert first.outcome == "transient" and first.payload["amount_cents"] == "12345"
+        first_snapshot = dict(first.payload)
+        pay(session, title_id, "partial-after-confirmed-transient", "", 1, "100")
+    infrastructure_clock.instant += timedelta(seconds=1)
+    assert run_once(session_factory, clock=infrastructure_clock)
+    with session_factory() as session:
+        attempts = session.scalars(select(Attempt).order_by(Attempt.number)).all()
+        assert len(attempts) == 2 and attempts[0].payload == first_snapshot
+        assert attempts[1].payload["amount_cents"] == "12245"
+        assert attempts[0].payload["idempotency_key"] == attempts[1].payload["idempotency_key"]
+        assert session.scalar(select(func.count(Delivery.id))) == 1
+        assert session.scalar(select(func.count(Reminder.id))) == 1
+
+
+@pytest.mark.parametrize("first_action", ["partial", "authorization"])
+def test_partial_and_authorization_share_title_lock_and_freeze_winning_balance(
+    session_factory: sessionmaker[Session], infrastructure_clock: FixedClock, first_action: str
+) -> None:
+    title_id = create_title(session_factory)
+    with session_factory.begin() as session:
+        schedule(session, clock=infrastructure_clock)
+    with session_factory.begin() as session:
+        possession = claim(session, clock=infrastructure_clock)
+        assert possession is not None
+    barrier = Barrier(2)
+
+    def perform(session: Session, action: str) -> None:
+        if action == "partial":
+            pay(session, title_id, "partial-race-with-reminder", "", 1, "1000")
+        else:
+            assert authorize(session, possession, clock=infrastructure_clock) is not None
+
+    def first() -> None:
+        with session_factory.begin() as session:
+            perform(session, first_action)
+            barrier.wait(timeout=10)
+
+    def second() -> None:
+        with session_factory.begin() as session:
+            session.connection()
+            barrier.wait(timeout=10)
+            perform(session, "authorization" if first_action == "partial" else "partial")
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        winner = pool.submit(first)
+        follower = pool.submit(second)
+        winner.result(timeout=15)
+        follower.result(timeout=15)
+    with session_factory() as session:
+        attempt = session.scalars(select(Attempt)).one()
+        assert attempt.payload["amount_cents"] == (
+            "11345" if first_action == "partial" else "12345"
+        )
+        job = session.scalars(select(Reminder)).one()
+        assert job.attempts_count == 1 and not job.cancel_requested
+        assert session.get(Receivable, title_id).status == "open"
 
 
 def test_reconciliation_without_effect_after_payment_cannot_authorize_retry(

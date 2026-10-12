@@ -170,6 +170,8 @@ def initialize(contract: Contract) -> dict:
             "title_ids": {r.external_receivable_id: r.id for r in titles},
             "payment_key": f"restore-{contract.run_id}-payment",
             "payment_note": FIXTURE["payment_note"],
+            "partial_key": f"restore-{contract.run_id}-partial",
+            "partial_note": FIXTURE["partial_note"],
         }
     write_private(EVIDENCE, "fixture", fixture)
     return {
@@ -266,7 +268,18 @@ def prepare_cut(contract: Contract) -> dict:
         )
         require(payment.amount_cents == 5000, "Payment oracle mismatch")
         payment_id = payment.id
+        partial = pay(
+            session,
+            fixture["title_ids"]["RESTORE-UNKNOWN"],
+            fixture["partial_key"],
+            fixture["partial_note"],
+            fixture["actor_id"],
+            amount_cents=str(FIXTURE["partial_cents"]),
+        )
+        require(partial.amount_cents == 2500, "Partial payment oracle mismatch")
+        partial_id = partial.id
         title = session.get(Receivable, fixture["title_ids"]["RESTORE-UNKNOWN"])
+        require(title.status == "open", "Partial must keep the title open")
         title.scenario = "response_lost"
         session.get(DemoState, 1).worker_enabled = True
         require(schedule(session) == 1, "Exactly one unpaid reminder must be scheduled")
@@ -280,6 +293,7 @@ def prepare_cut(contract: Contract) -> dict:
         attempt = authorize(session, possession)
         require(attempt is not None, "Attempt authorization failed")
         attempt_id = attempt.id
+        require(attempt.payload["amount_cents"] == "5000", "Authorized residual differs")
     try:
         FakeProvider(SessionLocal).send(attempt_id)
     except ResponseLost:
@@ -293,11 +307,14 @@ def prepare_cut(contract: Contract) -> dict:
             "Reminder not left in-flight",
         )
         require(session.scalar(select(func.count(Delivery.id))) == 1, "Delivery ledger mismatch")
-        require(session.scalar(select(func.count(Payment.id))) == 1, "Payment count mismatch")
+        require(session.scalar(select(func.count(Payment.id))) == 2, "Payment count mismatch")
         delivery_id = session.scalar(select(Delivery.id))
     cut = {
         "run_id": contract.run_id,
         "payment_id": payment_id,
+        "partial_id": partial_id,
+        "partial_cents": 2500,
+        "remaining_cents": 5000,
         "delivery_id": delivery_id,
         "attempt_id": attempt_id,
         "reminder_id": possession.reminder_id,
@@ -436,6 +453,18 @@ def replay_payment(contract: Contract) -> dict:
             payment.id == cut["payment_id"] and payment.amount_cents == 5000,
             "Replay created/returned a different payment",
         )
+        partial = pay(
+            session,
+            fixture["title_ids"]["RESTORE-UNKNOWN"],
+            fixture["partial_key"],
+            fixture["partial_note"],
+            fixture["actor_id"],
+            amount_cents=str(FIXTURE["partial_cents"]),
+        )
+        require(
+            partial.id == cut["partial_id"] and partial.amount_cents == 2500,
+            "Partial replay created/returned a different payment",
+        )
     try:
         with SessionLocal.begin() as session:
             pay(
@@ -455,6 +484,8 @@ def replay_payment(contract: Contract) -> dict:
     write_private(EVIDENCE, "payment-replay-after", after)
     return {
         "same_payment_id": cut["payment_id"],
+        "same_partial_id": cut["partial_id"],
+        "remaining_cents": cut["remaining_cents"],
         "same_complete_state": True,
         "conflict_code": "idempotency_conflict",
         "snapshot": public_snapshot(after),

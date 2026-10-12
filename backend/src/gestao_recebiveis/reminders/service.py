@@ -7,6 +7,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
 from gestao_recebiveis.audit import record
+from gestao_recebiveis.balances import get_balance
 from gestao_recebiveis.clock import Clock, SystemClock, business_now
 from gestao_recebiveis.config import get_settings
 from gestao_recebiveis.models import Attempt, Customer, Receivable, Reminder, ReminderDayGuard
@@ -290,6 +291,10 @@ def authorize(session: Session, possession: Claim, *, clock: Clock | None = None
     customer = session.get(Customer, title.customer_id)
     if customer is None:
         raise RuntimeError("Cliente do título não encontrado.")
+    # Financial mutations use the same title lock. The amount becomes an
+    # immutable authorization snapshot; unknown replays returned above keep it.
+    balance = get_balance(session, title)
+    remaining = balance.remaining_cents
     job.attempts_count += 1
     attempt = Attempt(
         reminder_id=job.id,
@@ -301,7 +306,7 @@ def authorize(session: Session, possession: Claim, *, clock: Clock | None = None
             "scenario": title.scenario,
             "receivable_id": title.id,
             "external_receivable_id": title.external_receivable_id,
-            "amount_cents": str(title.amount_cents),
+            "amount_cents": str(remaining),
             "due_date": title.due_date.isoformat(),
             "stage": job.stage,
             "customer_email": customer.email,
@@ -309,7 +314,7 @@ def authorize(session: Session, possession: Claim, *, clock: Clock | None = None
                 f"[SIMULAÇÃO — nenhuma mensagem externa] Olá, {customer.name}. "
                 f"Lembrete do título {title.external_receivable_id}, "
                 f"vencimento {title.due_date.isoformat()}, "
-                f"valor R$ {title.amount_cents // 100},{title.amount_cents % 100:02d}."
+                f"saldo autorizado R$ {remaining // 100},{remaining % 100:02d}."
             ),
         },
     )
