@@ -80,8 +80,10 @@ O [Compose](compose.yaml) publica frontend/API apenas em loopback e mantém o ba
 <p>
   <img src="docs/stack/python.svg" alt="Python" width="64" height="64">
   <img src="docs/stack/fastapi.svg" alt="FastAPI" width="64" height="64">
+  <img src="docs/stack/pydantic.svg" alt="Pydantic, validação dos contratos" width="64" height="64">
   <img src="docs/stack/postgresql.svg" alt="PostgreSQL" width="64" height="64">
   <img src="docs/stack/sqlalchemy.svg" alt="SQLAlchemy" width="64" height="64">
+  <img src="docs/stack/psycopg.svg" alt="psycopg, driver Python para PostgreSQL" width="64" height="64">
   <img src="docs/stack/typescript.svg" alt="TypeScript" width="64" height="64">
   <img src="docs/stack/react.svg" alt="React" width="64" height="64">
   <img src="docs/stack/nextjs.svg" alt="Next.js" width="64" height="64">
@@ -92,6 +94,7 @@ O [Compose](compose.yaml) publica frontend/API apenas em loopback e mantém o ba
 | ------------ | ------------------------------------------------------------------------------------------------- |
 | Interface    | Next.js, React e TypeScript apresentam a carteira; regras financeiras permanecem no servidor      |
 | API e worker | Python/FastAPI e SQLAlchemy/psycopg; transações e tratamento explícito de conflitos               |
+| Contratos    | Pydantic valida as entradas HTTP, incluindo valores de recebimentos e campos obrigatórios           |
 | Persistência | PostgreSQL para carteira e fila; permite coordenação transacional e concentra a operação no banco |
 | Execução     | Docker Compose, com bancos separados para demo e testes                                           |
 
@@ -163,7 +166,7 @@ Desenvolvido por **Arthur Joanes**. Para conversar sobre recebíveis, consistên
   </a>
 </p>
 
-Código sob [licença MIT](LICENSE). IBM Plex Sans mantém a [licença OFL 1.1](frontend/src/app/fonts/plex-LICENSE.txt) e a [origem](frontend/src/app/fonts/sources.json). Ícones da stack e LinkedIn: [Devicon, licença MIT](docs/stack/LICENSE.devicon).
+Código sob [licença MIT](LICENSE). IBM Plex Sans mantém a [licença OFL 1.1](frontend/src/app/fonts/plex-LICENSE.txt) e a [origem](frontend/src/app/fonts/sources.json). Ícones da stack e LinkedIn: [fontes e licenças Devicon e Simple Icons](docs/stack/README.md).
 
 ## Evolução de 12/10/2026
 
