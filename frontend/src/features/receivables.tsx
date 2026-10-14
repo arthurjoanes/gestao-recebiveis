@@ -154,6 +154,7 @@ export function ReceivablesView({
                   setSelectedBucket("");
                   setFilters({ ...emptyFilters, page: 1 });
                   setPeriodError("");
+                  onApplied();
                 }}
                 onSubmit={(event) => {
                   event.preventDefault();

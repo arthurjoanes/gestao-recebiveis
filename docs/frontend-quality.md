@@ -36,7 +36,7 @@ Datas de vencimento e recebimento são agrupadas separadamente. Cada paginação
 
 ## Responsividade e acessibilidade
 
-A carteira e os títulos dos relatórios reorganizam suas linhas até 1100 px para manter saldo, situação e identidade visíveis. O menu e os filtros móveis recolhem até 900 px; aplicar filtro altera a consulta somente no envio. Tabelas extensas de importações e histórico mantêm rolagem local identificada.
+A carteira e os títulos dos relatórios reorganizam suas linhas até 1100 px para manter saldo, situação e identidade visíveis. O menu e os filtros móveis recolhem até 900 px; aplicar filtro altera a consulta somente no envio. Na carteira compacta, aplicar ou limpar os filtros recolhe o formulário e devolve o foco a **Filtrar carteira**. Uma validação inválida mantém o formulário aberto e foca o campo com erro. Tabelas extensas de importações e histórico mantêm rolagem local identificada.
 
 Confira pelo menos 320, 390, 768, 1024 e 1440 CSS px, incluindo nomes longos, valores altos, vazio, erros e diálogo aberto. Teste teclado, foco visível, texto ampliado e preferência por movimento reduzido. Não dependa apenas de uma varredura automática para contraste ou semântica.
 
