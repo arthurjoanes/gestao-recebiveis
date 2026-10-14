@@ -112,93 +112,7 @@
   white-space: normal;
   overflow-wrap: anywhere;
 }
-@media (min-width: 901px) and (max-width: 1100px) {
-  .portfolio-workbench {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .portfolio-panel .portfolio-filters {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-    padding: 16px;
-    border-right: 0;
-    border-bottom: 1px solid var(--line);
-  }
-  .portfolio-panel .portfolio-results .table-scroll {
-    max-height: none;
-  }
-  .portfolio-filters .field-error {
-    grid-column: 1 / -1;
-  }
-  .portfolio-results table,
-  .portfolio-results tbody {
-    display: block;
-    white-space: normal;
-  }
-  .portfolio-results thead {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-  }
-  .portfolio-results tbody tr {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(90px, auto);
-    gap: 8px 12px;
-    padding: 16px;
-    border-bottom: 1px solid var(--line);
-  }
-  .portfolio-results tbody td {
-    padding: 0;
-    border: 0;
-    min-width: 0;
-    overflow-wrap: anywhere;
-  }
-  .portfolio-results tbody td:nth-child(2) {
-    grid-column: 1 / -1;
-    grid-row: 2;
-  }
-  .portfolio-results tbody td:nth-child(3) {
-    grid-column: 1;
-    grid-row: 3;
-  }
-  .portfolio-results tbody td:nth-child(4) {
-    grid-column: 1 / -1;
-    grid-row: 4;
-    text-align: left;
-    font-size: 18px;
-    padding-top: 8px;
-    border-top: 1px solid var(--line);
-  }
-  .portfolio-results tbody td:nth-child(4)::before {
-    content: "Saldo ";
-    color: var(--muted);
-    font-size: 13px;
-    font-weight: 400;
-  }
-  .portfolio-results tbody td:nth-child(4) small {
-    display: inline-block;
-    font-size: 13px;
-    margin-left: 12px;
-    margin-right: 12px;
-  }
-  .portfolio-results tbody td:nth-child(5) {
-    grid-column: 2;
-    grid-row: 3;
-    text-align: right;
-  }
-  .portfolio-results tbody td:nth-child(6) {
-    display: none;
-  }
-  .portfolio-results .truncate {
-    white-space: normal;
-    max-width: none;
-  }
-  .portfolio-results .table-scroll::after {
-    display: none;
-  }
-}
+
 @media (max-width: 1100px) {
   .report-titles-table,
   .report-titles-table tbody {
@@ -453,7 +367,7 @@
   padding: 0 36px;
   gap: 10px;
 }
-.desktop-header nav button {
+.desktop-header nav a {
   display: inline-flex;
   align-items: center;
   gap: 9px;
@@ -466,11 +380,11 @@
   font-size: 13px;
   font-weight: 600;
 }
-.desktop-header nav button:hover {
+.desktop-header nav a:hover {
   color: white;
   background: #23456f;
 }
-.desktop-header nav button.active {
+.desktop-header nav a.active {
   color: white;
   background: #23456f;
   border-bottom-color: var(--focus-inverse);
@@ -557,7 +471,7 @@
 .button,
 .text-button,
 .icon-button,
-nav button,
+nav a,
 tbody tr,
 input,
 select,
@@ -976,9 +890,6 @@ textarea {
   .main-content {
     padding: 24px;
   }
-  .portfolio-workbench {
-    grid-template-columns: 190px minmax(0, 1fr);
-  }
   .portfolio-panel .portfolio-filters {
     padding: 20px 16px;
   }
@@ -1350,5 +1261,93 @@ textarea {
     grid-row: auto;
     justify-self: start;
     margin-top: 8px;
+  }
+}
+
+@media (min-width: 901px) and (max-width: 1100px) {
+  .portfolio-workbench {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .portfolio-panel .portfolio-filters {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    padding: 16px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .portfolio-panel .portfolio-results .table-scroll {
+    max-height: none;
+  }
+  .portfolio-filters .field-error {
+    grid-column: 1 / -1;
+  }
+  .portfolio-results table,
+  .portfolio-results tbody {
+    display: block;
+    white-space: normal;
+  }
+  .portfolio-results thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .portfolio-results tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(90px, auto);
+    gap: 8px 12px;
+    padding: 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  .portfolio-results tbody td {
+    padding: 0;
+    border: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .portfolio-results tbody td:nth-child(2) {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .portfolio-results tbody td:nth-child(3) {
+    grid-column: 1;
+    grid-row: 3;
+  }
+  .portfolio-results tbody td:nth-child(4) {
+    grid-column: 1 / -1;
+    grid-row: 4;
+    text-align: left;
+    font-size: 18px;
+    padding-top: 8px;
+    border-top: 1px solid var(--line);
+  }
+  .portfolio-results tbody td:nth-child(4)::before {
+    content: "Saldo ";
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 400;
+  }
+  .portfolio-results tbody td:nth-child(4) small {
+    display: inline-block;
+    font-size: 13px;
+    margin-left: 12px;
+    margin-right: 12px;
+  }
+  .portfolio-results tbody td:nth-child(5) {
+    grid-column: 2;
+    grid-row: 3;
+    text-align: right;
+  }
+  .portfolio-results tbody td:nth-child(6) {
+    display: none;
+  }
+  .portfolio-results .truncate {
+    white-space: normal;
+    max-width: none;
+  }
+  .portfolio-results .table-scroll::after {
+    display: none;
   }
 }

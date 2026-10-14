@@ -16,7 +16,7 @@ async function navigate(page: Page, name: string) {
     await page.getByRole("button", { name: "Menu", exact: true }).click();
   await page
     .getByRole("navigation", { name: "Navegação principal" })
-    .getByRole("button", { name, exact: true })
+    .getByRole("link", { name, exact: true })
     .click();
 }
 async function openTitle(page: Page, code: string) {
@@ -29,7 +29,7 @@ async function openTitle(page: Page, code: string) {
   await page
     .getByRole("button", { name: "Filtrar títulos", exact: true })
     .click();
-  await page.getByRole("button", { name: code, exact: true }).click();
+  await page.getByRole("link", { name: code, exact: true }).click();
   await expect(
     page.getByRole("heading", { name: code, exact: true }),
   ).toBeVisible();
@@ -65,10 +65,10 @@ async function fixture(page: Page, amount = "1.00", count = 1) {
     ).ok(),
   ).toBe(true);
   const list = await (
-    await page.request.get(`/api/v1/receivables?q=${code}`)
+    await page.request.get(`/api/v2/receivables?q=${code}`)
   ).json();
   const title: ReceivableDetail = await (
-    await page.request.get(`/api/v1/receivables/${list.items[0].id}`)
+    await page.request.get(`/api/v2/receivables/${list.items[0].id}`)
   ).json();
   return { code, session, headers, title };
 }
@@ -144,9 +144,9 @@ test("confirmação conserva centavos grandes, corrige erro e quitação perdida
   expect(stored.preview.remaining_after_cents).toBe("0");
   await page.reload();
   await expect(
-    page.getByRole("heading", { name: "Resumo", exact: true }),
+    page.getByRole("heading", { name: code, exact: true }),
   ).toBeVisible();
-  await openTitle(page, code);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.locator(".detail-amount")).toHaveText("R$ 0,00");
   await page
     .getByRole("button", { name: "Resolver pagamento pendente", exact: true })
@@ -172,7 +172,7 @@ test("confirmação conserva centavos grandes, corrige erro e quitação perdida
     "Pagamento registrado: R$ 90.071.992.547.409,92",
   );
   const after: ReceivableDetail = await (
-    await page.request.get(`/api/v1/receivables/${title.id}`)
+    await page.request.get(`/api/v2/receivables/${title.id}`)
   ).json();
   expect(after.payments).toHaveLength(2);
   expect(
@@ -241,7 +241,7 @@ test("replay legado sem valor não inventa quantia a partir do saldo atual", asy
     "Pagamento registrado: R$ 1,00",
   );
   expect(
-    (await (await page.request.get(`/api/v1/receivables/${title.id}`)).json())
+    (await (await page.request.get(`/api/v2/receivables/${title.id}`)).json())
       .payments,
   ).toHaveLength(1);
 });
@@ -253,7 +253,7 @@ test("extrato distingue datas inválidas, estado traduzido e paginações por se
   const { code } = await fixture(page);
   await openTitle(page, code);
   await page
-    .getByRole("button", { name: "Extrato do cliente", exact: true })
+    .getByRole("link", { name: "Extrato do cliente", exact: true })
     .click();
   await page
     .getByRole("combobox", { name: "Situação", exact: true })
@@ -327,15 +327,15 @@ test("retorno de relatório restaura foco da linha e resposta atrasada respeita 
     .getByRole("button", { name: "Voltar para o aging", exact: true })
     .click();
   await expect(
-    page.getByRole("button", { name: rowCode, exact: true }),
+    page.getByRole("link", { name: rowCode, exact: true }),
   ).toBeFocused();
-  await page.getByRole("button", { name: rowCode, exact: true }).click();
+  await page.getByRole("link", { name: rowCode, exact: true }).click();
   let release!: () => void;
   const held = new Promise<void>((resolve) => {
     release = resolve;
   });
   await page.route(
-    "**/api/v1/reports/aging?**",
+    "**/api/v2/reports/aging?**",
     async (route) => {
       await held;
       await route.continue();

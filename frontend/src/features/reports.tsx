@@ -1,7 +1,8 @@
 "use client";
+import { RouteLink } from "@/lib/workspace-route";
 import { useEffect, useRef, useState } from "react";
 import { query } from "@/lib/api";
-import { date, instant, money } from "@/lib/format";
+import { date, instant, money, bucketOptions, titleCount } from "@/lib/format";
 import { useResource } from "@/lib/use-resource";
 import type { Aging, CustomerStatement, Receivable } from "@/lib/types";
 import type { PortfolioFilters } from "./receivables";
@@ -14,13 +15,6 @@ import {
   Pagination,
 } from "@/components/ui";
 
-const bucketOptions = [
-  { key: "current", label: "Em dia (inclui hoje)" },
-  { key: "1_30", label: "1–30 dias" },
-  { key: "31_60", label: "31–60 dias" },
-  { key: "61_90", label: "61–90 dias" },
-  { key: "over_90", label: "Acima de 90 dias" },
-];
 export const emptyAgingFilters = {
   q: "",
   customer_id: "",
@@ -170,13 +164,14 @@ function ReportTitleRows({
           {items.map((item) => (
             <tr key={item.id}>
               <td data-label="Título / origem">
-                <button
+                <RouteLink
+                  to={{ area: "titles", titleId: item.id }}
                   className="text-button row-link"
                   id={`report-title-open-${item.id}`}
-                  onClick={() => onOpen(item.id)}
+                  onNavigate={() => onOpen(item.id)}
                 >
                   {item.external_receivable_id}
-                </button>
+                </RouteLink>
                 <small data-label="Sistema de origem">
                   {item.source_system}
                 </small>
@@ -185,13 +180,14 @@ function ReportTitleRows({
                 {item.customer_name}
                 {onStatement && (
                   <small>
-                    <button
+                    <RouteLink
+                      to={{ area: "reports", customerId: item.customer_id }}
                       className="text-button"
                       aria-label={`Extrato do cliente ID ${item.customer_id}`}
-                      onClick={() => onStatement(item.customer_id)}
+                      onNavigate={() => onStatement(item.customer_id)}
                     >
                       Extrato
-                    </button>
+                    </RouteLink>
                   </small>
                 )}
               </td>
@@ -245,7 +241,7 @@ export function AgingView({
       customer_id: filters.customer_id,
       due_from: filters.due_from,
       due_to: filters.due_to,
-      status: "",
+      status: "open",
       aging_bucket: bucket,
       page: 1,
     });
@@ -369,7 +365,7 @@ export function AgingView({
               <div className="section-heading">
                 <h2>Carteira no recorte</h2>
                 <strong className="money">
-                  {money(data.open_cents)} · {data.title_count} títulos
+                  {money(data.open_cents)} · {titleCount(data.title_count)}
                 </strong>
               </div>
               <div className="aging-buckets">
@@ -377,14 +373,29 @@ export function AgingView({
                   <article key={bucket.key} className="metric">
                     <h3>{bucket.label}</h3>
                     <strong>{money(bucket.remaining_cents)}</strong>
-                    <p>{bucket.title_count} títulos</p>
-                    <button
+                    <p>{titleCount(bucket.title_count)}</p>
+                    <RouteLink
+                      to={{
+                        area: "titles",
+                        titleId: null,
+                        customerId: null,
+                        titleOrigin: { kind: "portfolio" },
+                        titleFilters: {
+                          q: filters.q,
+                          customer_id: filters.customer_id,
+                          due_from: filters.due_from,
+                          due_to: filters.due_to,
+                          status: "open",
+                          aging_bucket: bucket.key,
+                          page: 1,
+                        },
+                      }}
                       className="text-button"
                       aria-label={`Ver títulos da faixa ${bucket.label}`}
-                      onClick={() => drilldown(bucket.key)}
+                      onNavigate={() => drilldown(bucket.key)}
                     >
                       Ver títulos <Icon name="right" />
-                    </button>
+                    </RouteLink>
                   </article>
                 ))}
               </div>
@@ -610,7 +621,7 @@ export function CustomerStatementView({
             <section className="panel">
               <div className="section-heading">
                 <h2>Totais de todo o recorte</h2>
-                <span>{data.totals.title_count} títulos</span>
+                <span>{titleCount(data.totals.title_count)}</span>
               </div>
               <dl className="statement-totals">
                 <div>
@@ -647,7 +658,7 @@ export function CustomerStatementView({
                 <h2>Títulos do cliente</h2>
                 <span>
                   Página {data.titles.page} · {data.titles.items.length} de{" "}
-                  {data.titles.total} títulos
+                  {titleCount(data.titles.total)}
                 </span>
               </div>
               {data.titles.items.length ? (
@@ -695,12 +706,16 @@ export function CustomerStatementView({
                         <tr key={payment.id}>
                           <td>
                             #{payment.id} ·{" "}
-                            <button
+                            <RouteLink
+                              to={{
+                                area: "titles",
+                                titleId: payment.receivable_id,
+                              }}
                               className="text-button row-link"
-                              onClick={() => onOpen(payment.receivable_id)}
+                              onNavigate={() => onOpen(payment.receivable_id)}
                             >
                               {payment.external_receivable_id}
-                            </button>
+                            </RouteLink>
                             <small>{payment.source_system}</small>
                           </td>
                           <td className="numeric money">

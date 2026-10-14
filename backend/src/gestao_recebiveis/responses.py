@@ -37,7 +37,7 @@ class PaymentResponse(BaseModel):
     note: str
 
 
-class ReceivableResponse(BaseModel):
+class ReceivableSummaryResponse(BaseModel):
     id: int = Field(gt=0)
     source_system: str
     external_receivable_id: str
@@ -49,11 +49,14 @@ class ReceivableResponse(BaseModel):
     paid_cents: Cents
     remaining_cents: Cents
     payment_state: Literal["unpaid", "partial", "paid"]
-    payments: list[PaymentResponse]
     due_date: date
     status: Literal["open", "paid", "canceled"]
     overdue: bool
     scenario: Literal["success", "transient", "permanent", "response_lost", "always_transient"]
+
+
+class ReceivableResponse(ReceivableSummaryResponse):
+    payments: list[PaymentResponse]
 
 
 class AttemptResponse(BaseModel):
@@ -192,9 +195,13 @@ class Page[T](BaseModel):
 AgingBucket = Literal["current", "1_30", "31_60", "61_90", "over_90"]
 
 
-class AgingTitleResponse(ReceivableResponse):
+class AgingSummaryTitleResponse(ReceivableSummaryResponse):
     aging_bucket: AgingBucket
     days_overdue: int = Field(ge=0)
+
+
+class AgingTitleResponse(AgingSummaryTitleResponse):
+    payments: list[PaymentResponse]
 
 
 class AgingBucketResponse(BaseModel):
@@ -204,7 +211,7 @@ class AgingBucketResponse(BaseModel):
     remaining_cents: Cents
 
 
-class AgingResponse(Page[AgingTitleResponse]):
+class AgingBase[T: ReceivableSummaryResponse](Page[T]):
     generated_at: AwareDatetime
     business_now: AwareDatetime
     business_date: date
@@ -216,6 +223,10 @@ class AgingResponse(Page[AgingTitleResponse]):
     open_cents: Cents
     title_count: int = Field(ge=0)
     buckets: list[AgingBucketResponse]
+
+
+AgingResponse = AgingBase[AgingTitleResponse]
+AgingSummaryResponse = AgingBase[AgingSummaryTitleResponse]
 
 
 class CustomerResponse(BaseModel):
@@ -243,7 +254,7 @@ class StatementTotalsResponse(BaseModel):
     paid_count: int = Field(ge=0)
 
 
-class CustomerStatementResponse(BaseModel):
+class CustomerStatementBase[T: ReceivableSummaryResponse](BaseModel):
     generated_at: AwareDatetime
     business_now: AwareDatetime
     business_date: date
@@ -255,5 +266,19 @@ class CustomerStatementResponse(BaseModel):
     received_from: date
     received_to: date
     totals: StatementTotalsResponse
-    titles: Page[ReceivableResponse]
+    titles: Page[T]
     payments: Page[StatementPaymentResponse]
+
+
+CustomerStatementResponse = CustomerStatementBase[ReceivableResponse]
+CustomerStatementSummaryResponse = CustomerStatementBase[ReceivableSummaryResponse]
+
+
+class HistoryPage(BaseModel):
+    total: int = Field(ge=0)
+    page: int = Field(ge=1)
+    page_size: int = Field(ge=1, le=100)
+
+
+class PaginatedReceivableDetailResponse(ReceivableDetailResponse):
+    history: dict[Literal["payments", "events", "reminders"], HistoryPage]

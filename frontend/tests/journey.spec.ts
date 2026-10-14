@@ -31,7 +31,7 @@ async function navigate(page: Page, name: string) {
     await page.getByRole("button", { name: "Menu", exact: true }).click();
   await page
     .getByRole("navigation", { name: "Navegação principal" })
-    .getByRole("button", { name, exact: true })
+    .getByRole("link", { name, exact: true })
     .click();
 }
 
@@ -136,7 +136,7 @@ test("layout financeiro em cinco larguras, dados longos, diálogo e foco", async
   await navigate(page, "Títulos");
   await fillSearch(page, key);
   await page.getByRole("button", { name: "Filtrar títulos" }).click();
-  await page.getByRole("button", { name: key, exact: true }).click();
+  await page.getByRole("link", { name: key, exact: true }).click();
   await expect(
     page.getByText("R$ 90.071.992.547.409,93", { exact: true }).first(),
   ).toBeVisible();
@@ -285,9 +285,9 @@ test("importar, repetir, simular retry, pagar e conferir histórico real", async
   await navigate(page, "Títulos");
   await fillSearch(page, key);
   await page.getByRole("button", { name: "Filtrar títulos" }).click();
-  await expect(
-    page.getByRole("button", { name: key, exact: true }),
-  ).toHaveCount(1);
+  await expect(page.getByRole("link", { name: key, exact: true })).toHaveCount(
+    1,
+  );
   await navigate(page, "Demonstração");
   await page.getByLabel("Buscar título em aberto").fill(key);
   await page
@@ -337,7 +337,7 @@ test("importar, repetir, simular retry, pagar e conferir histórico real", async
   await navigate(page, "Títulos");
   await fillSearch(page, key);
   await page.getByRole("button", { name: "Filtrar títulos" }).click();
-  await page.getByRole("button", { name: key, exact: true }).click();
+  await page.getByRole("link", { name: key, exact: true }).click();
   await page.getByRole("button", { name: "Registrar pagamento" }).click();
   await page
     .getByLabel("Observação (opcional)")
@@ -390,7 +390,7 @@ test("leitor consulta sem controles de mutação e navega com teclado", async ({
   await expect(
     page.getByText("Somente leitura", { exact: true }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Ver todos os vencidos" }).click();
+  await page.getByRole("link", { name: "Ver todos os vencidos" }).click();
   await expect(
     page.getByRole("combobox", { name: "Situação", exact: true }),
   ).toHaveValue("overdue");
@@ -426,7 +426,7 @@ test("sessão expirada volta ao login e mostra a recuperação", async ({
   page,
 }) => {
   await login(page);
-  await page.route("**/api/v1/receivables?**", (route) =>
+  await page.route("**/api/v2/receivables?**", (route) =>
     route.fulfill({
       status: 401,
       contentType: "application/json",
@@ -505,7 +505,7 @@ test("CSV inválido e conflito bloqueiam lote sem alterar totais", async ({
   ])
     expect(after[field]).toBe(before[field]);
   const newTitle = await (
-    await page.request.get(`/api/v1/receivables?q=${key}-NEW`)
+    await page.request.get(`/api/v2/receivables?q=${key}-NEW`)
   ).json();
   expect(newTitle.total).toBe(0);
   await page.screenshot({
@@ -518,7 +518,7 @@ test("erro de rede permite tentar novamente e busca vazia explica resultado", as
   page,
 }) => {
   await login(page);
-  await page.route("**/api/v1/receivables?**", (route) =>
+  await page.route("**/api/v2/receivables?**", (route) =>
     route.abort("connectionfailed"),
   );
   await navigate(page, "Títulos");
@@ -528,7 +528,7 @@ test("erro de rede permite tentar novamente e busca vazia explica resultado", as
   await expect(
     page.getByRole("heading", { name: "Nenhum título encontrado" }),
   ).toHaveCount(0);
-  await page.unroute("**/api/v1/receivables?**");
+  await page.unroute("**/api/v2/receivables?**");
   await fillSearch(page, `SEM-RESULTADO-${Date.now()}`);
   await page.getByRole("button", { name: "Filtrar títulos" }).click();
   await expect(
@@ -550,7 +550,7 @@ test("erro de rede permite tentar novamente e busca vazia explica resultado", as
     started = resolve;
   });
   const staleQuery = `ATRASADA-${Date.now()}`;
-  await page.route("**/api/v1/receivables?**", async (route) => {
+  await page.route("**/api/v2/receivables?**", async (route) => {
     if (new URL(route.request().url()).searchParams.get("q") === staleQuery) {
       started();
       await delayed;
@@ -597,9 +597,7 @@ test("menu móvel tem seis destinos, prende foco e devolve foco ao fechar", asyn
   await page.keyboard.press("Enter");
   const dialog = page.getByRole("dialog", { name: "Menu" });
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByRole("navigation").getByRole("button")).toHaveCount(
-    6,
-  );
+  await expect(dialog.getByRole("navigation").getByRole("link")).toHaveCount(6);
   for (const name of [
     "Resumo",
     "Títulos",
@@ -609,29 +607,25 @@ test("menu móvel tem seis destinos, prende foco e devolve foco ao fechar", asyn
     "Demonstração",
   ]) {
     const bounds = await dialog
-      .getByRole("button", { name, exact: true })
+      .getByRole("link", { name, exact: true })
       .boundingBox();
     expect(bounds!.x).toBeGreaterThanOrEqual(0);
     expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(320);
     expect(bounds!.height).toBeGreaterThanOrEqual(44);
   }
-  await dialog
-    .getByRole("button", { name: "Demonstração", exact: true })
-    .focus();
+  await dialog.getByRole("link", { name: "Demonstração", exact: true }).focus();
   await page.keyboard.press("Tab");
   await expect(
     dialog.getByRole("button", { name: "Fechar diálogo" }),
   ).toBeFocused();
   await page.keyboard.press("Shift+Tab");
   await expect(
-    dialog.getByRole("button", { name: "Demonstração", exact: true }),
+    dialog.getByRole("link", { name: "Demonstração", exact: true }),
   ).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(menu).toBeFocused();
   await page.keyboard.press("Enter");
-  await dialog
-    .getByRole("button", { name: "Demonstração", exact: true })
-    .focus();
+  await dialog.getByRole("link", { name: "Demonstração", exact: true }).focus();
   await page.keyboard.press("Enter");
   await expect(
     page.getByRole("heading", { name: "Demonstração", exact: true }),
@@ -734,7 +728,7 @@ test("saldo abre títulos com busca e vencimento preservados e retorno mantém r
 }) => {
   await login(page);
   const overdue = await (
-    await page.request.get("/api/v1/receivables?status=overdue&page_size=1")
+    await page.request.get("/api/v2/receivables?status=overdue&page_size=1")
   ).json();
   const title = overdue.items[0];
   await page.locator(".overview-filter-panel summary").click();
@@ -746,7 +740,7 @@ test("saldo abre títulos com busca e vencimento preservados e retorno mantém r
     "1 título em aberto",
   );
   await page
-    .getByRole("button", { name: "Ver títulos vencidos", exact: true })
+    .getByRole("link", { name: "Ver títulos vencidos", exact: true })
     .focus();
   await page.keyboard.press("Enter");
   await expect(page.locator("#main-content")).toBeFocused();
@@ -759,7 +753,7 @@ test("saldo abre títulos com busca e vencimento preservados e retorno mantém r
   await expect(page.locator('[name="due_from"]')).toHaveValue(title.due_date);
   await expect(page.locator("tbody tr")).toHaveCount(1);
   await page
-    .getByRole("button", { name: title.external_receivable_id, exact: true })
+    .getByRole("link", { name: title.external_receivable_id, exact: true })
     .focus();
   await page.keyboard.press("Enter");
   await expect(page.locator("#main-content")).toBeFocused();
@@ -768,7 +762,7 @@ test("saldo abre títulos com busca e vencimento preservados e retorno mantém r
     releaseReturn = resolve;
   });
   await page.route(
-    "**/api/v1/receivables?**",
+    "**/api/v2/receivables?**",
     async (route) => {
       await delayedReturn;
       await route.continue();
@@ -810,7 +804,7 @@ test("saldo abre títulos com busca e vencimento preservados e retorno mantém r
   await expect(page.locator('[name="due_from"]')).toBeFocused();
   await navigate(page, "Resumo");
   await page
-    .getByRole("button", { name: "Ver títulos em dia", exact: true })
+    .getByRole("link", { name: "Ver títulos em dia", exact: true })
     .focus();
   await page.keyboard.press("Enter");
   await expect(page.locator("#main-content")).toBeFocused();
@@ -944,7 +938,7 @@ test("detalhe do lembrete preserva filtros, página, rolagem e foco na fila", as
   await page
     .getByRole("button", { name: "Filtrar títulos", exact: true })
     .click();
-  await page.getByRole("button", { name: "TIT-0001", exact: true }).click();
+  await page.getByRole("link", { name: "TIT-0001", exact: true }).click();
   await page
     .getByRole("button", { name: "Ver tentativas", exact: true })
     .first()
@@ -971,7 +965,7 @@ test("voltar do título preserva a página e o foco, com saída para página esv
     await page.getByRole("button", { name: "Próxima", exact: true }).click();
     await expect(page.locator(".pagination")).toContainText("Página 2");
     const title = await page.locator(".row-link").last().innerText();
-    await page.getByRole("button", { name: title, exact: true }).click();
+    await page.getByRole("link", { name: title, exact: true }).click();
     await expect(
       page.getByRole("heading", { name: title, exact: true }),
     ).toBeVisible();
@@ -981,18 +975,18 @@ test("voltar do título preserva a página e o foco, com saída para página esv
     await expect(page.locator(".pagination")).toContainText("Página 2");
     await expect(page.getByLabel("Cliente ou título")).toHaveValue("TIT-");
     await expect(
-      page.getByRole("button", { name: title, exact: true }),
+      page.getByRole("link", { name: title, exact: true }),
     ).toBeFocused();
   }
 
   const heldTitle = await page.locator(".row-link").last().innerText();
-  await page.getByRole("button", { name: heldTitle, exact: true }).click();
+  await page.getByRole("link", { name: heldTitle, exact: true }).click();
   let releaseReturn!: () => void;
   const delayedReturn = new Promise<void>((resolve) => {
     releaseReturn = resolve;
   });
   await page.route(
-    "**/api/v1/receivables?**",
+    "**/api/v2/receivables?**",
     async (route) => {
       await delayedReturn;
       await route.continue();
@@ -1013,9 +1007,9 @@ test("voltar do título preserva a página e o foco, com saída para página esv
   await expect(page.getByLabel("Cliente ou título")).toHaveValue("TIT-00");
 
   const title = await page.locator(".row-link").last().innerText();
-  await page.getByRole("button", { name: title, exact: true }).click();
+  await page.getByRole("link", { name: title, exact: true }).click();
   // Resposta controlada: os títulos da segunda página deixaram o recorte enquanto o detalhe estava aberto.
-  await page.route("**/api/v1/receivables?**", async (route) => {
+  await page.route("**/api/v2/receivables?**", async (route) => {
     const response = await route.fetch();
     const body = await response.json();
     await route.fulfill({
@@ -1032,7 +1026,7 @@ test("voltar do título preserva a página e o foco, com saída para página esv
   await expect(
     page.getByRole("heading", { name: "Títulos", exact: true }),
   ).toBeFocused();
-  await page.unroute("**/api/v1/receivables?**");
+  await page.unroute("**/api/v2/receivables?**");
   await page
     .getByRole("button", { name: "Voltar à primeira página", exact: true })
     .click();

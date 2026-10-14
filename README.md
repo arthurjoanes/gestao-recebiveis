@@ -52,7 +52,7 @@ flowchart TB
     Worker["Worker Python<br/>etapas D-3 / D0 / D+3 / D+7<br/>lease e token de posse"]
     Fake["FakeProvider no worker<br/>resultado por tentativa<br/>entrega por chave idempotente"]
     Browser -->|"HTTP · cookie e CSRF"| Web
-    Web -->|"proxy /api/v1"| API
+    Web -->|"proxy /api/v1 e /api/v2"| API
     API -->|"SQL · commit antes da resposta"| DB
     DB -.->|"polling de jobs"| Worker
     Worker -->|"autoriza e finaliza em transações"| DB
@@ -168,6 +168,6 @@ Código sob [licença MIT](LICENSE). IBM Plex Sans mantém a [licença OFL 1.1](
 
 A carteira mostra valor original, recebido e saldo. Uma parcela mantém o título aberto; quitar o saldo encerra o título e cancela as pendências de lembrete. Aging distribui o saldo aberto entre em dia, 1–30, 31–60, 61–90 e acima de 90 dias. O extrato identifica o cliente pelo ID e código externo, lista títulos e recebimentos e permite impressão pelo navegador.
 
-O [contrato da evolução](docs/evolucao-20261012.md) descreve migração, filtros, repetição após resposta perdida e limites dos relatórios. Resultados desta versão estão em [verificação](docs/verification.md); recibos e imagens de 2026 anteriores continuam históricos.
+O [contrato da evolução](docs/evolucao-20261012.md) descreve migração, filtros, repetição após resposta perdida e limites dos relatórios. Resultados desta versão estão em [verificação](docs/verification.md); recibos e imagens de execuções anteriores conservam suas datas e versões.
 
 A confirmação mostra valor a registrar e saldo resultante. Pagamentos com resposta perdida conservam a mesma intenção para recuperação; logout limpa o contexto local, e respostas de outra sessão são descartadas. Carteira, aging e extrato mantêm valores completos e contexto de navegação. Os [critérios de interface](docs/frontend-quality.md) descrevem acessibilidade, estados e testes.

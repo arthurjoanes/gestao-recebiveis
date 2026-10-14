@@ -143,7 +143,12 @@ export async function api<T>(
   if (csrf) headers.set("X-CSRF-Token", csrf);
   let response: Response;
   try {
-    response = await fetch(`/api/v1${path}`, {
+    const readV2 =
+      (!options.method || options.method === "GET") &&
+      /^\/(?:receivables(?:\/\d+)?|reports\/aging|customers\/\d+\/statement)(?:\?|$)/.test(
+        path,
+      );
+    response = await fetch(`/api/${readV2 ? "v2" : "v1"}${path}`, {
       ...options,
       headers,
       credentials: "same-origin",

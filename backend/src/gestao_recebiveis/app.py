@@ -17,7 +17,7 @@ from gestao_recebiveis.config import get_settings
 from gestao_recebiveis.database import SessionLocal, engine
 from gestao_recebiveis.errors import DomainError
 from gestao_recebiveis.request_limits import RequestBodyLimitMiddleware
-from gestao_recebiveis.routes import router
+from gestao_recebiveis.routes import read_router, router
 
 logger = logging.getLogger("gestao_recebiveis.api")
 
@@ -40,6 +40,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 app.include_router(router)
+app.include_router(read_router)
 app.add_middleware(RequestBodyLimitMiddleware)
 app.mount("/assets/swagger", StaticFiles(directory=swagger_ui_path), name="swagger")
 

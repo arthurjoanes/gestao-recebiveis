@@ -9,6 +9,7 @@ from gestao_recebiveis.audit import record
 from gestao_recebiveis.errors import DomainError
 from gestao_recebiveis.import_csv import MAX_BYTES, parse
 from gestao_recebiveis.models import Customer, ImportBatch, ImportLine, Receivable
+from gestao_recebiveis.schemas import reject_nul
 
 
 def analyze(
@@ -142,6 +143,10 @@ def save_lines(session: Session, batch: ImportBatch) -> None:
 
 
 def create_preview(session: Session, filename: str, content: bytes, actor_id: int) -> ImportBatch:
+    try:
+        reject_nul(filename)
+    except ValueError as exc:
+        raise DomainError("invalid_filename", "Nome do arquivo não pode conter NUL.", 422) from exc
     if len(content) > MAX_BYTES:
         raise DomainError("file_too_large", "Arquivo maior que 2 MiB.", 413)
     batch = ImportBatch(

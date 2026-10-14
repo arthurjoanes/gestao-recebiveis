@@ -1,4 +1,5 @@
 "use client";
+import { RouteLink } from "@/lib/workspace-route";
 import { useState } from "react";
 import type { Session } from "@/lib/types";
 import { Brand } from "./brand";
@@ -40,18 +41,27 @@ export function WorkspaceNavigation({
   const navigation = (
     <nav aria-label="Navegação principal">
       {areas.map((item) => (
-        <button
+        <RouteLink
+          to={{
+            area: item.id,
+            statementOrigin: null,
+            titleId: null,
+            customerId: null,
+            reminderId: null,
+            titleOrigin: { kind: "portfolio" },
+            titleFilters: { q: "", status: "", due_from: "", due_to: "" },
+          }}
           key={item.id}
           className={area === item.id ? "active" : ""}
           aria-current={area === item.id ? "page" : undefined}
-          onClick={() => navigate(item.id)}
+          onNavigate={() => navigate(item.id)}
         >
           <Icon name={item.id} />
           {item.label}
           {area === item.id && (
             <span className="nav-current" aria-hidden="true" />
           )}
-        </button>
+        </RouteLink>
       ))}
     </nav>
   );

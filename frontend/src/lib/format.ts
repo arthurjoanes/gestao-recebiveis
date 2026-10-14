@@ -48,3 +48,20 @@ export function nextAttempt(
     ? instant(job.next_attempt_at)
     : "—";
 }
+
+export const bucketOptions = [
+  { key: "current", label: "Em dia (inclui hoje)" },
+  { key: "1_30", label: "1–30 dias" },
+  { key: "31_60", label: "31–60 dias" },
+  { key: "61_90", label: "61–90 dias" },
+  { key: "over_90", label: "Acima de 90 dias" },
+];
+export function bucketLabel(key: string): string {
+  return (
+    bucketOptions.find((option) => option.key === key)?.label ??
+    "Todas as faixas"
+  );
+}
+export function titleCount(count: number): string {
+  return `${count} ${count === 1 ? "título" : "títulos"}`;
+}

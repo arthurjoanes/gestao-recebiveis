@@ -30,6 +30,68 @@ BASE = [
 ]
 
 
+def test_json_query_and_filename_nul_rejected_without_financial_changes(
+    client: TestClient, db: Session
+) -> None:
+    headers = login(client)
+    load(db)
+    title = db.scalar(select(Receivable).order_by(Receivable.id))
+    assert title is not None
+    db.commit()
+
+    def counts():
+        return tuple(db.scalar(select(func.count(model.id))) for model in (Payment, AuditEvent))
+
+    before = counts()
+    for field in ("note", "idempotency_key"):
+        body = {"idempotency_key": "valid-nul-test-key", "note": "", "amount_cents": "1"}
+        body[field] = "prefix\x00suffix"
+        response = client.post(
+            f"/api/v1/receivables/{title.id}/payments", json=body, headers=headers
+        )
+        assert response.status_code == 422
+        assert response.json()["details"][0]["field"] == f"body.{field}"
+    assert (
+        client.post(
+            f"/api/v1/receivables/{title.id}/cancel", json={"reason": "a\x00bc"}, headers=headers
+        ).status_code
+        == 422
+    )
+    assert (
+        client.post(
+            "/api/v1/auth/login",
+            json={"email": "a\x00@example.com", "password": "synthetic"},
+            headers=headers,
+        ).status_code
+        == 422
+    )
+    assert client.get("/api/v2/receivables", params={"q": "a\x00b"}).status_code == 422
+    assert (
+        client.post(
+            "/api/v1/imports",
+            headers={**headers, "Content-Type": "multipart/form-data; boundary=nul-test"},
+            content=b'--nul-test\r\nContent-Disposition: form-data; name="file"; filename="bad\x00.csv"\r\nContent-Type: text/csv\r\n\r\n'
+            + export_row(BASE)
+            + b"\r\n--nul-test--\r\n",
+        ).status_code
+        == 422
+    )
+    assert counts() == before
+    assert client.get(f"/api/v2/receivables/{title.id}").json()["paid_cents"] == "0"
+    assert (
+        client.post(
+            f"/api/v1/receivables/{title.id}/payments",
+            headers=headers,
+            json={
+                "idempotency_key": "unicode-good-key",
+                "note": "São José 😀\nConferido",
+                "amount_cents": "1",
+            },
+        ).status_code
+        == 200
+    )
+
+
 def export_row(values: list[str], *, bom: bool = False) -> bytes:
     output = io.StringIO(newline="")
     writer = csv.writer(output)
