@@ -81,6 +81,7 @@ O [Compose](compose.yaml) publica frontend/API apenas em loopback e mantém o ba
   <img src="docs/stack/python.svg" alt="Python" width="64" height="64">
   <img src="docs/stack/fastapi.svg" alt="FastAPI" width="64" height="64">
   <img src="docs/stack/postgresql.svg" alt="PostgreSQL" width="64" height="64">
+  <img src="docs/stack/sqlalchemy.svg" alt="SQLAlchemy" width="64" height="64">
   <img src="docs/stack/typescript.svg" alt="TypeScript" width="64" height="64">
   <img src="docs/stack/react.svg" alt="React" width="64" height="64">
   <img src="docs/stack/nextjs.svg" alt="Next.js" width="64" height="64">
@@ -171,3 +172,5 @@ A carteira mostra valor original, recebido e saldo. Uma parcela mantém o títul
 O [contrato da evolução](docs/evolucao-20261012.md) descreve migração, filtros, repetição após resposta perdida e limites dos relatórios. Resultados desta versão estão em [verificação](docs/verification.md); recibos e imagens de execuções anteriores conservam suas datas e versões.
 
 A confirmação mostra valor a registrar e saldo resultante. Pagamentos com resposta perdida conservam a mesma intenção para recuperação; logout limpa o contexto local, e respostas de outra sessão são descartadas. Carteira, aging e extrato mantêm valores completos e contexto de navegação. Os [critérios de interface](docs/frontend-quality.md) descrevem acessibilidade, estados e testes.
+
+Fontes dos ícones e cartões: [documentação da stack](docs/stack/README.md).
