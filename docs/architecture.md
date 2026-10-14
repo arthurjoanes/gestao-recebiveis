@@ -30,7 +30,7 @@ flowchart TB
         Queue[("reminders · attempts<br/>reminder_day_guards")]
         ProviderLedger[("provider_results · deliveries")]
     end
-    Browser -->|"HTTP /api/v1 · cookie e CSRF"| Web
+    Browser -->|"HTTP /api/v1 e /api/v2 · cookie e CSRF"| Web
     Web -->|"proxy HTTP na rede Compose"| Guard
     Guard -->|"identidade e estado demo"| Access
     Guard -->|"operador: importar"| Import
@@ -40,7 +40,6 @@ flowchart TB
     Financial -->|"cancela pendências na mesma transação"| Queue
     Schedule -->|"lê vencimentos e estado do título"| Ledger
     Schedule -->|"insere etapa e reserva diária"| Queue
-    Queue -.->|"polling independente do HTTP"| Execute
     Execute -->|"revalida título sob lock"| Ledger
     Execute -->|"claim e atualização com lease/token"| Queue
     Execute -->|"após commit da autorização"| Fake
@@ -48,11 +47,11 @@ flowchart TB
     Fake -->|"grava resultado e entrega"| ProviderLedger
 ```
 
-Setas contínuas são chamadas ou acessos síncronos dentro de cada fluxo. A pontilhada marca a retirada de trabalho durável em segundo plano: o worker consulta o banco, não recebe mensagens da API. `FakeProvider` também lê o payload de `attempts`; seu ledger fica no mesmo banco para permitir reproduzir resposta perdida e reinício.
+As setas são chamadas ou acessos síncronos dentro de cada fluxo. O worker consulta a fila no banco por polling, independentemente do HTTP; não recebe mensagens da API. A seta de claim inclui essa consulta e a atualização da posse. `FakeProvider` também lê o payload de `attempts`; seu ledger fica no mesmo banco para permitir reproduzir resposta perdida e reinício.
 
 | Módulo / processo | Entrada → responsabilidade → saída | Fronteira |
 | --- | --- | --- |
-| [Cliente HTTP](../frontend/src/lib/api.ts) e [proxy](../frontend/next.config.ts) | Formulários e filtros → `/api/v1` com sessão/CSRF → estados de tela | A interface apresenta o resultado confirmado; não decide saldos |
+| [Cliente HTTP](../frontend/src/lib/api.ts) e [proxy](../frontend/next.config.ts) | Formulários em `/api/v1` e consultas financeiras paginadas em `/api/v2`, com sessão/CSRF → estados de tela | A interface apresenta o resultado confirmado; não decide saldos |
 | [Autenticação](../backend/src/gestao_recebiveis/auth.py) e [admissão de login](../backend/src/gestao_recebiveis/login_admission.py) | Cookie ou credenciais → usuário/perfil → acesso ou 401/403 | Login reserva cota em transação independente; falha de senha não desfaz a reserva |
 | [Importação](../backend/src/gestao_recebiveis/imports.py) | CSV persistido → validação, comparação e confirmação → lote com relatório | Savepoint isola alterações financeiras do diagnóstico de rejeição |
 | [Recebíveis](../backend/src/gestao_recebiveis/receivables.py) | Título + chave e valor opcional → locks e saldo → recebimento parcial ou quitação | Recebimento e auditoria compartilham commit; quitação cancela pendências |
@@ -94,7 +93,7 @@ Esses limites são exercitados em [`test_financial.py`](../backend/tests/test_fi
 
 ## Contratos HTTP
 
-Rotas sob `/api/v1` recebem entradas Pydantic e declaram modelos de resposta em `responses.py`. Centavos atravessam JSON como strings de inteiros não negativos; timestamps exigem fuso, estados são explícitos e listas seguem paginação tipada. Serializadores selecionam os campos públicos; senhas e conteúdo bruto dos lotes não fazem parte das respostas. O [contrato HTTP](api-contract.md) resume os recursos e o Swagger local expõe o OpenAPI.
+Rotas recebem entradas Pydantic e declaram modelos de resposta em `responses.py`. Autenticação, mutações e consultas operacionais continuam sob `/api/v1`. O frontend usa `/api/v2` para carteira, aging, extrato e detalhe do título: listas devolvem resumos, e o detalhe pagina recebimentos, eventos e lembretes. A v1 conserva o histórico completo para compatibilidade. Centavos atravessam JSON como strings de inteiros não negativos; timestamps exigem fuso e estados são explícitos. Serializadores selecionam os campos públicos; senhas e conteúdo bruto dos lotes não fazem parte das respostas. Os contratos [v1](api-contract.md) e [v2](api-read-v2.md) detalham os recursos; o Swagger local expõe o OpenAPI.
 
 O upload aceita CSV UTF-8 até 2 MiB e 5.000 registros. Um middleware limita o corpo antes do parser, inclusive sem `Content-Length`: upload com 64 KiB adicionais de envelope, demais mutações com 8 KiB. A confirmação sempre relê o conteúdo persistido e revalida o estado do banco. A lista de lotes projeta apenas o resumo necessário à tabela; relatórios completos pertencem ao endpoint de detalhe.
 

@@ -7,15 +7,20 @@ async function login(page: Page, role = "operador", visit = true) {
   await page.getByLabel("E-mail", { exact: true }).fill(`${role}@example.com`);
   await page.getByLabel("Senha", { exact: true }).fill("Recebiveis!2026");
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
-  await expect(
-    page.getByRole("heading", { name: "Resumo", exact: true }),
-  ).toBeVisible();
+  if (visit) {
+    await expect(
+      page.getByRole("heading", { name: "Resumo", exact: true }),
+    ).toBeVisible();
+  } else {
+    // Authentication resumes the URL, including when switching accounts.
+    await expect(page.locator(".workspace")).toBeVisible();
+  }
 }
 
 async function navigate(page: Page, name: string) {
   await page
     .getByRole("navigation", { name: "Navegação principal" })
-    .getByRole("button", { name, exact: true })
+    .getByRole("link", { name, exact: true })
     .click();
 }
 
@@ -64,10 +69,10 @@ async function openFreshTitle(page: Page, session: Session) {
     ).ok(),
   ).toBe(true);
   const list = await (
-    await page.request.get(`/api/v1/receivables?q=${code}`)
+    await page.request.get(`/api/v2/receivables?q=${code}`)
   ).json();
   const title: ReceivableDetail = await (
-    await page.request.get(`/api/v1/receivables/${list.items[0].id}`)
+    await page.request.get(`/api/v2/receivables/${list.items[0].id}`)
   ).json();
   await navigate(page, "Títulos");
   if (!(await page.getByLabel("Cliente ou título").isVisible()))
@@ -78,7 +83,7 @@ async function openFreshTitle(page: Page, session: Session) {
   await page
     .getByRole("button", { name: "Filtrar títulos", exact: true })
     .click();
-  await page.getByRole("button", { name: code, exact: true }).click();
+  await page.getByRole("link", { name: code, exact: true }).click();
   await expect(
     page.getByRole("heading", { name: code, exact: true }),
   ).toBeVisible();
@@ -417,7 +422,7 @@ test("timeout real de pagamento conserva chave e payload sem reenviar automatica
   ).toBeEnabled();
   expect(requests).toBe(1);
   const after: ReceivableDetail = await (
-    await page.request.get(`/api/v1/receivables/${title.id}`)
+    await page.request.get(`/api/v2/receivables/${title.id}`)
   ).json();
   expect(after.payments).toEqual(title.payments);
   expect(after.paid_cents).toBe(title.paid_cents);

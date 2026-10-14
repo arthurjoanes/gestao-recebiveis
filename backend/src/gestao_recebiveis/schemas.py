@@ -1,8 +1,25 @@
 import re
 from datetime import datetime
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr, field_validator
+from pydantic import (
+    AfterValidator,
+    BaseModel,
+    ConfigDict,
+    Field,
+    StrictBool,
+    StrictStr,
+    field_validator,
+)
+
+
+def reject_nul(value: str) -> str:
+    if "\x00" in value:
+        raise ValueError("O campo não pode conter o caractere NUL.")
+    return value
+
+
+DatabaseText = Annotated[str, AfterValidator(reject_nul)]
 
 
 class Input(BaseModel):
@@ -12,13 +29,13 @@ class Input(BaseModel):
 class LoginInput(Input):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=False)
 
-    email: str = Field(min_length=3, max_length=254)
+    email: DatabaseText = Field(min_length=3, max_length=254)
     password: str = Field(min_length=1, max_length=200)
 
 
 class PaymentInput(Input):
-    idempotency_key: str = Field(min_length=8, max_length=100)
-    note: str = Field(default="", max_length=500)
+    idempotency_key: DatabaseText = Field(min_length=8, max_length=100)
+    note: DatabaseText = Field(default="", max_length=500)
     amount_cents: StrictStr | None = Field(
         default=None,
         pattern=r"^[1-9][0-9]{0,18}$",
@@ -43,7 +60,7 @@ class PaymentInput(Input):
 
 
 class CancelInput(Input):
-    reason: str = Field(min_length=3, max_length=500)
+    reason: DatabaseText = Field(min_length=3, max_length=500)
 
 
 class ClockInput(Input):

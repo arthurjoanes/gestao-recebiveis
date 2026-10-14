@@ -17,7 +17,10 @@ export function ResponsiveFilters({
   function applied() {
     if (window.matchMedia("(max-width: 900px)").matches) {
       setExpanded(false);
-      document.getElementById(`${id}-toggle`)?.focus();
+      // Applied URL filters may remount the form; focus its current toggle.
+      requestAnimationFrame(() =>
+        document.getElementById(`${id}-toggle`)?.focus(),
+      );
     }
   }
   return (

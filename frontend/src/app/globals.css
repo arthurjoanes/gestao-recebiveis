@@ -898,7 +898,7 @@ summary {
   display: grid;
   gap: 6px;
 }
-.mobile-navigation nav button {
+.mobile-navigation nav a {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -910,7 +910,7 @@ summary {
   border-radius: 4px;
   color: var(--ink);
 }
-.mobile-navigation nav button.active {
+.mobile-navigation nav a.active {
   background: var(--accent-soft);
   border-color: var(--accent);
   color: var(--accent-dark);

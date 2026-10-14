@@ -1,6 +1,6 @@
 # Recuperar a carteira sem repetir seus efeitos
 
-As quatro imagens desta página são **históricas**, vinculadas ao manifesto da restauração. Mantêm o layout da execução original; veja as [telas atuais](image-captures.md) para a composição servida hoje.
+As quatro capturas da prova de setembro e as cinco da evolução de outubro são **históricas**, vinculadas aos respectivos manifestos de restauração. Mantêm o layout de cada execução; o [guia de capturas](image-captures.md) identifica datas, estados e reprodução.
 
 Restaurar um banco não basta para retomar cobranças: é preciso preservar a baixa já registrada e descobrir se uma tentativa pendente já foi aceita. Esta prova restaura uma carteira sintética em outro volume e confere esses fatos antes de continuar. O caso representa um risco técnico do domínio; não é um incidente de cliente.
 

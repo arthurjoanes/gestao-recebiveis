@@ -1,11 +1,12 @@
 "use client";
+import { RouteLink } from "@/lib/workspace-route";
 import { useState } from "react";
 import { query } from "@/lib/api";
 import { date, instant, money } from "@/lib/format";
 import { useResource } from "@/lib/use-resource";
 import {
   OverviewFilterForm,
-  emptyOverviewFilters,
+  type OverviewFilters,
   portfolioScope,
 } from "./overview-filters";
 import type { PortfolioFilters } from "./receivables";
@@ -15,11 +16,14 @@ import { Alert, Badge, Empty, Icon, Loading } from "@/components/ui";
 export function OverviewView({
   onOpen,
   onTitles,
+  filters,
+  onFiltersChange: setFilters,
 }: {
   onOpen: (id: number) => void;
   onTitles: (filters: PortfolioFilters) => void;
+  filters: OverviewFilters;
+  onFiltersChange: (filters: OverviewFilters) => void;
 }) {
-  const [filters, setFilters] = useState(emptyOverviewFilters);
   const [revision, setRevision] = useState(0);
   const overview = useResource<Overview>(
     `/overview?${query({ ...filters })}`,
@@ -83,24 +87,48 @@ export function OverviewView({
                       {portfolioScope(filters)}
                       {filters.q ? ` · Busca: ${filters.q}` : ""}
                     </small>
-                    <button
+                    <RouteLink
+                      to={{
+                        area: "titles",
+                        titleId: null,
+                        customerId: null,
+                        titleOrigin: { kind: "portfolio" },
+                        titleFilters: {
+                          q: filters.q,
+                          due_from: filters.due_from,
+                          due_to: filters.due_to,
+                          status: "open",
+                        },
+                      }}
                       className="text-button"
-                      onClick={() => openTitles("open")}
+                      onNavigate={() => openTitles("open")}
                     >
                       Ver títulos em aberto <Icon name="right" />
-                    </button>
+                    </RouteLink>
                   </article>
                   <article className="metric metric-overdue">
                     <div className="metric-label">Vencido</div>
                     <strong>{money(data.overdue_cents)}</strong>
                     <p>{data.overdue_count} títulos · parte do aberto</p>
                     <small>Antes de {date(data.business_date)}</small>
-                    <button
+                    <RouteLink
+                      to={{
+                        area: "titles",
+                        titleId: null,
+                        customerId: null,
+                        titleOrigin: { kind: "portfolio" },
+                        titleFilters: {
+                          q: filters.q,
+                          due_from: filters.due_from,
+                          due_to: filters.due_to,
+                          status: "overdue",
+                        },
+                      }}
                       className="text-button"
-                      onClick={() => openTitles("overdue")}
+                      onNavigate={() => openTitles("overdue")}
                     >
                       Ver títulos vencidos <Icon name="right" />
-                    </button>
+                    </RouteLink>
                   </article>
                   <article className="metric metric-current">
                     <div className="metric-label">Em dia</div>
@@ -109,12 +137,24 @@ export function OverviewView({
                     <small>
                       A partir de {date(data.business_date)} · inclui hoje
                     </small>
-                    <button
+                    <RouteLink
+                      to={{
+                        area: "titles",
+                        titleId: null,
+                        customerId: null,
+                        titleOrigin: { kind: "portfolio" },
+                        titleFilters: {
+                          q: filters.q,
+                          due_from: filters.due_from,
+                          due_to: filters.due_to,
+                          status: "current",
+                        },
+                      }}
                       className="text-button"
-                      onClick={() => openTitles("current")}
+                      onNavigate={() => openTitles("current")}
                     >
                       Ver títulos em dia <Icon name="right" />
-                    </button>
+                    </RouteLink>
                   </article>
                 </div>
                 <article className="metric metric-accent">
@@ -151,12 +191,24 @@ export function OverviewView({
                   <h2>Títulos vencidos</h2>
                 </div>
                 <div className="attention-actions">
-                  <button
+                  <RouteLink
+                    to={{
+                      area: "titles",
+                      titleId: null,
+                      customerId: null,
+                      titleOrigin: { kind: "portfolio" },
+                      titleFilters: {
+                        q: filters.q,
+                        due_from: filters.due_from,
+                        due_to: filters.due_to,
+                        status: "overdue",
+                      },
+                    }}
                     className="text-button"
-                    onClick={() => openTitles("overdue")}
+                    onNavigate={() => openTitles("overdue")}
                   >
                     Ver todos os vencidos <Icon name="right" />
-                  </button>
+                  </RouteLink>
                 </div>
               </div>
               {urgent.error ? (
@@ -183,12 +235,13 @@ export function OverviewView({
                       {urgent.data.items.map((item) => (
                         <tr key={item.id}>
                           <td>
-                            <button
+                            <RouteLink
+                              to={{ area: "titles", titleId: item.id }}
                               className="text-button row-link"
-                              onClick={() => onOpen(item.id)}
+                              onNavigate={() => onOpen(item.id)}
                             >
                               {item.customer_name}
-                            </button>
+                            </RouteLink>
                             <small>{item.external_receivable_id}</small>
                           </td>
                           <td>{date(item.due_date)}</td>

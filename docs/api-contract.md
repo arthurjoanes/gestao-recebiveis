@@ -1,5 +1,7 @@
 # Contrato HTTP v1
 
+As leituras de carteira, aging, extrato e detalhe têm uma [versão v2 com resumos e histórico paginado](api-read-v2.md), usada pelo frontend atual. A v1 abaixo permanece para compatibilidade; autenticação e mutações continuam nesta versão.
+
 Base `/api/v1`, JSON e nomes `snake_case`. Valores `*_cents` são strings de inteiros; datas usam `YYYY-MM-DD` e instantes ISO com fuso. `paid_at` é serializado em UTC. IDs inteiros vão de 1 a 2.147.483.647.
 
 ## Sessão e erros

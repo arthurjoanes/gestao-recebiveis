@@ -20,7 +20,7 @@ async function navigate(page: Page, name: string) {
     await page.getByRole("button", { name: "Menu", exact: true }).click();
   await page
     .getByRole("navigation", { name: "Navegação principal" })
-    .getByRole("button", { name, exact: true })
+    .getByRole("link", { name, exact: true })
     .click();
 }
 async function openTitle(page: Page, code: string) {
@@ -33,7 +33,7 @@ async function openTitle(page: Page, code: string) {
   await page
     .getByRole("button", { name: "Filtrar títulos", exact: true })
     .click();
-  await page.getByRole("button", { name: code, exact: true }).click();
+  await page.getByRole("link", { name: code, exact: true }).click();
   await expect(
     page.getByRole("heading", { name: code, exact: true }),
   ).toBeVisible();
@@ -67,10 +67,10 @@ async function createTitle(page: Page, count = 1) {
   );
   expect(confirmation.ok()).toBe(true);
   const list = await (
-    await page.request.get(`/api/v1/receivables?q=${code}`)
+    await page.request.get(`/api/v2/receivables?q=${code}`)
   ).json();
   const title: ReceivableDetail = await (
-    await page.request.get(`/api/v1/receivables/${list.items[0].id}`)
+    await page.request.get(`/api/v2/receivables/${list.items[0].id}`)
   ).json();
   return { session, title, code, headers };
 }
@@ -151,9 +151,9 @@ test("resposta perdida após commit conserva intenção ao reabrir e recarregar,
   );
   await page.reload();
   await expect(
-    page.getByRole("heading", { name: "Resumo", exact: true }),
+    page.getByRole("heading", { name: code, exact: true }),
   ).toBeVisible();
-  await openTitle(page, code);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   await page
     .getByRole("button", { name: "Resolver pagamento pendente", exact: true })
     .click();
@@ -207,7 +207,7 @@ test("resposta perdida após commit conserva intenção ao reabrir e recarregar,
     await page.evaluate((key) => sessionStorage.getItem(key), storageKey),
   ).toBeNull();
   const after: ReceivableDetail = await (
-    await page.request.get(`/api/v1/receivables/${title.id}`)
+    await page.request.get(`/api/v2/receivables/${title.id}`)
   ).json();
   expect(after.payments).toHaveLength(1);
   expect(after.paid_cents).toBe("1");
@@ -232,7 +232,7 @@ test("resposta perdida após commit conserva intenção ao reabrir e recarregar,
     .click();
   await expect(page.getByText("Pago", { exact: true })).toBeVisible();
   const paid: ReceivableDetail = await (
-    await page.request.get(`/api/v1/receivables/${title.id}`)
+    await page.request.get(`/api/v2/receivables/${title.id}`)
   ).json();
   expect(paid.payments).toHaveLength(2);
   expect(paid.payment).toBeNull();
@@ -343,7 +343,7 @@ test("replay rejeitado após lookup resolve intenção perdida antes de permitir
   );
   expect(acceptedPayload?.amount_cents).toBe("25");
   const after: ReceivableDetail = await (
-    await page.request.get(`/api/v1/receivables/${title.id}`)
+    await page.request.get(`/api/v2/receivables/${title.id}`)
   ).json();
   expect(after.payments.map((payment) => payment.amount_cents)).toEqual([
     "75",
@@ -440,7 +440,7 @@ test("intenção que expira com diálogo aberto exige histórico e só reenvia c
   );
   expect(replayRequests).toBe(1);
   const after: ReceivableDetail = await (
-    await page.request.get(`/api/v1/receivables/${title.id}`)
+    await page.request.get(`/api/v2/receivables/${title.id}`)
   ).json();
   expect(after.payments).toHaveLength(1);
   expect(
@@ -469,7 +469,7 @@ test("retorno aging, extrato e título preserva recorte e páginas de cada relat
   await expect(page.locator(".pagination")).toContainText("Página 2");
   const rowCode = await page.locator(".row-link").first().innerText();
   await page
-    .getByRole("button", {
+    .getByRole("link", {
       name: `Extrato do cliente ID ${title.customer_id}`,
       exact: true,
     })
@@ -487,13 +487,13 @@ test("retorno aging, extrato e título preserva recorte e páginas de cada relat
   );
   await expect(page.locator('[name="due_from"]')).toHaveValue(title.due_date);
   await expect(page.locator(".pagination")).toContainText("Página 2");
-  await page.getByRole("button", { name: rowCode, exact: true }).click();
+  await page.getByRole("link", { name: rowCode, exact: true }).click();
   await page
     .getByRole("button", { name: "Voltar para o aging", exact: true })
     .click();
   await expect(page.locator(".pagination")).toContainText("Página 2");
   await page
-    .getByRole("button", {
+    .getByRole("link", {
       name: `Extrato do cliente ID ${title.customer_id}`,
       exact: true,
     })
@@ -595,7 +595,7 @@ test("logout e troca de conta limpam intenções, reader consulta relatórios se
     page.getByRole("button", { name: "Cancelar título", exact: true }),
   ).toHaveCount(0);
   await page
-    .getByRole("button", { name: "Extrato do cliente", exact: true })
+    .getByRole("link", { name: "Extrato do cliente", exact: true })
     .click();
   await expect(
     page.getByRole("heading", { name: "Extrato operacional", exact: true }),
@@ -620,14 +620,14 @@ test("aging mantém recorte no drilldown e extrato imprime posição atual com f
     .getByRole("button", { name: "Filtrar aging", exact: true })
     .click();
   await expect(
-    page.getByRole("button", { name: code, exact: true }),
+    page.getByRole("link", { name: code, exact: true }),
   ).toBeVisible();
   await page.screenshot({
     path: info.outputPath("aging-current.png"),
     fullPage: true,
   });
   await page
-    .getByRole("button", {
+    .getByRole("link", {
       name: "Ver títulos da faixa Em dia",
       exact: true,
     })
@@ -635,13 +635,13 @@ test("aging mantém recorte no drilldown e extrato imprime posição atual com f
   await expect(page.getByLabel("Faixa de aging")).toHaveValue("current");
   await expect(
     page.getByRole("combobox", { name: "Situação", exact: true }),
-  ).toHaveValue("");
+  ).toHaveValue("open");
   await expect(page.getByLabel("ID do cliente")).toHaveValue(
     String(title.customer_id),
   );
   await expect(page.getByLabel("Cliente ou título")).toHaveValue(code);
   await expect(page.locator('[name="due_from"]')).toHaveValue(title.due_date);
-  await page.getByRole("button", { name: code, exact: true }).click();
+  await page.getByRole("link", { name: code, exact: true }).click();
   await page
     .getByRole("button", { name: "Registrar pagamento", exact: true })
     .click();
@@ -654,7 +654,7 @@ test("aging mantém recorte no drilldown e extrato imprime posição atual com f
     "Pagamento registrado",
   );
   await page
-    .getByRole("button", { name: "Extrato do cliente", exact: true })
+    .getByRole("link", { name: "Extrato do cliente", exact: true })
     .click();
   await expect(
     page.getByRole("heading", { name: "Extrato operacional", exact: true }),

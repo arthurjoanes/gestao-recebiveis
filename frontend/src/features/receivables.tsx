@@ -1,7 +1,14 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { RouteLink } from "@/lib/workspace-route";
 import { query } from "@/lib/api";
-import { date, money } from "@/lib/format";
+import {
+  date,
+  money,
+  bucketOptions,
+  bucketLabel,
+  titleCount,
+} from "@/lib/format";
 import { useResource } from "@/lib/use-resource";
 import type { Page, Receivable } from "@/lib/types";
 import { ResponsiveFilters } from "@/components/responsive-filters";
@@ -44,15 +51,23 @@ export function ReceivablesView({
   onOpen,
   initialFilters = emptyFilters,
   returnToTitle,
+  onFiltersChange,
 }: {
   onOpen: (id: number, filters: PortfolioFilters) => void;
   initialFilters?: PortfolioFilters;
+  onFiltersChange: (filters: PortfolioFilters) => void;
   returnToTitle?: number | null;
 }) {
-  const [filters, setFilters] = useState({
+  const filters = {
     ...initialFilters,
     page: initialFilters.page ?? 1,
-  });
+  };
+  const setFilters = (
+    next: PortfolioFilters | ((previous: typeof filters) => PortfolioFilters),
+  ) => onFiltersChange(typeof next === "function" ? next(filters) : next);
+  const [selectedBucket, setSelectedBucket] = useState(
+    initialFilters.aging_bucket ?? "",
+  );
   const [periodError, setPeriodError] = useState("");
   const [revision, setRevision] = useState(0);
   const result = useResource<Page<Receivable>>(
@@ -98,7 +113,7 @@ export function ReceivablesView({
               ? "Consultando…"
               : result.error
                 ? "Consulta indisponível"
-                : `${result.data?.total ?? 0} títulos nos filtros atuais`}
+                : `${titleCount(result.data?.total ?? 0)} nos filtros atuais`}
           </span>
         </div>
         <div className="portfolio-workbench">
@@ -109,9 +124,13 @@ export function ReceivablesView({
               filters.q ? `Busca: ${filters.q}` : "Todos os clientes e títulos",
               situationLabels[filters.status] ?? "Todas as situações",
               filters.customer_id ? `Cliente ID ${filters.customer_id}` : "",
-              filters.aging_bucket ? `Aging: ${filters.aging_bucket}` : "",
+              filters.aging_bucket
+                ? `Aging: ${bucketLabel(filters.aging_bucket)}`
+                : "",
               portfolioScope(filters),
-            ].join(" · ")}
+            ]
+              .filter(Boolean)
+              .join(" · ")}
           >
             {(onApplied) => (
               <form
@@ -132,6 +151,7 @@ export function ReceivablesView({
                       ) as HTMLInputElement
                     ).value = "";
                   }
+                  setSelectedBucket("");
                   setFilters({ ...emptyFilters, page: 1 });
                   setPeriodError("");
                 }}
@@ -154,7 +174,9 @@ export function ReceivablesView({
                   setPeriodError("");
                   setFilters({
                     q: String(form.get("q") ?? "").trim(),
-                    status: String(form.get("status") ?? ""),
+                    status: form.get("aging_bucket")
+                      ? "open"
+                      : String(form.get("status") ?? ""),
                     due_from: String(form.get("due_from") ?? ""),
                     due_to: String(form.get("due_to") ?? ""),
                     customer_id: String(form.get("customer_id") ?? "").trim(),
@@ -188,19 +210,39 @@ export function ReceivablesView({
                   Faixa de aging
                   <select
                     name="aging_bucket"
-                    defaultValue={initialFilters.aging_bucket ?? ""}
+                    value={selectedBucket}
+                    onChange={(event) => {
+                      setSelectedBucket(event.target.value);
+                      if (event.target.value)
+                        (
+                          event.currentTarget.form?.elements.namedItem(
+                            "status",
+                          ) as HTMLSelectElement
+                        ).value = "open";
+                    }}
                   >
                     <option value="">Todas</option>
-                    <option value="current">Em dia (inclui hoje)</option>
-                    <option value="1_30">1–30 dias</option>
-                    <option value="31_60">31–60 dias</option>
-                    <option value="61_90">61–90 dias</option>
-                    <option value="over_90">Acima de 90 dias</option>
+                    {bucketOptions.map((option) => (
+                      <option key={option.key} value={option.key}>
+                        {option.label}
+                      </option>
+                    ))}
                   </select>
                 </label>
                 <label>
                   Situação
-                  <select name="status" defaultValue={initialFilters.status}>
+                  <select
+                    name="status"
+                    defaultValue={
+                      initialFilters.aging_bucket
+                        ? "open"
+                        : initialFilters.status
+                    }
+                    disabled={!!selectedBucket}
+                    aria-describedby={
+                      selectedBucket ? "aging-open-help" : undefined
+                    }
+                  >
                     <option value="">Todas</option>
                     <option value="open">Em aberto</option>
                     <option value="overdue">Vencidos</option>
@@ -209,6 +251,11 @@ export function ReceivablesView({
                     <option value="canceled">Cancelados</option>
                   </select>
                 </label>
+                {selectedBucket && (
+                  <p id="aging-open-help" className="muted">
+                    A faixa de aging consulta somente o saldo em aberto.
+                  </p>
+                )}
                 <label>
                   Vencimento de
                   <input
@@ -314,13 +361,19 @@ export function ReceivablesView({
                       {result.data.items.map((item) => (
                         <tr key={item.id}>
                           <td>
-                            <button
+                            <RouteLink
+                              to={{
+                                area: "titles",
+                                titleId: item.id,
+                                titleOrigin: { kind: "portfolio" },
+                                titleFilters: filters,
+                              }}
                               id={`title-open-${item.id}`}
                               className="text-button row-link"
-                              onClick={() => onOpen(item.id, filters)}
+                              onNavigate={() => onOpen(item.id, filters)}
                             >
                               {item.external_receivable_id}
-                            </button>
+                            </RouteLink>
                             <small>{item.source_system}</small>
                           </td>
                           <td>
@@ -344,13 +397,19 @@ export function ReceivablesView({
                             )}
                           </td>
                           <td>
-                            <button
+                            <RouteLink
+                              to={{
+                                area: "titles",
+                                titleId: item.id,
+                                titleOrigin: { kind: "portfolio" },
+                                titleFilters: filters,
+                              }}
                               className="text-button"
                               aria-label={`Abrir título ${item.external_receivable_id}`}
-                              onClick={() => onOpen(item.id, filters)}
+                              onNavigate={() => onOpen(item.id, filters)}
                             >
                               Detalhe
-                            </button>
+                            </RouteLink>
                           </td>
                         </tr>
                       ))}

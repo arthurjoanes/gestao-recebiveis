@@ -19,6 +19,7 @@ export default defineConfig({
     ],
   ],
   use: {
+    channel: process.env.PLAYWRIGHT_CHANNEL,
     baseURL: process.env.BASE_URL ?? "http://localhost:3101",
     locale: "pt-BR",
     timezoneId: "America/Sao_Paulo",

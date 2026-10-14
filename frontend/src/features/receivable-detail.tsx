@@ -1,4 +1,5 @@
 "use client";
+import { RouteLink } from "@/lib/workspace-route";
 import { useEffect, useState } from "react";
 import { api, ApiError, errorMessage } from "@/lib/api";
 import {
@@ -18,7 +19,15 @@ import {
 } from "@/lib/payment-intent";
 import { useResource } from "@/lib/use-resource";
 import type { Payment, ReceivableDetail, Session } from "@/lib/types";
-import { Alert, Badge, Empty, Icon, Loading, Modal } from "@/components/ui";
+import {
+  Alert,
+  Badge,
+  Empty,
+  Icon,
+  Loading,
+  Modal,
+  Pagination,
+} from "@/components/ui";
 
 export function ReceivableDetailView({
   id,
@@ -36,7 +45,15 @@ export function ReceivableDetailView({
   backLabel?: string;
 }) {
   const [revision, setRevision] = useState(0);
-  const result = useResource<ReceivableDetail>(`/receivables/${id}`, revision);
+  const [historyPages, setHistoryPages] = useState({
+    payments: 1,
+    events: 1,
+    reminders: 1,
+  });
+  const result = useResource<ReceivableDetail>(
+    `/receivables/${id}?payment_page=${historyPages.payments}&event_page=${historyPages.events}&reminder_page=${historyPages.reminders}`,
+    revision,
+  );
   const [action, setAction] = useState<"pay" | "cancel" | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -268,12 +285,13 @@ export function ReceivableDetailView({
                 <p className="title-customer">{data.customer_name}</p>
               </div>
               <div className="button-group">
-                <button
+                <RouteLink
+                  to={{ area: "reports", customerId: data.customer_id }}
                   className="button secondary"
-                  onClick={() => onStatement(data.customer_id)}
+                  onNavigate={() => onStatement(data.customer_id)}
                 >
                   Extrato do cliente
-                </button>
+                </RouteLink>
                 <button
                   className="button secondary"
                   onClick={() => setRevision((value) => value + 1)}
@@ -387,11 +405,22 @@ export function ReceivableDetailView({
                 ) : (
                   <Empty title="Sem eventos" />
                 )}
+                <Pagination
+                  {...{
+                    page: data.history.events.page,
+                    total: data.history.events.total,
+                    pageSize: data.history.events.page_size,
+                  }}
+                  label="Paginação dos eventos"
+                  onChange={(page) =>
+                    setHistoryPages((value) => ({ ...value, events: page }))
+                  }
+                />
               </section>
             </div>
             <section className="panel" aria-label="Histórico de recebimentos">
               <div className="section-heading">
-                <h2>Recebimentos ({data.payments.length})</h2>
+                <h2>Recebimentos ({data.history.payments.total})</h2>
               </div>
               {data.payments.length ? (
                 <div
@@ -428,6 +457,17 @@ export function ReceivableDetailView({
               ) : (
                 <Empty title="Nenhum recebimento registrado" />
               )}
+              <Pagination
+                {...{
+                  page: data.history.payments.page,
+                  total: data.history.payments.total,
+                  pageSize: data.history.payments.page_size,
+                }}
+                label="Paginação dos recebimentos do título"
+                onChange={(page) =>
+                  setHistoryPages((value) => ({ ...value, payments: page }))
+                }
+              />
             </section>
             <section className="panel">
               <div className="section-heading">
@@ -479,6 +519,17 @@ export function ReceivableDetailView({
                   Aguardando a próxima etapa pela data comercial.
                 </Empty>
               )}
+              <Pagination
+                {...{
+                  page: data.history.reminders.page,
+                  total: data.history.reminders.total,
+                  pageSize: data.history.reminders.page_size,
+                }}
+                label="Paginação dos lembretes do título"
+                onChange={(page) =>
+                  setHistoryPages((value) => ({ ...value, reminders: page }))
+                }
+              />
             </section>
           </>
         )

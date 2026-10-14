@@ -1,12 +1,8 @@
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import { expect, test } from "@playwright/test";
 import type { AxeResults, RunOptions } from "axe-core";
 
-const axeSource = readFileSync(
-  join(process.cwd(), "node_modules/axe-core/axe.min.js"),
-  "utf8",
-);
+const axeSource = readFileSync(require.resolve("axe-core/axe.min.js"), "utf8");
 
 test("texto ampliado por CSS mantém navegação e números operáveis", async ({
   page,
@@ -53,7 +49,7 @@ test("texto ampliado por CSS mantém navegação e números operáveis", async (
       await page.getByRole("button", { name: "Menu", exact: true }).click();
     await page
       .getByRole("navigation", { name: "Navegação principal" })
-      .getByRole("button", { name: "Aging", exact: true })
+      .getByRole("link", { name: "Aging", exact: true })
       .click();
     await expect(
       page.getByRole("heading", { name: "Carteira no recorte", exact: true }),
@@ -62,6 +58,10 @@ test("texto ampliado por CSS mantém navegação e números operáveis", async (
       await page.evaluate(() => document.documentElement.scrollWidth),
     ).toBeLessThanOrEqual(width);
     await page.reload();
+    await expect(
+      page.getByRole("heading", { name: "Aging da carteira", exact: true }),
+    ).toBeVisible();
+    await page.goto("/?area=overview");
     await expect(page.locator(".metric-open strong")).toBeVisible();
   }
 });
@@ -83,7 +83,7 @@ test("relatórios e confirmação permanecem acessíveis nas cinco larguras", as
       await page.getByRole("button", { name: "Menu", exact: true }).click();
     await page
       .getByRole("navigation", { name: "Navegação principal" })
-      .getByRole("button", { name, exact: true })
+      .getByRole("link", { name, exact: true })
       .click();
   }
   async function scan(name: string, width: number) {
@@ -135,7 +135,7 @@ test("relatórios e confirmação permanecem acessíveis nas cinco larguras", as
         .getByRole("button", { name: "Filtrar títulos", exact: true })
         .click();
       await expect(
-        page.getByRole("button", { name: "TIT-0009", exact: true }),
+        page.getByRole("link", { name: "TIT-0009", exact: true }),
       ).toBeAttached();
       const list = page.locator(".portfolio-results .table-scroll");
       const lastAmount = page
@@ -171,7 +171,7 @@ test("relatórios e confirmação permanecem acessíveis nas cinco larguras", as
         return rect.left >= 0 && rect.right <= innerWidth;
       }),
     ).toBe(true);
-    await page.getByRole("button", { name: "TIT-0001", exact: true }).click();
+    await page.getByRole("link", { name: "TIT-0001", exact: true }).click();
     await page
       .getByRole("button", { name: "Registrar pagamento", exact: true })
       .click();
@@ -183,7 +183,7 @@ test("relatórios e confirmação permanecem acessíveis nas cinco larguras", as
       .getByRole("button", { name: "Fechar diálogo", exact: true })
       .click();
     await page
-      .getByRole("button", { name: "Extrato do cliente", exact: true })
+      .getByRole("link", { name: "Extrato do cliente", exact: true })
       .click();
     await expect(
       page.getByRole("heading", { name: "Totais de todo o recorte" }),
@@ -211,7 +211,7 @@ test("Firefox percorre consulta, título e extrato com perfil leitor", async ({
   playwright,
   baseURL,
 }) => {
-  const browser = await playwright.firefox.launch();
+  const browser = await playwright.firefox.launch({ channel: undefined });
   try {
     const page = await browser.newPage({
       baseURL,
@@ -228,17 +228,17 @@ test("Firefox percorre consulta, título e extrato com perfil leitor", async ({
     await page.getByRole("button", { name: "Menu", exact: true }).click();
     await page
       .getByRole("navigation", { name: "Navegação principal" })
-      .getByRole("button", { name: "Aging", exact: true })
+      .getByRole("link", { name: "Aging", exact: true })
       .click();
     await expect(
       page.getByRole("heading", { name: "Títulos do aging" }),
     ).toBeVisible();
-    await page.getByRole("button", { name: "TIT-0001", exact: true }).click();
+    await page.getByRole("link", { name: "TIT-0001", exact: true }).click();
     await expect(
       page.getByRole("button", { name: "Registrar pagamento", exact: true }),
     ).toHaveCount(0);
     await page
-      .getByRole("button", { name: "Extrato do cliente", exact: true })
+      .getByRole("link", { name: "Extrato do cliente", exact: true })
       .click();
     await expect(
       page.getByRole("heading", { name: "Totais de todo o recorte" }),

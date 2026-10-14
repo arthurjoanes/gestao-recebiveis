@@ -41,13 +41,17 @@ export interface Receivable {
   paid_cents: string;
   remaining_cents: string;
   payment_state: "unpaid" | "partial" | "paid";
-  payments: Payment[];
   due_date: string;
   status: string;
   overdue: boolean;
   scenario: string;
 }
 export interface ReceivableDetail extends Receivable {
+  payments: Payment[];
+  history: Record<
+    "payments" | "events" | "reminders",
+    { total: number; page: number; page_size: number }
+  >;
   payment: Payment | null;
   reminders: Reminder[];
   events: AuditEvent[];

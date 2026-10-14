@@ -37,3 +37,9 @@ As cinco capturas de `screenshots/restore-proof/6e75361b018645ffa98bce7ad338d4d4
 O [coletor](../scripts/capture_restore_story.cjs) consulta após login e espera totais e linhas prontos. O extrato mostra original R$ 125, recebido R$ 75 e saldo R$ 50; o aging inclui apenas o saldo residual do título parcial. A execução anterior `1054efee…` passou financeiramente, mas capturou extrato e aging durante carregamento; suas imagens não representam relatórios prontos.
 
 Capturas não substituem testes de cálculo, identidade ou persistência, nem verificam leitor de tela ou conformidade de acessibilidade integral. Preserve imagens e manifestos de uma prova concluída; novas execuções recebem destinos próprios.
+
+## Leitura visual conferida em 13/10/2026
+
+O Resumo mostra a página completa e distingue saldo aberto de recebimentos. Seus R$ 244.250,17 vencidos e R$ 272.403,60 em dia somam R$ 516.653,77; os R$ 118.316,93 recebidos pertencem a outro recorte. A imagem apresenta indicadores e uma tabela, sem gráfico de série temporal.
+
+Na execução `6e75361b…`, o extrato mostra os dois títulos, os dois recebimentos e a conta R$ 125 − R$ 75 = R$ 50. O aging mostra apenas esse saldo residual na faixa em dia. São páginas completas e legíveis quando abertas; a captura de aging conserva o texto antigo “1 títulos”, anterior à correção de singular/plural. As imagens `06` e `07` de `1054efee…` mostram “Carregando…”, por isso não servem para apresentar o extrato ou o aging concluídos. Permanecem como registro da captura incompleta, já substituída na apresentação pela execução final.

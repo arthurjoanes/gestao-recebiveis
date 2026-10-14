@@ -2,6 +2,12 @@
 
 Este guia descreve os contratos de navegação, estados e acessibilidade do frontend. Regras financeiras e permissões são validadas no servidor; a interface apresenta os dados e preserva a intenção de cada ação.
 
+## Endereços e retomada
+
+Áreas, título, cliente e filtros aplicados de resumo, carteira, aging e extrato ficam na URL (`area`, `title`, `customer` e prefixos `o_`, `t_`, `a_`, `s_`). Recarregar, copiar o endereço e usar Voltar/Avançar restaura a consulta após autenticação. Links aceitam abertura em outra aba. IDs, datas, situações, faixas e páginas são validados ao ler o endereço; parâmetros inválidos recebem valores padrão ou são ajustados aos limites aceitos. A faixa de aging fixa a situação em aberto e explica essa restrição junto ao controle.
+
+Rascunhos e diálogos de pagamento não entram na URL e não são enviados ao restaurar uma consulta. A recuperação da intenção de pagamento continua exigindo ação explícita e preserva a chave original. A navegação não concede acesso: a API continua verificando sessão e perfil. Consultas usam o [contrato v2 de histórico limitado](api-read-v2.md).
+
 ## Valores e estados financeiros
 
 O Resumo distingue o saldo aberto, suas partes vencida e em dia, e os recebimentos do período. Filtros de vencimento e de pagamento têm efeitos diferentes e são identificados junto aos valores. Títulos e relatórios exibem original, recebido e saldo, com centavos completos.

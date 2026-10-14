@@ -34,16 +34,20 @@ from gestao_recebiveis.reminders.views import reminder_view
 from gestao_recebiveis.responses import (
     AgingBucket,
     AgingResponse,
+    AgingSummaryResponse,
     AuthResponse,
     CustomerStatementResponse,
+    CustomerStatementSummaryResponse,
     DemoResponse,
     ImportBatchResponse,
     ImportBatchSummaryResponse,
     LogoutResponse,
     OverviewResponse,
+    PaginatedReceivableDetailResponse,
     PaymentResponse,
     ReceivableDetailResponse,
     ReceivableResponse,
+    ReceivableSummaryResponse,
     ReminderDetailResponse,
     ReminderResponse,
 )
@@ -51,6 +55,7 @@ from gestao_recebiveis.responses import Page as PageResponse
 from gestao_recebiveis.schemas import (
     CancelInput,
     ClockInput,
+    DatabaseText,
     LoginInput,
     PaymentInput,
     ScenarioInput,
@@ -59,10 +64,11 @@ from gestao_recebiveis.schemas import (
 from gestao_recebiveis.views import batch_view, payment_view, title_detail
 
 router = APIRouter(prefix="/api/v1")
+read_router = APIRouter(prefix="/api/v2", tags=["Consultas com históricos limitados"])
 ResourceId = Annotated[int, Path(ge=1, le=2147483647)]
 Page = Annotated[int, Query(ge=1, le=10_000)]
 PageSize = Annotated[int, Query(ge=1, le=100)]
-Search = Annotated[str, Query(max_length=200)]
+Search = Annotated[DatabaseText, Query(max_length=200)]
 CustomerFilter = Annotated[int | None, Query(ge=1, le=2147483647)]
 ReminderStatus = Literal[
     "pending", "processing", "retry_scheduled", "sent", "failed", "canceled", "superseded"
@@ -424,3 +430,116 @@ def set_scenario(body: ScenarioInput, session: Db, user: Operator) -> dict[str, 
         {"scenario": body.scenario},
     )
     return title_detail(session, item)
+
+
+@read_router.get("/receivables", response_model=PageResponse[ReceivableSummaryResponse])
+def titles_v2(
+    session: ReadDb,
+    user: CurrentUser,
+    q: Search = "",
+    status: str | None = None,
+    due_from: date | None = None,
+    due_to: date | None = None,
+    customer_id: CustomerFilter = None,
+    aging_bucket: AgingBucket | None = None,
+    page: Page = 1,
+    page_size: PageSize = 20,
+) -> dict[str, Any]:
+    today = business_date(session)
+    conditions = reporting.title_filters(
+        q, status, due_from, due_to, today, customer_id, aging_bucket
+    )
+    return reporting.list_titles(session, today, conditions, page, page_size, summary=True)
+
+
+@read_router.get("/reports/aging", response_model=AgingSummaryResponse)
+def aging_v2(
+    request: Request,
+    session: ReadDb,
+    user: CurrentUser,
+    q: Search = "",
+    customer_id: CustomerFilter = None,
+    due_from: date | None = None,
+    due_to: date | None = None,
+    bucket: AgingBucket | None = None,
+    page: Page = 1,
+    page_size: PageSize = 20,
+) -> dict[str, Any]:
+    report_query(request, {"q", "customer_id", "due_from", "due_to", "bucket", "page", "page_size"})
+    return reporting.aging(
+        session, q, customer_id, due_from, due_to, bucket, page, page_size, summary=True
+    )
+
+
+@read_router.get(
+    "/customers/{customer_id}/statement", response_model=CustomerStatementSummaryResponse
+)
+def customer_statement_v2(
+    customer_id: ResourceId,
+    request: Request,
+    session: ReadDb,
+    user: CurrentUser,
+    q: Search = "",
+    status: str | None = None,
+    due_from: date | None = None,
+    due_to: date | None = None,
+    received_from: date | None = None,
+    received_to: date | None = None,
+    page: Page = 1,
+    page_size: PageSize = 20,
+    payment_page: Page = 1,
+    payment_page_size: PageSize = 20,
+) -> dict[str, Any]:
+    report_query(
+        request,
+        {
+            "q",
+            "status",
+            "due_from",
+            "due_to",
+            "received_from",
+            "received_to",
+            "page",
+            "page_size",
+            "payment_page",
+            "payment_page_size",
+        },
+    )
+    return reporting.customer_statement(
+        session,
+        customer_id,
+        q,
+        status,
+        due_from,
+        due_to,
+        received_from,
+        received_to,
+        page,
+        page_size,
+        payment_page,
+        payment_page_size,
+        summary=True,
+    )
+
+
+@read_router.get("/receivables/{receivable_id}", response_model=PaginatedReceivableDetailResponse)
+def title_v2(
+    receivable_id: ResourceId,
+    session: ReadDb,
+    user: CurrentUser,
+    page_size: PageSize = 20,
+    payment_page: Page = 1,
+    event_page: Page = 1,
+    reminder_page: Page = 1,
+) -> dict[str, Any]:
+    item = session.get(Receivable, receivable_id)
+    if not item:
+        raise DomainError("not_found", "Título não encontrado.", 404)
+    return title_detail(
+        session,
+        item,
+        page_size=page_size,
+        payment_page=payment_page,
+        event_page=event_page,
+        reminder_page=reminder_page,
+    )

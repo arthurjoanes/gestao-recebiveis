@@ -100,6 +100,7 @@ def list_titles(
     page_size: int,
     *,
     include_aging: bool = False,
+    summary: bool = False,
 ) -> dict[str, Any]:
     totals = payment_totals()
     paid, _ = expressions(totals)
@@ -118,7 +119,7 @@ def list_titles(
     ).all()
     title_ids = [title.id for title, _, _ in rows]
     payments_by_title: dict[int, list[dict[str, Any]]] = {title_id: [] for title_id in title_ids}
-    if title_ids:
+    if title_ids and not summary:
         for payment in session.scalars(
             select(Payment)
             .where(Payment.receivable_id.in_(title_ids))
@@ -128,7 +129,8 @@ def list_titles(
     items = []
     for title, customer, paid_cents in rows:
         item = title_view(title, customer, today, int(paid_cents))
-        item["payments"] = payments_by_title[title.id]
+        if not summary:
+            item["payments"] = payments_by_title[title.id]
         if include_aging:
             item.update(
                 aging_bucket=aging_bucket(title.due_date, today),
@@ -234,6 +236,8 @@ def aging(
     bucket: str | None,
     page: int,
     page_size: int,
+    *,
+    summary: bool = False,
 ) -> dict[str, Any]:
     commercial_now = business_now(session)
     today = commercial_now.date()
@@ -269,7 +273,9 @@ def aging(
         "open_cents": str(sum(cents for _, cents in observed.values())),
         "title_count": sum(count for count, _ in observed.values()),
         "buckets": buckets,
-        **list_titles(session, today, conditions, page, page_size, include_aging=True),
+        **list_titles(
+            session, today, conditions, page, page_size, include_aging=True, summary=summary
+        ),
     }
 
 
@@ -286,6 +292,8 @@ def customer_statement(
     page_size: int,
     payment_page: int,
     payment_page_size: int,
+    *,
+    summary: bool = False,
 ) -> dict[str, Any]:
     commercial_now = business_now(session)
     today = commercial_now.date()
@@ -362,7 +370,7 @@ def customer_statement(
             "received_cents": str(received_cents),
             "paid_count": paid_count,
         },
-        "titles": list_titles(session, today, conditions, page, page_size),
+        "titles": list_titles(session, today, conditions, page, page_size, summary=summary),
         "payments": {
             "items": payments,
             "total": paid_count,
