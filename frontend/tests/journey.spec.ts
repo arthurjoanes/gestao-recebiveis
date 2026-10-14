@@ -778,7 +778,7 @@ test("saldo abre títulos com busca e vencimento preservados e retorno mantém r
     releaseReturn();
   }
   await expect(
-    page.getByRole("button", {
+    page.getByRole("link", {
       name: title.external_receivable_id,
       exact: true,
     }),
@@ -1094,6 +1094,27 @@ test("carteira compacta mantém recorte aplicado, validação e retorno ao contr
     .click();
   await expect(page.locator("#title-period-error")).toHaveCount(0);
   await expect(search).toHaveValue("");
+  await expect(search).toBeHidden();
+  await expect(toggle).toBeFocused();
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await expect(page.locator(".filter-scope")).not.toContainText("TIT-0001");
+  await expect(page.locator(".filter-scope")).toContainText(
+    "Todos os clientes e títulos",
+  );
+  await expect(page).not.toHaveURL(/[?&]t_(?:q|due_from|due_to)=/);
+  await expect.poll(() => page.locator("tbody tr").count()).toBeGreaterThan(1);
+  await toggle.click();
+  await expect(search).toBeVisible();
+  await expect(page.locator('[name="due_from"]')).toHaveValue("");
+  await expect(page.locator('[name="due_to"]')).toHaveValue("");
+  // Limpar uma carteira já sem filtros também recolhe e restaura o foco.
+  await page
+    .getByRole("button", { name: "Limpar filtros", exact: true })
+    .click();
+  await expect(search).toBeHidden();
+  await expect(toggle).toBeFocused();
+  await toggle.click();
+  await expect(search).toBeVisible();
   await page
     .getByRole("button", { name: "Fechar filtros", exact: true })
     .click();
