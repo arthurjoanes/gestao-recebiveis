@@ -29,9 +29,9 @@ O [guia de casos e testes](docs/problem-solution.md) liga esses comportamentos �
 
 ## Demonstração
 
-![Resumo da carteira no Gestão de Recebíveis](docs/readme/overview.png)
+![Resumo com saldo em aberto, vencidos, valores em dia, recebimentos e títulos da carteira](docs/readme/overview.png)
 
-_Carteira fictícia em reais. [Procedência das capturas](docs/image-captures.md)._
+_Página Resumo capturada em 12/10/2026, com carteira fictícia em reais e data comercial de 17/08/2026. Os indicadores e a tabela mostram o estado daquela demonstração. [Procedência das capturas](docs/image-captures.md)._
 
 <a id="reproduzir-um-lote-pequeno"></a>
 
