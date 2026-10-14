@@ -803,6 +803,23 @@ test("saldo abre títulos com busca e vencimento preservados e retorno mantém r
   await expect(page.locator("#title-period-error")).toBeVisible();
   await expect(page.locator('[name="due_from"]')).toBeFocused();
   await navigate(page, "Resumo");
+  await expect(page.locator(".overview-filter-panel summary")).toContainText(
+    title.external_receivable_id,
+  );
+  await page.locator(".overview-filter-panel summary").click();
+  await expect(page.getByLabel("Cliente ou título")).toHaveValue(
+    title.external_receivable_id,
+  );
+  await expect(page.locator('[name="due_from"]')).toHaveValue(title.due_date);
+  await expect(page.locator('[name="due_to"]')).toHaveValue(title.due_date);
+  // O Resumo conserva seu próprio recorte; limpe-o antes de consultar em dia.
+  await page.getByRole("button", { name: "Limpar filtros" }).click();
+  await expect(page.getByLabel("Cliente ou título")).toHaveValue("");
+  await expect(page.locator('[name="due_from"]')).toHaveValue("");
+  await expect(page.locator('[name="due_to"]')).toHaveValue("");
+  await expect(page.locator(".overview-filter-panel summary")).toContainText(
+    "Carteira completa",
+  );
   await page
     .getByRole("link", { name: "Ver títulos em dia", exact: true })
     .focus();
