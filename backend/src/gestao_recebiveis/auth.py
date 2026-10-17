@@ -40,7 +40,8 @@ def current_user(request: Request, session: Db) -> User:
         raise DomainError("unauthenticated", "Sessão inválida.", 401)
     if request.method not in ("GET", "HEAD", "OPTIONS"):
         check_origin(request)
-        if not secrets.compare_digest(request.headers.get("x-csrf-token", ""), login.csrf_token):
+        supplied = request.headers.get("x-csrf-token", "")
+        if not supplied.isascii() or not secrets.compare_digest(supplied, login.csrf_token):
             raise DomainError(
                 "csrf", "Confirmação de segurança inválida. Recarregue a página.", 403
             )
