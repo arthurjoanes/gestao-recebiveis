@@ -1,12 +1,10 @@
 # Capturas da interface
 
-## Apresentação
+## Apresentação atual
 
-A [imagem do Resumo](readme/overview.png), usada no README, foi capturada na aplicação local em 12/10/2026, no Edge 155.0.4283.45, com viewport 1440×900 CSS px. A aplicação estava compilada em produção e autenticada como operador. O PNG conserva a página inteira, sem edição de pixels.
+As imagens [desktop](readme/overview.png) e [mobile](readme/overview-mobile.png) foram capturadas em 18/10/2026 UTC, no Chromium 153.0.8010.12. O desktop usa viewport de 1440 × 1360; o mobile mostra o gráfico em 390 × 844. A aplicação usa build de produção, API local e PostgreSQL 17.11 portátil, com os dados fictícios do seed e perfil leitor. A data comercial é 17/08/2026.
 
-A carteira é fictícia: seed de 240 títulos mais três títulos de teste, 61 clientes, 49 recebimentos e cinco lotes. A data comercial é 17/08/2026. O Resumo mostra R$ 516.653,77 em aberto, em 195 títulos, e R$ 118.316,93 recebidos, em 49 recebimentos. Esses valores descrevem o estado da demonstração capturada.
-
-A [imagem do CI de 22/09/2026](screenshots/publication-20260922/overview.png) pertence ao commit `5718cdad`; o [recibo](evidence/frontend-ci-20260922.json) registra sua origem e hash. Ela não representa o estado atual da carteira.
+O desktop mostra a página; o mobile é uma captura nativa do componente. Os arquivos não receberam edição de pixels. [Arquivos e hashes](readme/capture.json).
 
 ## Reproduzir
 
@@ -38,7 +36,7 @@ O [coletor](../scripts/capture_restore_story.cjs) consulta após login e espera 
 
 Capturas não substituem testes de cálculo, identidade ou persistência, nem verificam leitor de tela ou conformidade de acessibilidade integral. Preserve imagens e manifestos de uma prova concluída; novas execuções recebem destinos próprios.
 
-## Leitura visual conferida em 13/10/2026
+## Registro da captura anterior (13/10/2026)
 
 O Resumo mostra a página completa e distingue saldo aberto de recebimentos. Seus R$ 244.250,17 vencidos e R$ 272.403,60 em dia somam R$ 516.653,77; os R$ 118.316,93 recebidos pertencem a outro recorte. A imagem apresenta indicadores e uma tabela, sem gráfico de série temporal.
 

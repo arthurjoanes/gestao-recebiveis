@@ -10,7 +10,8 @@ import {
   portfolioScope,
 } from "./overview-filters";
 import type { PortfolioFilters } from "./receivables";
-import type { Overview, Page, Receivable } from "@/lib/types";
+import type { Aging, Overview, Page, Receivable } from "@/lib/types";
+import { AgingChart } from "./aging-chart";
 import { Alert, Badge, Empty, Icon, Loading } from "@/components/ui";
 
 export function OverviewView({
@@ -34,6 +35,10 @@ export function OverviewView({
     revision,
   );
   const data = overview.data;
+  const aging = useResource<Aging>(
+    `/reports/aging?${query({ q: filters.q, due_from: filters.due_from, due_to: filters.due_to, page_size: 1 })}`,
+    revision,
+  );
   function openTitles(status: string) {
     onTitles({
       q: filters.q,
@@ -185,6 +190,13 @@ export function OverviewView({
         )}
         {!overview.loading && data && (
           <div className="overview-collection">
+            {aging.error ? (
+              <Alert>{aging.error}</Alert>
+            ) : aging.loading ? (
+              <Loading />
+            ) : (
+              aging.data && <AgingChart data={aging.data} />
+            )}
             <section className="panel">
               <div className="section-heading">
                 <div>

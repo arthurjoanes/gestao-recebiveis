@@ -6,6 +6,7 @@ import { date, instant, money, bucketOptions, titleCount } from "@/lib/format";
 import { useResource } from "@/lib/use-resource";
 import type { Aging, CustomerStatement, Receivable } from "@/lib/types";
 import type { PortfolioFilters } from "./receivables";
+import { AgingChart } from "./aging-chart";
 import {
   Alert,
   Badge,
@@ -361,6 +362,7 @@ export function AgingView({
               generatedAt={data.generated_at}
               businessDate={data.business_date}
             />
+            <AgingChart data={data} />
             <section className="panel">
               <div className="section-heading">
                 <h2>Carteira no recorte</h2>

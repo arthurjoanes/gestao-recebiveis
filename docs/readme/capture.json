@@ -1,0 +1,28 @@
+{
+  "repo": "gestao-recebiveis",
+  "captured_at": "2026-10-18T02:50:37.110Z",
+  "runtime": "PostgreSQL 17.11 portÃ¡til; API e frontend locais; seed do projeto; dados fictÃ­cios; sem interceptaÃ§Ã£o de HTTP",
+  "reference_date": "2026-08-17",
+  "browser": "153.0.8010.12",
+  "images": [
+    {
+      "file": "docs/readme/overview.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1360
+      },
+      "sha256": "7dc06245c2b382df6a6ad5e5837d1fa3b194fb249ad143e4cfd94670942ba5a0",
+      "axe_violations": 0
+    },
+    {
+      "file": "docs/readme/overview-mobile.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "sha256": "26bd557bad3e879b87d3ccb26c4e6e3a7232b3cf7f79d613ec63b85765154aa0",
+      "axe_violations": 0
+    }
+  ],
+  "page_errors": []
+}

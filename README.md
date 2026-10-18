@@ -1,6 +1,6 @@
 # Gestão de recebíveis
 
-Aplicação para importar contas a receber, registrar recebimentos parciais ou integrais e acompanhar lembretes simulados. O aging mostra o saldo por faixa de atraso; o extrato operacional reúne títulos e recebimentos por cliente. Desenvolvi as regras financeiras e os fluxos de recuperação com dados de uma empresa fictícia em reais (BRL).
+Controle de contas a receber em reais: importação por CSV, pagamentos parciais e acompanhamento de atrasos. A demonstração usa uma empresa fictícia e lembretes simulados.
 
 <!-- Navegação do README -->
 <p>
@@ -29,9 +29,13 @@ O [guia de casos e testes](docs/problem-solution.md) liga esses comportamentos �
 
 ## Demonstração
 
-![Resumo com saldo em aberto, vencidos, valores em dia, recebimentos e títulos da carteira](docs/readme/overview.png)
+![Saldo em aberto e distribuição por atraso](docs/readme/overview.png)
 
-_Página Resumo capturada em 12/10/2026, com carteira fictícia em reais e data comercial de 17/08/2026. Os indicadores e a tabela mostram o estado daquela demonstração. [Procedência das capturas](docs/image-captures.md)._
+O resumo separa saldo em aberto de dinheiro recebido. O gráfico mostra a participação de cada faixa de atraso no saldo selecionado. Use os filtros de vencimento para analisar uma carteira; o período de recebimento filtra apenas os pagamentos.
+
+![Distribuição do saldo no celular](docs/readme/overview-mobile.png)
+
+Capturas da aplicação com dados fictícios. [Ambiente e data](docs/image-captures.md).
 
 <a id="reproduzir-um-lote-pequeno"></a>
 
@@ -39,7 +43,7 @@ Na demo iniciada, importe [valid.csv](data/samples/valid.csv): **R$ 1.250,09 + R
 
 <a id="prova-histórica-a-mesma-baixa-após-restauração"></a>
 
-A prova histórica de **22/09/2026** usa outra massa: dois títulos de **R$ 50 + R$ 75 = R$ 125**. Após restauração, repetir a baixa de R$ 50 conservou o pagamento e **R$ 75 em aberto**, conforme o [manifesto da execução `11adf9df…`](docs/evidence/restore-proof/11adf9df35ba4314945ffdd4fbaeabfc/manifest.json). Veja o [cenário, as imagens e os limites](docs/restore-proof.md).
+O [teste de restauração](docs/restore-proof.md) verifica a recuperação do banco e a repetição de uma baixa sem duplicar o pagamento.
 
 ## Arquitetura
 
@@ -126,7 +130,7 @@ Se já usou a versão PostgreSQL Debian, leia a [migração do banco](docs/verif
 
 No [script principal](scripts/gestao-recebiveis.ps1), `test` verifica backend e navegador em ambientes descartáveis, incluindo o [Compose E2E](compose.e2e.yaml). `proof` executa a [prova de interrupção e reinício](scripts/prove.ps1) do banco de teste; a restauração em volume novo tem [executor separado](scripts/prove_restore.py).
 
-A validação local de 12/10/2026 aprovou **218 testes backend** e **37 casos Playwright**, além de build, lint e tipos. Os resultados têm datas e escopos próprios em [verificação](docs/verification.md). O [recibo do CI de 22/09/2026](docs/evidence/frontend-ci-20260922.json), sobre `5718cdad`, conserva os **15 casos Playwright** daquela versão.
+Os comandos, resultados por versão e testes de recuperação estão no [guia de verificação](docs/verification.md).
 
 <a id="limites-e-manutenção"></a>
 <a id="decisões-e-limites"></a>
@@ -137,7 +141,7 @@ A validação local de 12/10/2026 aprovou **218 testes backend** e **37 casos Pl
 - Quitação confirmada impede novas [autorizações de lembrete](backend/src/gestao_recebiveis/reminders/service.py); uma autorização anterior em trânsito conserva seu payload e pode exigir reconciliação.
 - O provedor simulado usa o mesmo PostgreSQL. A restauração local não prova recuperação de um efeito em serviço externo ou perda do host.
 - O Compose publica serviços em loopback. Uso público exige identidade, HTTPS e configuração operacional próprios.
-- Produtividade com usuários, carga de produção, leitor de tela, zoom nativo e conformidade AA integral não foram demonstrados.
+- Os testes automatizados de interface estão no [guia de qualidade](docs/frontend-quality.md).
 
 Os guias de [segurança](docs/security.md) e [qualidade da interface](docs/frontend-quality.md) detalham o alcance das verificações. A [revisão de 03/10/2026](docs/SECURITY-REVIEW-2026-10-03.md) registra os 18 itens do checklist, a atualização de dependências e a pendência na ferramenta de desenvolvimento. O [plano de provedor real](docs/provider-integration-plan.md) é trabalho proposto.
 
@@ -157,7 +161,7 @@ Relate problemas nas [issues](https://github.com/arthurjoanes/gestao-recebiveis/
 
 ## Autor e licença
 
-Desenvolvido por **Arthur Joanes**. Para conversar sobre recebíveis, consistência e recuperação:
+Desenvolvido por **Arthur Joanes**.
 
 <p>
   <a href="https://www.linkedin.com/in/arthur-joanes-6a2967373/">
@@ -168,12 +172,12 @@ Desenvolvido por **Arthur Joanes**. Para conversar sobre recebíveis, consistên
 
 Código sob [licença MIT](LICENSE). IBM Plex Sans mantém a [licença OFL 1.1](frontend/src/app/fonts/plex-LICENSE.txt) e a [origem](frontend/src/app/fonts/sources.json). Ícones da stack e LinkedIn: [fontes e licenças Devicon e Simple Icons](docs/stack/README.md).
 
-## Evolução de 12/10/2026
+## Relatórios
 
-A carteira mostra valor original, recebido e saldo. Uma parcela mantém o título aberto; quitar o saldo encerra o título e cancela as pendências de lembrete. Aging distribui o saldo aberto entre em dia, 1–30, 31–60, 61–90 e acima de 90 dias. O extrato identifica o cliente pelo ID e código externo, lista títulos e recebimentos e permite impressão pelo navegador.
+O aging agrupa o saldo em dia e em quatro faixas de atraso. Cada título pertence a uma faixa. Os percentuais usam o saldo completo dos filtros, incluindo os títulos das outras páginas.
 
-O [contrato da evolução](docs/evolucao-20261012.md) descreve migração, filtros, repetição após resposta perdida e limites dos relatórios. Resultados desta versão estão em [verificação](docs/verification.md); recibos e imagens de execuções anteriores conservam suas datas e versões.
+O extrato reúne títulos e pagamentos por cliente. Uma baixa parcial reduz o saldo; a quitação encerra o título e cancela os lembretes pendentes. A confirmação exibe o saldo que restará antes de gravar o pagamento.
 
-A confirmação mostra valor a registrar e saldo resultante. Pagamentos com resposta perdida conservam a mesma intenção para recuperação; logout limpa o contexto local, e respostas de outra sessão são descartadas. Carteira, aging e extrato mantêm valores completos e contexto de navegação. Os [critérios de interface](docs/frontend-quality.md) descrevem acessibilidade, estados e testes.
+[Contratos dos relatórios](docs/evolucao-20261012.md) · [Navegação e acessibilidade](docs/frontend-quality.md).
 
 Fontes dos ícones e cartões: [documentação da stack](docs/stack/README.md).
