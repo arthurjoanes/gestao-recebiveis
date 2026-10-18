@@ -33,7 +33,7 @@ O [guia de casos e testes](docs/problem-solution.md) liga esses comportamentos �
 
 O resumo separa saldo em aberto de dinheiro recebido. O gráfico mostra a participação de cada faixa de atraso no saldo selecionado. Use os filtros de vencimento para analisar uma carteira; o período de recebimento filtra apenas os pagamentos.
 
-![Distribuição do saldo no celular](docs/readme/overview-mobile.png)
+![Resumo da carteira no celular](docs/readme/overview-mobile.png)
 
 Capturas da aplicação com dados fictícios. [Ambiente e data](docs/image-captures.md).
 

@@ -1,27 +1,61 @@
 {
   "repo": "gestao-recebiveis",
-  "captured_at": "2026-10-18T02:50:37.110Z",
-  "runtime": "PostgreSQL 17.11 portÃ¡til; API e frontend locais; seed do projeto; dados fictÃ­cios; sem interceptaÃ§Ã£o de HTTP",
+  "captured_at": "2026-10-18T03:00:40.576Z",
+  "runtime": "PostgreSQL 17.11 portátil; API e frontend locais; seed do projeto; dados fictícios; sem interceptação de HTTP",
   "reference_date": "2026-08-17",
   "browser": "153.0.8010.12",
   "images": [
     {
       "file": "docs/readme/overview.png",
+      "capture": "viewport",
       "viewport": {
         "width": 1440,
         "height": 1360
       },
-      "sha256": "7dc06245c2b382df6a6ad5e5837d1fa3b194fb249ad143e4cfd94670942ba5a0",
+      "dimensions": {
+        "width": 1440,
+        "height": 1360
+      },
+      "clip": null,
+      "sha256": "c3db4f8a06db0e05d67f3d6fc8d6438e21b83d82aa4b280f66ca882fab2dd160",
       "axe_violations": 0
     },
     {
       "file": "docs/readme/overview-mobile.png",
+      "capture": "viewport",
       "viewport": {
         "width": 390,
         "height": 844
       },
-      "sha256": "26bd557bad3e879b87d3ccb26c4e6e3a7232b3cf7f79d613ec63b85765154aa0",
+      "dimensions": {
+        "width": 390,
+        "height": 844
+      },
+      "clip": null,
+      "sha256": "f28fb68c0ee8b741d6c20f256d2bd6f9ab2e6fb7b698f6005659bd9b0e0aa64f",
       "axe_violations": 0
+    },
+    {
+      "file": "docs/readme/overview-detail-mobile.png",
+      "capture": "element",
+      "selector": ".aging-analysis",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "dimensions": {
+        "width": 358,
+        "height": 534
+      },
+      "clip": {
+        "x": 16,
+        "y": 155.1875,
+        "width": 358,
+        "height": 533.390625
+      },
+      "sha256": "26bd557bad3e879b87d3ccb26c4e6e3a7232b3cf7f79d613ec63b85765154aa0",
+      "axe_violations": 0,
+      "clip_coordinate_space": "viewport CSS pixels"
     }
   ],
   "page_errors": []

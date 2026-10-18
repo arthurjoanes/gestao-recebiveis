@@ -2,9 +2,9 @@
 
 ## Apresentação atual
 
-As imagens [desktop](readme/overview.png) e [mobile](readme/overview-mobile.png) foram capturadas em 18/10/2026 UTC, no Chromium 153.0.8010.12. O desktop usa viewport de 1440 × 1360; o mobile mostra o gráfico em 390 × 844. A aplicação usa build de produção, API local e PostgreSQL 17.11 portátil, com os dados fictícios do seed e perfil leitor. A data comercial é 17/08/2026.
+As imagens [desktop](readme/overview.png) e [mobile](readme/overview-mobile.png) foram capturadas em 18/10/2026 UTC, no Chromium 153.0.8010.12. São viewports completas de 1440 × 1360 e 390 × 844. A aplicação usa build de produção, API local e PostgreSQL 17.11 portátil, com os dados fictícios do seed e perfil leitor. A data comercial é 17/08/2026.
 
-O desktop mostra a página; o mobile é uma captura nativa do componente. Os arquivos não receberam edição de pixels. [Arquivos e hashes](readme/capture.json).
+O [detalhe do gráfico no celular](readme/overview-detail-mobile.png) é um recorte nativo de 358 × 534. Os arquivos não receberam edição de pixels. [Dimensões, recortes e hashes](readme/capture.json).
 
 ## Reproduzir
 
